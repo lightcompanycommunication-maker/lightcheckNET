@@ -220,13 +220,14 @@ tr:hover td{background:#f9fafb;}
   </button>
   <div class="import-wrap">
     <div class="btn-import-split">
-      <button class="btn-import-main" onclick="alert('Import — bientôt disponible')">Importer</button>
+      <button class="btn-import-main" onclick="scImportPick()">Importer</button>
       <button class="btn-import-arrow" onclick="toggleImportMenu()">▾</button>
     </div>
     <div class="import-menu" id="import-menu">
-      <button class="im-item" onclick="closeImportMenu()">📄 Importer depuis CSV</button>
-      <button class="im-item" onclick="closeImportMenu()">📋 Copier depuis un autre site</button>
+      <button class="im-item" onclick="scImportPick();closeImportMenu()">📄 Importer depuis CSV</button>
+      <button class="im-item" onclick="scDownloadTemplate();closeImportMenu()">⬇ Télécharger le modèle CSV</button>
     </div>
+    <input type="file" id="sc-import-file" accept=".csv,text/csv" style="display:none" onchange="scImportFile(event)"/>
   </div>
 </div>
 
@@ -698,6 +699,116 @@ function closeImportMenu(){
 document.addEventListener('click', e=>{
   if(!e.target.closest('.import-wrap')) closeImportMenu();
 });
+
+// ══ IMPORT CSV DES HORAIRES ══
+const SC_DAY_MAP = {di:0,dim:0,dimanche:0,lu:1,lun:1,lundi:1,ma:2,mar:2,mardi:2,me:3,mer:3,mercredi:3,
+  je:4,jeu:4,jeudi:4,ve:5,ven:5,vendredi:5,sa:6,sam:6,samedi:6};
+
+function scImportPick(){ const el=document.getElementById('sc-import-file'); if(el) el.click(); }
+
+function scNorm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+
+function scParseDays(raw){
+  if(raw==null || String(raw).trim()==='') return [1,2,3,4,5];
+  const toks = String(raw).toLowerCase().split(/[,;|/\s]+/).filter(Boolean);
+  const out = new Set();
+  toks.forEach(t=>{
+    if(/^[0-6]$/.test(t)) out.add(parseInt(t,10));
+    else if(SC_DAY_MAP[t]!=null) out.add(SC_DAY_MAP[t]);
+  });
+  return out.size ? [...out].sort((a,b)=>a-b) : [1,2,3,4,5];
+}
+
+// parseur de ligne CSV avec gestion des guillemets
+function scSplitLine(line, delim){
+  const out=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ if(q && line[i+1]==='"'){ cur+='"'; i++; } else q=!q; }
+    else if(c===delim && !q){ out.push(cur); cur=''; }
+    else cur+=c;
+  }
+  out.push(cur);
+  return out.map(s=>s.trim());
+}
+
+async function scImportFile(ev){
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value='';                                   // permet de réimporter le même fichier
+  if(!file) return;
+  let text='';
+  try { text = await file.text(); } catch(e){ alert('Light Check : lecture du fichier impossible.'); return; }
+  text = text.replace(/^\ufeff/,'');                    // BOM éventuel
+  const lines = text.split(/\r?\n/).filter(l=>l.trim()!=='');
+  if(lines.length < 2){ alert('Le fichier est vide ou ne contient pas de lignes de données.'); return; }
+
+  const delim = (lines[0].match(/;/g)||[]).length > (lines[0].match(/,/g)||[]).length ? ';' : ',';
+  const headers = scSplitLine(lines[0], delim).map(scNorm);
+  const col = (...names)=>{ for(const n of names){ const i=headers.indexOf(n); if(i>=0) return i; } return -1; };
+
+  const iName  = col('nom','name','intitule','libelle');
+  const iStart = col('debut','heure_debut','start','start_time','entree');
+  const iEnd   = col('fin','heure_fin','end','end_time','sortie');
+  const iLate  = col('tolerance_retard','retard','late','late_tolerance');
+  const iEarly = col('tolerance_avance','avance','early','early_tolerance');
+  const iDays  = col('jours','work_days','days','jours_travailles');
+  const iColor = col('couleur','color');
+  const iSdate = col('date_debut','start_date');
+
+  if(iName<0 || iStart<0 || iEnd<0){
+    alert('Colonnes manquantes.\nLe fichier doit contenir au minimum : nom, debut, fin.\n(Télécharge le modèle CSV depuis le menu ▾.)');
+    return;
+  }
+
+  const timeOk = v=>/^\d{1,2}:\d{2}(:\d{2})?$/.test(String(v||'').trim());
+  const rows=[], errs=[];
+  for(let r=1;r<lines.length;r++){
+    const c = scSplitLine(lines[r], delim);
+    const name = (c[iName]||'').trim();
+    const start= (c[iStart]||'').trim();
+    const end  = (c[iEnd]||'').trim();
+    if(!name){ errs.push(`Ligne ${r+1} : nom vide`); continue; }
+    if(!timeOk(start) || !timeOk(end)){ errs.push(`Ligne ${r+1} : heure invalide (format attendu HH:MM)`); continue; }
+    const sdate = (iSdate>=0 && /^\d{4}-\d{2}-\d{2}$/.test((c[iSdate]||'').trim())) ? c[iSdate].trim() : null;
+    rows.push({
+      name,
+      repeat_n:1, repeat_unit:'semaine',
+      start_date:sdate, end_date:null,
+      start_time:start, end_time:end,
+      late_tolerance: iLate>=0 ? (parseInt(c[iLate],10)||15) : 15,
+      early_tolerance:iEarly>=0 ? (parseInt(c[iEarly],10)||10) : 10,
+      color:(iColor>=0 && (c[iColor]||'').trim()) ? c[iColor].trim() : '#1d4ed8',
+      work_days: scParseDays(iDays>=0 ? c[iDays] : ''),
+      company_id:(me && me.company_id)||null
+    });
+  }
+
+  if(!rows.length){ alert('Aucune ligne valide à importer.\n\n'+errs.slice(0,8).join('\n')); return; }
+
+  let res;
+  try { res = await LC.sbInsert('schedules', rows); }
+  catch(e){ alert('Light Check : serveur injoignable pendant l\'import.'); return; }
+
+  if(Array.isArray(res)){
+    let msg = `${res.length} horaire(s) importé(s) avec succès.`;
+    if(errs.length) msg += `\n\n${errs.length} ligne(s) ignorée(s) :\n` + errs.slice(0,6).join('\n');
+    alert(msg);
+    if(typeof loadSchedules==='function') loadSchedules();
+  } else {
+    alert('Échec de l\'import : ' + ((res && res.message) || 'insertion refusée par la base.'));
+  }
+}
+
+function scDownloadTemplate(){
+  const csv = 'nom,debut,fin,tolerance_retard,tolerance_avance,jours,couleur\n'
+    + 'Journee standard,08:00,17:00,15,10,"1,2,3,4,5",#1d4ed8\n'
+    + 'Equipe du matin,06:00,14:00,10,10,"lun,mar,mer,jeu,ven,sam",#0d9f58\n';
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'modele_horaires.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
 
 // ══ SCHEDULES ══
 async function loadSchedules(){
