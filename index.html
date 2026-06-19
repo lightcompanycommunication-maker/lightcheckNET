@@ -1070,7 +1070,7 @@ function todayGMT1(){ return new Date(Date.now()+3600000).toISOString().split('T
 // ══ POINTAGES ══
 async function loadPointages(){
   const today = todayGMT1();
-  const res = await sbGet('pointages',`created_at=gte.${today}T00:00:00+01:00&order=created_at.desc&limit=200`);
+  const res = await sbGet('pointages',`created_at=gte.${today}T00:00:00%2B01:00&order=created_at.desc&limit=200`);
   allPointages = Array.isArray(res) ? res : [];
 }
 
