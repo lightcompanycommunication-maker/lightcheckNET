@@ -8,6 +8,17 @@
 <script src="lc-dialog.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+  /* Infobulle d'aide « ? » */
+  .help{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;
+    background:#FFCF00;color:#1f2937;font-size:.68rem;font-weight:800;cursor:help;position:relative;
+    margin-left:5px;vertical-align:middle;line-height:1;}
+  .help .help-tip{position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%);
+    width:250px;max-width:72vw;background:#1f2937;color:#fff;font-size:.72rem;font-weight:400;line-height:1.45;
+    text-align:left;padding:9px 11px;border-radius:9px;opacity:0;visibility:hidden;transition:opacity .15s ease;
+    z-index:60;box-shadow:0 8px 24px rgba(16,24,40,.28);pointer-events:none;white-space:normal;}
+  .help .help-tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:#1f2937;}
+  .help:hover .help-tip{opacity:1;visibility:visible;}
   :root{ --bg:#f3f4f6; --surface:#fff; --line:#e5e7eb; --ink:#1f2937; --muted:#6b7280; --muted2:#9ca3af;
     --blue:#1d4ed8; --green:#16a34a; --green-bg:#dcfce7; --red:#e11d48; --amber:#d97706; --head:#eef2f7; --r:10px; }
   *{ box-sizing:border-box; }
@@ -133,8 +144,12 @@
             <select id="p-ot-enabled"><option value="false">Non</option><option value="true">Oui</option></select></div>
           <div class="fld"><label>Seuil journalier (h)</label>
             <input type="number" id="p-ot-threshold" step="0.5" min="0"/></div>
-          <div class="fld"><label>Multiplicateur (ex : 1.25)</label>
-            <input type="number" id="p-ot-mult" step="0.05" min="1"/></div>
+          <div class="fld"><label>Mode de calcul <span class="help">?<span class="help-tip"><b>Multiplicateur</b> : l'heure sup = taux horaire × facteur (proportionnel au salaire de chacun).<br/><b>Montant fixe</b> : chaque heure sup vaut une somme fixe, identique pour tous.</span></span></label>
+            <select id="p-ot-mode" onchange="toggleOtMode()"><option value="multiplier">Multiplicateur (× taux horaire)</option><option value="fixed_per_hour">Montant fixe par heure</option></select></div>
+          <div class="fld" id="fld-ot-mult"><label>Multiplicateur (ex : 1.25 → +25 %) <span class="help">?<span class="help-tip">Les heures au-delà du seuil journalier sont payées au <b>taux horaire × ce multiplicateur</b>.<br/>• 1.25 = +25 % (heure sup payée 1,25× l'heure normale)<br/>• 1.5 = +50 %<br/>• 2 = double</span></span></label>
+            <input type="number" id="p-ot-mult" step="0.05" min="1" placeholder="1.25"/></div>
+          <div class="fld" id="fld-ot-fixed"><label>Montant fixe / heure sup <span class="help">?<span class="help-tip">Somme versée pour <b>chaque heure supplémentaire</b> (dans la devise choisie), peu importe le taux horaire.<br/>Ex. : 2000 → chaque heure sup rapporte 2000.</span></span></label>
+            <input type="number" id="p-ot-fixed" step="50" min="0" placeholder="2000"/></div>
         </div>
 
         <h3 style="margin-top:12px;">Pénalités de retard</h3>
@@ -236,7 +251,7 @@ async function loadAll(){
 
 function defaultSettings(){
   return { company_id:companyId, currency:'XOF', default_pay_type:'monthly', standard_hours_per_day:8, monthly_hours:173.33,
-    overtime_enabled:false, overtime_multiplier:1.25, overtime_threshold_daily:8,
+    overtime_enabled:false, overtime_multiplier:1.25, overtime_threshold_daily:8, overtime_pay_mode:'multiplier', overtime_fixed_amount:0,
     late_penalty_type:'none', late_penalty_amount:0, late_grace_minutes:0,
     absence_deduction_type:'daily_rate', absence_deduction_amount:0, rh_can_configure:false,
     absence_pay_map:{"CONGE":"paid","MALADIE":"paid","MISSION":"paid","FORMATION":"paid","ABSENCE":"unpaid","CONGE_SANS_SOLDE":"unpaid"} };
@@ -251,6 +266,12 @@ function setTab(t){
 }
 
 // ───────── PARAMÈTRES ─────────
+function toggleOtMode(){
+  const mode=(document.getElementById('p-ot-mode')||{}).value||'multiplier';
+  const m=document.getElementById('fld-ot-mult'), f=document.getElementById('fld-ot-fixed');
+  if(m) m.style.display = mode==='multiplier'    ? '' : 'none';
+  if(f) f.style.display = mode==='fixed_per_hour' ? '' : 'none';
+}
 function fillSettingsForm(){
   const g=id=>document.getElementById(id); const S=settings;
   g('p-currency').value=S.currency||'XOF';
@@ -260,6 +281,9 @@ function fillSettingsForm(){
   g('p-ot-enabled').value=String(!!S.overtime_enabled);
   g('p-ot-threshold').value=S.overtime_threshold_daily??8;
   g('p-ot-mult').value=S.overtime_multiplier??1.25;
+  g('p-ot-mode').value=S.overtime_pay_mode||'multiplier';
+  g('p-ot-fixed').value=S.overtime_fixed_amount??0;
+  toggleOtMode();
   g('p-late-type').value=S.late_penalty_type||'none';
   g('p-late-amount').value=S.late_penalty_amount??0;
   g('p-late-grace').value=S.late_grace_minutes??0;
@@ -279,7 +303,7 @@ function fillSettingsForm(){
       </select></div>`;
   }).join('');
   // verrouillage si lecture seule
-  ['p-currency','p-default-type','p-std-hours','p-monthly-hours','p-ot-enabled','p-ot-threshold','p-ot-mult',
+  ['p-currency','p-default-type','p-std-hours','p-monthly-hours','p-ot-enabled','p-ot-threshold','p-ot-mult','p-ot-mode','p-ot-fixed',
    'p-late-type','p-late-amount','p-late-grace','p-abs-type','p-abs-amount'].forEach(id=>g(id).disabled=!canConfig);
   document.querySelectorAll('.abs-map-sel').forEach(s=>s.disabled=!canConfig);
   // l'interrupteur RH : seul le patron peut le changer
@@ -299,6 +323,8 @@ async function saveSettings(){
     overtime_enabled:g('p-ot-enabled').value==='true',
     overtime_threshold_daily:parseFloat(g('p-ot-threshold').value)||0,
     overtime_multiplier:parseFloat(g('p-ot-mult').value)||1,
+    overtime_pay_mode:g('p-ot-mode').value,
+    overtime_fixed_amount:parseFloat(g('p-ot-fixed').value)||0,
     late_penalty_type:g('p-late-type').value,
     late_penalty_amount:parseFloat(g('p-late-amount').value)||0,
     late_grace_minutes:parseInt(g('p-late-grace').value)||0,
@@ -399,7 +425,11 @@ function computePay(emp, pay, h, S){
     hourlyEquiv = (Number(S.monthly_hours)||173.33)>0 ? gross/(Number(S.monthly_hours)||173.33) : 0;
     dailyRate = std>0 ? hourlyEquiv*std : 0;
   }
-  const otPay = S.overtime_enabled ? h.overtime_hours*hourlyEquiv*(Number(S.overtime_multiplier)||1) : 0;
+  const otPay = S.overtime_enabled
+    ? (S.overtime_pay_mode === 'fixed_per_hour'
+        ? h.overtime_hours * (Number(S.overtime_fixed_amount) || 0)
+        : h.overtime_hours * hourlyEquiv * (Number(S.overtime_multiplier) || 1))
+    : 0;
   // pénalités retard
   let pen=0;
   if(S.late_penalty_type==='per_minute') pen=h.late_minutes*(Number(S.late_penalty_amount)||0);
