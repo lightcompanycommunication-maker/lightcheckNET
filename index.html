@@ -1067,6 +1067,18 @@ async function loadEmployees(){
 // ══ GMT+1 DATE HELPER ══
 function todayGMT1(){ return new Date(Date.now()+3600000).toISOString().split('T')[0]; }
 
+// La colonne created_at est de l'UTC stocké SANS fuseau. new Date() la lirait
+// comme une heure locale -> décalage. On force l'UTC puis on affiche au fuseau
+// du Bénin (Africa/Lagos = GMT+1), quel que soit l'appareil qui consulte.
+function dParse(s){
+  if(!s) return new Date(NaN);
+  s = String(s);
+  const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(s);
+  return new Date(hasTz ? s : s.replace(' ','T') + 'Z');
+}
+function bjTime(s){ return dParse(s).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'}); }
+function bjDate(s){ return dParse(s).toLocaleDateString('fr-FR',{day:'numeric',month:'short',timeZone:'Africa/Lagos'}); }
+
 // ══ POINTAGES ══
 async function loadPointages(){
   const today = todayGMT1();
@@ -1175,8 +1187,7 @@ function renderActivity(){
     const emp = empMap[p.employee_id]||{full_name:'Employé inconnu',post:'—'};
     const initials = emp.full_name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
     const color = avatarColors[i % avatarColors.length];
-    const t = new Date(p.created_at);
-    const timeStr = t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const timeStr = bjTime(p.created_at);
     const conf = p.face_confidence!=null ? `Reconnaissance ${parseFloat(p.face_confidence).toFixed(0)}%` : 'Manuel';
     return `<div class="activity-item">
       <div class="act-avatar" style="background:${color};">${initials}</div>
@@ -1309,9 +1320,7 @@ function renderNotifications(){
 
   el.innerHTML = notifData.map(n=>{
     const isUnread = new Date(n.created_at).getTime() > notifLastSeen;
-    const t = new Date(n.created_at);
-    const timeStr = t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) +
-      ' · ' + t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    const timeStr = bjTime(n.created_at) + ' · ' + bjDate(n.created_at);
     if(n.isFraud){
       return `<div class="notif-item ${isUnread?'unread':''}">
         <div class="notif-dot" style="background:#e11d48;"></div>
