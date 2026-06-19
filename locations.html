@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Localisations</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#fff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#1d4ed8;--blue-bg:#eff8ff;--blue-border:#b2ddff;--blue-light:#2e90fa;
+  --radius:10px;--shadow:0 1px 3px rgba(16,24,40,0.1);
+  --shadow-md:0 4px 8px -2px rgba(16,24,40,0.1);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.back-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;color:var(--text2);
+  padding:6px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;font-family:'Instrument Sans',sans-serif;}
+.back-btn:hover{background:var(--bg);}
+.topbar-title{position:absolute;left:50%;transform:translateX(-50%);
+  font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);}
+.icon-btn:hover{background:var(--bg);}
+
+/* CONTAINER */
+.container{max-width:900px;margin:0 auto;padding:16px;}
+
+/* ACTION ROW */
+.action-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.btn-add{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;
+  border:none;border-radius:8px;padding:9px 18px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:600;cursor:pointer;transition:background 0.15s;}
+.btn-add:hover{background:#1e40af;}
+.btn-import{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;margin-left:auto;
+  font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:500;
+  cursor:pointer;color:var(--text);transition:all 0.15s;}
+.btn-import:hover{background:var(--bg);}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:8px;padding:10px 16px 10px 40px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.9rem;color:var(--text);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--blue-light);}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:1rem;pointer-events:none;}
+
+/* TABLE CARD */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f9fafb;border-bottom:1px solid var(--border);}
+th{padding:10px 14px;text-align:left;font-size:0.75rem;font-weight:600;color:var(--text2);white-space:nowrap;}
+th:last-child{width:44px;}
+td{padding:12px 14px;border-top:1px solid var(--border);font-size:0.875rem;vertical-align:middle;}
+tr:hover td{background:#f9fafb;}
+tr.selected td{background:#eff8ff;}
+.cb{width:16px;height:16px;cursor:pointer;accent-color:var(--blue);}
+.th-check{width:44px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:500;}
+.badge-default{background:#f2f4f7;color:var(--text2);border:1px solid var(--border);}
+.badge-gps{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green-border);}
+.badge-nogps{background:var(--bg);color:var(--text3);border:1px solid var(--border);}
+
+/* ROW ACTIONS */
+.row-actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity 0.15s;}
+tr:hover .row-actions{opacity:1;}
+.row-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text2);}
+.row-btn:hover{background:var(--bg);color:var(--text);}
+.row-btn.danger:hover{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
+
+/* BULK BAR */
+.bulk-bar{display:none;position:sticky;top:52px;z-index:90;background:var(--blue);
+  padding:10px 16px;align-items:center;gap:12px;color:#fff;font-size:0.875rem;}
+.bulk-bar.visible{display:flex;}
+.bulk-count{font-weight:600;}
+.bulk-actions{display:flex;gap:8px;margin-left:auto;}
+.bulk-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
+  border-radius:6px;padding:5px 12px;color:#fff;font-family:'Instrument Sans',sans-serif;font-size:0.8rem;cursor:pointer;}
+.bulk-btn:hover{background:rgba(255,255,255,0.25);}
+.bulk-btn.danger{background:rgba(231,76,60,0.3);border-color:rgba(231,76,60,0.5);}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+.per-page{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text2);}
+.per-page-select{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:4px 8px;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;outline:none;}
+.page-info{font-size:0.82rem;color:var(--text2);}
+.page-nav{display:flex;align-items:center;gap:4px;}
+.page-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;color:var(--text2);}
+.page-btn:hover:not(:disabled){background:var(--bg);}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.page-input{width:48px;text-align:center;border:1px solid var(--border);border-radius:6px;
+  padding:4px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:var(--text);outline:none;}
+.page-total{font-size:0.82rem;color:var(--text2);}
+
+/* EMPTY */
+.empty-row td{text-align:center;padding:48px;color:var(--text3);}
+.empty-icon{font-size:2rem;margin-bottom:8px;}
+
+/* MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);z-index:300;align-items:center;justify-content:center;padding:16px;}
+.modal-bd.open{display:flex;}
+.modal{background:var(--surface);border-radius:16px;padding:28px 24px;
+  width:100%;max-width:460px;animation:mIn 0.2s ease;max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+@keyframes mIn{from{opacity:0;transform:scale(0.96);}to{opacity:1;transform:scale(1);}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.modal-title{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;}
+.modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text2);
+  padding:4px;border-radius:6px;line-height:1;}
+.modal-close:hover{background:var(--bg);}
+
+/* FORM */
+.fg{margin-bottom:16px;}
+.fl{display:flex;align-items:center;gap:6px;font-size:0.875rem;font-weight:500;color:var(--text);margin-bottom:6px;}
+.fl .req{color:var(--red);font-size:1rem;}
+.fl .hint-icon{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--text3);
+  display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;
+  color:var(--text3);cursor:help;flex-shrink:0;}
+.fi{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 14px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;outline:none;
+  transition:border-color 0.15s;}
+.fi:focus{border-color:var(--blue-light);}
+.fi.error{border-color:var(--red);}
+.fsel{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 14px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;
+  outline:none;cursor:pointer;}
+.fsel:focus{border-color:var(--blue-light);}
+.fi-hint{font-size:0.75rem;color:var(--amber-dark);margin-top:4px;display:flex;align-items:center;gap:4px;}
+
+/* CHECKBOX ROW */
+.check-row{display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer;}
+.check-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
+.check-label{font-size:0.9rem;font-weight:500;}
+.check-hint{font-size:0.78rem;color:var(--text2);margin-top:2px;}
+
+/* GPS COORDS SECTION */
+.gps-section{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px;}
+.gps-section-title{font-size:0.78rem;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;}
+.gps-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.btn-get-gps{width:100%;padding:9px;border-radius:8px;border:1.5px solid var(--blue-light);
+  background:var(--blue-bg);color:var(--blue);font-family:'Instrument Sans',sans-serif;
+  font-size:0.85rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-get-gps:hover{background:#dbeafe;}
+.gps-status{font-size:0.75rem;color:var(--text2);margin-top:6px;text-align:center;font-family:'IBM Plex Mono',monospace;}
+
+/* MODAL FOOTER */
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.btn-cancel{padding:9px 20px;border-radius:8px;border:1.5px solid var(--border);background:transparent;
+  color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;cursor:pointer;}
+.btn-cancel:hover{background:var(--bg);}
+.btn-submit{padding:9px 24px;border-radius:8px;border:none;background:var(--blue);
+  color:#fff;font-family:'Instrument Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;}
+.btn-submit:hover{background:#1e40af;}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* ALERT */
+.alert{padding:10px 14px;border-radius:8px;font-size:0.82rem;border:1px solid;margin-bottom:12px;display:flex;gap:8px;}
+.alert-error{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
+.alert-success{background:var(--green-bg);border-color:var(--green-border);color:var(--green-dark);}
+
+/* DETAIL ROW */
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.875rem;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{color:var(--text2);}
+.detail-val{font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(min-width:768px){
+  .modal{padding:32px;}
+  .gps-row{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='index.html'">← Tableau de bord</button>
+  <div class="topbar-title">Localisations</div>
+  <button class="icon-btn" onclick="loadLocations()" title="Actualiser">↻</button>
+</div>
+
+<!-- BULK BAR -->
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-count" id="bulk-count">0 sélectionné(s)</span>
+  <div class="bulk-actions">
+    <button class="bulk-btn danger" onclick="bulkDelete()">🗑 Supprimer</button>
+  </div>
+  <button class="bulk-btn" onclick="clearSelection()">✕</button>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- ACTION ROW -->
+  <div class="action-row">
+    <button class="btn-add" onclick="openAddModal()">+ Ajouter une localisation</button>
+    <button class="btn-import" onclick="alert('Import — bientôt disponible')">⬇ Importer</button>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" placeholder="Rechercher…"
+      id="search-input" oninput="filterLocs(this.value)"/>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-check"><input type="checkbox" class="cb" id="cb-all" onchange="toggleAll(this)"/></th>
+            <th>Code</th>
+            <th>Nom</th>
+            <th>Description</th>
+            <th>Fuseau</th>
+            <th>GPS</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="locs-tbody">
+          <tr class="empty-row"><td colspan="7"><div class="empty-icon">⏳</div><div>Chargement…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div class="per-page">
+        <select class="per-page-select" id="per-page" onchange="changePP(this.value)">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+        </select>
+        <span>par page</span>
+      </div>
+      <div class="page-info" id="page-info">—</div>
+      <div class="page-nav">
+        <button class="page-btn" id="btn-first" onclick="goPage(1)">⏮</button>
+        <button class="page-btn" id="btn-prev"  onclick="goPage(currentPage-1)">◀</button>
+        <input class="page-input" type="number" id="page-input" min="1" value="1" onchange="goPage(parseInt(this.value))"/>
+        <span class="page-total" id="page-total">/ 1</span>
+        <button class="page-btn" id="btn-next"  onclick="goPage(currentPage+1)">▶</button>
+        <button class="page-btn" id="btn-last"  onclick="goPage(totalPages)">⏭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: AJOUTER LOCALISATION ══ -->
+<div class="modal-bd" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Ajouter une localisation</div>
+      <button class="modal-close" onclick="closeModal('modal-add')">✕</button>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Nom <span class="req">*</span></label>
+      <input class="fi" id="loc-name" placeholder="Nom"/>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Description <span class="req">*</span></label>
+      <input class="fi" id="loc-desc" placeholder="Description de la localisation"/>
+    </div>
+
+    <div class="fg">
+      <label class="fl">
+        Fuseau horaire <span class="req">*</span>
+        <span class="hint-icon" title="Le fuseau horaire détermine les heures de pointage pour cette localisation.">?</span>
+      </label>
+      <select class="fsel" id="loc-tz">
+        <option value="-12:00">UTC-12:00</option>
+        <option value="-11:00">UTC-11:00</option>
+        <option value="-10:00">UTC-10:00</option>
+        <option value="-09:00">UTC-09:00</option>
+        <option value="-08:00">UTC-08:00 (PST)</option>
+        <option value="-07:00">UTC-07:00 (MST)</option>
+        <option value="-06:00">UTC-06:00 (CST)</option>
+        <option value="-05:00">UTC-05:00 (EST)</option>
+        <option value="-04:00">UTC-04:00</option>
+        <option value="-03:00">UTC-03:00</option>
+        <option value="-02:00">UTC-02:00</option>
+        <option value="-01:00">UTC-01:00</option>
+        <option value="+00:00">UTC+00:00 (GMT)</option>
+        <option value="+01:00" selected>UTC+01:00</option>
+        <option value="+02:00">UTC+02:00</option>
+        <option value="+03:00">UTC+03:00</option>
+        <option value="+04:00">UTC+04:00</option>
+        <option value="+05:00">UTC+05:00</option>
+        <option value="+05:30">UTC+05:30 (IST)</option>
+        <option value="+06:00">UTC+06:00</option>
+        <option value="+07:00">UTC+07:00</option>
+        <option value="+08:00">UTC+08:00 (CST)</option>
+        <option value="+09:00">UTC+09:00 (JST)</option>
+        <option value="+10:00">UTC+10:00 (AEST)</option>
+        <option value="+11:00">UTC+11:00</option>
+        <option value="+12:00">UTC+12:00</option>
+      </select>
+      <div class="fi-hint" id="tz-hint">⚠ Le décalage horaire est +01:00 heures par rapport à UTC.</div>
+    </div>
+
+    <!-- GPS CHECKBOX -->
+    <label class="check-row" onclick="toggleGPS()">
+      <input type="checkbox" id="loc-gps-check" onclick="event.stopPropagation();toggleGPS()"/>
+      <div>
+        <div class="check-label">
+          Définir les coordonnées GPS
+          <span class="hint-icon" style="margin-left:6px;" title="Limite les pointages à une zone géographique précise.">?</span>
+        </div>
+        <div class="check-hint">Optionnel — restreint le pointage à cette zone</div>
+      </div>
+    </label>
+
+    <!-- GPS COORDS (hidden by default) -->
+    <div id="gps-section" style="display:none;">
+      <div class="gps-section">
+        <div class="gps-section-title">Coordonnées GPS</div>
+        <div class="gps-row">
+          <div class="fg" style="margin:0;">
+            <label class="fl" style="font-size:0.78rem;margin-bottom:4px;">Latitude</label>
+            <input class="fi" id="loc-lat" type="number" step="any" placeholder="ex: 6.3703"/>
+          </div>
+          <div class="fg" style="margin:0;">
+            <label class="fl" style="font-size:0.78rem;margin-bottom:4px;">Longitude</label>
+            <input class="fi" id="loc-lng" type="number" step="any" placeholder="ex: 2.3912"/>
+          </div>
+        </div>
+        <div class="fg" style="margin:0 0 10px;">
+          <label class="fl" style="font-size:0.78rem;margin-bottom:4px;">Rayon (mètres)</label>
+          <input class="fi" id="loc-radius" type="number" placeholder="ex: 100" value="100"/>
+        </div>
+        <button class="btn-get-gps" onclick="getCurrentGPS()">
+          📍 Utiliser ma position actuelle
+        </button>
+        <div class="gps-status" id="gps-status"></div>
+      </div>
+    </div>
+
+    <div id="add-error" class="alert alert-error" style="display:none;margin-top:12px;">
+      <span>⚠</span><span id="add-error-msg">Erreur.</span>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modal-add')">Annuler</button>
+      <button class="btn-submit" id="btn-add-loc" onclick="addLocation()">
+        <span id="btn-add-label">Ajouter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: DÉTAIL LOCALISATION ══ -->
+<div class="modal-bd" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="det-title">—</div>
+      <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div id="det-rows"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="detDelete()">🗑 Supprimer</button>
+      <button class="btn-submit" onclick="closeModal('modal-detail')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+// ══ CONFIG ══
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const sbH = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+
+async function sbGet(t, q=''){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, {headers:sbH})).json();
+}
+async function sbInsert(t, d){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}`, {
+    method:'POST', headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(d)
+  })).json();
+}
+async function sbDelete(t, q){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, {
+    method:'DELETE', headers:{...sbH,Prefer:'return=representation'}
+  })).json();
+}
+
+// ══ STATE ══
+let allLocs    = [];
+let filtered   = [];
+let selected   = new Set();
+let currentPage = 1;
+let perPage     = 50;
+let totalPages  = 1;
+let searchVal   = '';
+let detailLoc   = null;
+
+// ══ LOAD ══
+async function loadLocations(){
+  document.getElementById('locs-tbody').innerHTML =
+    `<tr class="empty-row"><td colspan="7"><div class="empty-icon">⏳</div><div>Chargement…</div></td></tr>`;
+
+  // Use companies table as locations for now, or a dedicated table
+  // We'll store locations in a 'locations' table — create it if needed
+  const data = await sbGet('locations', 'order=name.asc');
+  if(Array.isArray(data)){
+    allLocs = data;
+  } else {
+    // Table doesn't exist yet — show empty with setup notice
+    allLocs = [];
+    document.getElementById('locs-tbody').innerHTML =
+      `<tr class="empty-row"><td colspan="7">
+        <div class="empty-icon">📍</div>
+        <div>Aucune localisation</div>
+        <div style="font-size:0.75rem;margin-top:4px;color:var(--amber-dark);">
+          Exécutez le SQL de création de table dans Supabase d'abord.
+        </div>
+      </td></tr>`;
+    return;
+  }
+  applyFilter();
+}
+
+function applyFilter(){
+  const q = searchVal.toLowerCase();
+  filtered = allLocs.filter(l =>
+    !q || (l.name||'').toLowerCase().includes(q) ||
+    (l.description||'').toLowerCase().includes(q) ||
+    (l.code||'').toLowerCase().includes(q)
+  );
+  totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  if(currentPage > totalPages) currentPage = 1;
+  renderTable();
+  updatePagination();
+}
+
+function filterLocs(v){ searchVal=v; currentPage=1; applyFilter(); }
+function changePP(v){ perPage=parseInt(v); currentPage=1; applyFilter(); }
+function goPage(n){
+  n=Math.max(1,Math.min(n,totalPages));
+  currentPage=n;
+  document.getElementById('page-input').value=n;
+  renderTable(); updatePagination();
+}
+
+// ══ RENDER ══
+function renderTable(){
+  const tbody = document.getElementById('locs-tbody');
+  const start = (currentPage-1)*perPage;
+  const page  = filtered.slice(start, start+perPage);
+
+  if(!page.length){
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="7">
+      <div class="empty-icon">📍</div>
+      <div>${allLocs.length?'Aucun résultat':'Aucune localisation — cliquez sur + Ajouter'}</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = page.map(l=>{
+    const isSel = selected.has(l.id);
+    const hasGPS = l.latitude!=null && l.longitude!=null;
+    return `<tr class="${isSel?'selected':''}">
+      <td><input type="checkbox" class="cb" ${isSel?'checked':''} onchange="toggleSelect('${l.id}',this.checked)"/></td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--text2);">${l.code||'—'}</span></td>
+      <td><strong>${l.name}</strong></td>
+      <td class="muted" style="font-size:0.82rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.description||'—'}</td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;">${l.timezone||'+01:00'}</span></td>
+      <td>${hasGPS
+        ? `<span class="badge badge-gps">📍 GPS</span>`
+        : `<span class="badge badge-nogps">—</span>`}</td>
+      <td>
+        <div class="row-actions">
+          <button class="row-btn" onclick="openDetail('${l.id}')" title="Voir">›</button>
+          <button class="row-btn danger" onclick="deleteLoc('${l.id}')" title="Supprimer">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updatePagination(){
+  const start = Math.min((currentPage-1)*perPage+1, filtered.length||1);
+  const end   = Math.min(currentPage*perPage, filtered.length);
+  document.getElementById('page-info').textContent  = filtered.length
+    ? `${start} - ${end} sur ${filtered.length}`
+    : '0 élément';
+  document.getElementById('page-total').textContent = `/ ${totalPages}`;
+  document.getElementById('page-input').value       = currentPage;
+  document.getElementById('btn-first').disabled = currentPage===1;
+  document.getElementById('btn-prev').disabled  = currentPage===1;
+  document.getElementById('btn-next').disabled  = currentPage===totalPages;
+  document.getElementById('btn-last').disabled  = currentPage===totalPages;
+}
+
+// ══ SELECTION ══
+function toggleSelect(id, checked){
+  if(checked) selected.add(id); else selected.delete(id);
+  updateBulkBar(); renderTable();
+}
+function toggleAll(cb){
+  const start=(currentPage-1)*perPage;
+  filtered.slice(start,start+perPage).forEach(l=>{ if(cb.checked) selected.add(l.id); else selected.delete(l.id); });
+  updateBulkBar(); renderTable();
+}
+function clearSelection(){ selected.clear(); updateBulkBar(); renderTable(); document.getElementById('cb-all').checked=false; }
+function updateBulkBar(){
+  document.getElementById('bulk-bar').classList.toggle('visible', selected.size>0);
+  document.getElementById('bulk-count').textContent=`${selected.size} sélectionné(s)`;
+}
+async function bulkDelete(){
+  if(!selected.size) return;
+  if(!confirm(`Supprimer ${selected.size} localisation(s) ?`)) return;
+  for(const id of [...selected]) await sbDelete('locations',`id=eq.${id}`);
+  clearSelection(); await loadLocations();
+}
+
+// ══ ADD MODAL ══
+function openAddModal(){
+  ['loc-name','loc-desc','loc-lat','loc-lng','loc-radius'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('loc-radius').value='100';
+  document.getElementById('loc-tz').value='+01:00';
+  document.getElementById('loc-gps-check').checked=false;
+  document.getElementById('gps-section').style.display='none';
+  document.getElementById('add-error').style.display='none';
+  document.getElementById('gps-status').textContent='';
+  document.getElementById('btn-add-label').textContent='Ajouter';
+  document.getElementById('btn-add-loc').disabled=false;
+  updateTZHint();
+  document.getElementById('modal-add').classList.add('open');
+}
+
+function toggleGPS(){
+  const checked = document.getElementById('loc-gps-check').checked;
+  document.getElementById('gps-section').style.display = checked ? 'block' : 'none';
+}
+
+function updateTZHint(){
+  const tz = document.getElementById('loc-tz').value;
+  document.getElementById('tz-hint').textContent = `⚠ Le décalage horaire est ${tz} heures par rapport à UTC.`;
+}
+document.getElementById('loc-tz')?.addEventListener('change', updateTZHint);
+
+function getCurrentGPS(){
+  const status = document.getElementById('gps-status');
+  status.textContent = '📡 Acquisition GPS…';
+  if(!navigator.geolocation){ status.textContent='GPS non disponible'; return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('loc-lat').value = pos.coords.latitude.toFixed(6);
+    document.getElementById('loc-lng').value = pos.coords.longitude.toFixed(6);
+    status.textContent = `✓ Position capturée : ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+    status.style.color = 'var(--green-dark)';
+  }, err=>{
+    status.textContent = '✗ '+err.message;
+    status.style.color = 'var(--red)';
+  },{timeout:10000});
+}
+
+// Generate a short code from name
+function makeCode(name){
+  return name.trim().toUpperCase().replace(/\s+/g,'-').substring(0,10);
+}
+
+async function addLocation(){
+  const name = document.getElementById('loc-name').value.trim();
+  const desc = document.getElementById('loc-desc').value.trim();
+  const tz   = document.getElementById('loc-tz').value;
+  const useGPS = document.getElementById('loc-gps-check').checked;
+  const lat  = document.getElementById('loc-lat').value;
+  const lng  = document.getElementById('loc-lng').value;
+  const rad  = document.getElementById('loc-radius').value;
+
+  if(!name||!desc){
+    document.getElementById('add-error-msg').textContent='Le nom et la description sont obligatoires.';
+    document.getElementById('add-error').style.display='flex';
+    return;
+  }
+  if(useGPS && (!lat||!lng)){
+    document.getElementById('add-error-msg').textContent='Veuillez saisir les coordonnées GPS ou utiliser votre position.';
+    document.getElementById('add-error').style.display='flex';
+    return;
+  }
+  document.getElementById('add-error').style.display='none';
+  document.getElementById('btn-add-label').innerHTML='<span class="spinner"></span>';
+  document.getElementById('btn-add-loc').disabled=true;
+
+  const payload = {
+    name, description:desc, code:makeCode(name),
+    timezone:tz,
+    latitude:  useGPS&&lat  ? parseFloat(lat)  : null,
+    longitude: useGPS&&lng  ? parseFloat(lng)  : null,
+    radius_m:  useGPS&&rad  ? parseInt(rad)    : null,
+  };
+
+  // Get company_id
+  const companies = await sbGet('companies','limit=1');
+  if(companies[0]) payload.company_id = companies[0].id;
+
+  const result = await sbInsert('locations', payload);
+
+  if(result&&result[0]?.id){
+    closeModal('modal-add');
+    await loadLocations();
+  } else {
+    document.getElementById('add-error-msg').textContent = 'Erreur : '+(result?.message||result?.code||JSON.stringify(result));
+    document.getElementById('add-error').style.display='flex';
+    document.getElementById('btn-add-label').textContent='Ajouter';
+    document.getElementById('btn-add-loc').disabled=false;
+  }
+}
+
+// ══ DETAIL ══
+function openDetail(id){
+  detailLoc = allLocs.find(l=>l.id===id);
+  if(!detailLoc) return;
+  document.getElementById('det-title').textContent = detailLoc.name;
+  const rows = [
+    ['Code',        detailLoc.code||'—'],
+    ['Nom',         detailLoc.name],
+    ['Description', detailLoc.description||'—'],
+    ['Fuseau',      detailLoc.timezone||'—'],
+    ['Latitude',    detailLoc.latitude!=null?detailLoc.latitude:'—'],
+    ['Longitude',   detailLoc.longitude!=null?detailLoc.longitude:'—'],
+    ['Rayon (m)',   detailLoc.radius_m!=null?detailLoc.radius_m+'m':'—'],
+    ['Créé le',     new Date(detailLoc.created_at).toLocaleDateString('fr-FR')],
+  ];
+  document.getElementById('det-rows').innerHTML = rows.map(([k,v])=>`
+    <div class="detail-row">
+      <span class="detail-key">${k}</span>
+      <span class="detail-val">${v}</span>
+    </div>`).join('');
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+async function detDelete(){
+  if(!detailLoc) return;
+  if(!confirm(`Supprimer "${detailLoc.name}" ?`)) return;
+  await sbDelete('locations',`id=eq.${detailLoc.id}`);
+  closeModal('modal-detail');
+  await loadLocations();
+}
+
+async function deleteLoc(id){
+  const l = allLocs.find(l=>l.id===id);
+  if(!l||!confirm(`Supprimer "${l.name}" ?`)) return;
+  await sbDelete('locations',`id=eq.${id}`);
+  await loadLocations();
+}
+
+// ══ MODAL HELPERS ══
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bd').forEach(m=>
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); })
+);
+
+// ══ INIT ══
+loadLocations();
+</script>
+</body>
+</html>

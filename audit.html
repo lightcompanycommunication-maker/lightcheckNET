@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Light Check — Journal d'événements</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --surface:#fff; --line:#e5e7eb; --ink:#1f2937; --muted:#6b7280; --muted2:#9ca3af;
+    --blue:#1d4ed8; --blue-d:#1e40af; --green:#16a34a; --green-bg:#dcfce7; --green-ink:#166534;
+    --red:#e11d48; --red-bg:#ffe4e6; --red-ink:#9f1239; --amber:#d97706;
+    --head:#eef2f7; --r:10px;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:14px; }
+  .app{ max-width:1500px; margin:0 auto; }
+
+  /* ── Top tabs + segmented toggle ── */
+  .topbar{ background:var(--surface); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 18px; gap:6px; }
+  .tab{ padding:16px 14px 13px; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; cursor:default; }
+  .tab.active{ color:var(--blue); border-bottom-color:var(--blue); }
+  .topbar .sp{ flex:1; }
+  .seg{ display:flex; border:1px solid var(--blue); border-radius:8px; overflow:hidden; margin:10px 0; }
+  .seg button{ border:none; background:#fff; color:var(--blue); padding:8px 18px; font-family:inherit; font-weight:600; font-size:.85rem; cursor:pointer; }
+  .seg button.active{ background:var(--blue); color:#fff; }
+
+  /* ── Toolbar ── */
+  .toolbar{ background:var(--surface); border-bottom:1px solid var(--line); padding:12px 18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .ic-btn{ width:40px; height:40px; border:1px solid var(--line); border-radius:9px; background:#fff; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
+  .search{ position:relative; flex:0 1 320px; }
+  .search input{ width:100%; padding:10px 38px 10px 14px; border:1px solid var(--line); border-radius:9px; font-family:inherit; font-size:.9rem; outline:none; }
+  .search input:focus{ border-color:var(--blue); }
+  .search .mag{ position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--muted2); }
+  .filt-btn{ border:1px solid var(--line); background:#fff; border-radius:9px; padding:10px 14px; font-family:inherit; font-size:.88rem; cursor:pointer; }
+  .filt-btn select{ border:none; background:transparent; font-family:inherit; font-size:.88rem; outline:none; cursor:pointer; }
+  .chk{ display:flex; align-items:center; gap:8px; font-size:.88rem; color:var(--ink); cursor:pointer; user-select:none; }
+  .chk input{ width:16px; height:16px; accent-color:var(--blue); }
+  .toolbar .sp{ flex:1; }
+  .btn-blue{ background:var(--blue); color:#fff; border:none; border-radius:9px; padding:11px 18px; font-family:inherit; font-weight:600; font-size:.9rem; cursor:pointer; }
+  .btn-ghost{ background:#fff; border:1px solid var(--line); border-radius:9px; padding:11px 14px; font-family:inherit; font-size:.88rem; cursor:pointer; }
+
+  /* ── Body grid ── */
+  .grid{ display:grid; grid-template-columns:300px 1fr; gap:0; min-height:560px; }
+  @media(max-width:820px){ .grid{ grid-template-columns:1fr; } .cal-wrap.hide{ display:none; } }
+
+  /* ── Calendar ── */
+  .cal-wrap{ background:var(--surface); border-right:1px solid var(--line); padding:16px; }
+  .cal-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .cal-month{ font-weight:700; font-size:.95rem; }
+  .cal-nav{ width:30px; height:30px; border:1px solid var(--line); background:#fff; border-radius:7px; cursor:pointer; color:var(--muted); }
+  .cal-refresh{ margin-left:auto; border:1px solid var(--line); background:#fff; border-radius:7px; padding:6px 10px; font-family:inherit; font-size:.78rem; cursor:pointer; color:var(--muted); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-dow{ text-align:center; font-size:.7rem; color:var(--muted); font-weight:600; padding:4px 0; }
+  .cal-cell{ border:1px solid var(--line); border-radius:7px; min-height:54px; padding:4px; cursor:pointer; background:#fff; display:flex; flex-direction:column; gap:2px; }
+  .cal-cell:hover{ border-color:var(--blue); }
+  .cal-cell.out{ opacity:.35; cursor:default; }
+  .cal-cell.today{ background:#eef2ff; }
+  .cal-cell.sel{ outline:2px solid var(--blue); outline-offset:-1px; }
+  .cal-d{ font-size:.78rem; font-weight:600; }
+  .cal-tag{ font-size:.6rem; border-radius:4px; padding:1px 4px; line-height:1.4; }
+  .t-none{ background:#eef0f3; color:var(--muted2); }
+  .t-ok{ background:var(--green-bg); color:var(--green-ink); }
+  .t-err{ background:var(--red-bg); color:var(--red-ink); }
+  .legend{ margin-top:14px; display:flex; flex-direction:column; gap:7px; font-size:.78rem; color:var(--muted); }
+  .legend span{ display:flex; align-items:center; gap:8px; }
+  .dot{ width:13px; height:13px; border-radius:4px; }
+
+  /* ── Table ── */
+  .tbl-wrap{ background:var(--surface); display:flex; flex-direction:column; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ background:var(--head); text-align:left; font-size:.78rem; color:var(--muted); font-weight:600; padding:13px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--line); font-size:.86rem; }
+  tbody tr.err{ background:#fff5f6; }
+  tbody tr:hover{ background:#f8fafc; }
+  tbody tr.err:hover{ background:#ffeef0; }
+  .name-c{ font-weight:600; }
+  .pill{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:.74rem; font-weight:600; }
+  .p-ok{ background:var(--green-bg); color:var(--green-ink); }
+  .p-err{ background:var(--red-bg); color:var(--red-ink); }
+  .p-neutral{ background:#eef2f7; color:var(--muted); }
+  .empty{ text-align:center; color:var(--muted); padding:70px 20px; }
+  .empty .i{ font-size:1.4rem; opacity:.6; }
+
+  /* ── Pagination ── */
+  .pager{ display:flex; align-items:center; gap:6px; padding:12px 16px; border-top:1px solid var(--line); font-size:.84rem; color:var(--muted); margin-top:auto; flex-wrap:wrap; }
+  .pg-btn{ width:30px; height:30px; border:1px solid var(--line); background:#fff; border-radius:7px; cursor:pointer; color:var(--ink); }
+  .pg-btn:disabled{ opacity:.4; cursor:default; }
+  .pg-cur{ min-width:34px; text-align:center; border:1px solid var(--line); border-radius:7px; padding:5px 8px; }
+  .pager select{ border:1px solid var(--line); border-radius:7px; padding:5px 8px; font-family:inherit; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- tabs + employee/visitor toggle -->
+  <div class="topbar">
+    <div class="tab active">Événements</div>
+    <div class="sp"></div>
+    <div class="seg">
+      <button id="seg-emp" class="active" onclick="setTab('employee')">Employé</button>
+      <button id="seg-vis" onclick="setTab('visitor')">Visiteur</button>
+      <button id="seg-aud" onclick="setTab('audit')">Modifications</button>
+    </div>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="ic-btn" onclick="toggleCal()" title="Afficher/masquer le calendrier">📅</button>
+    <div class="search">
+      <input id="q" type="text" placeholder="Rechercher un nom…" oninput="page=1;render()"/>
+      <span class="mag">🔍</span>
+    </div>
+    <div class="filt-btn">
+      <select id="type-filter" onchange="page=1;render()">
+        <option value="">Tous les types</option>
+        <option value="entrée">Entrées</option>
+        <option value="sortie">Sorties</option>
+        <option value="pause">Pauses</option>
+        <option value="retour">Retours</option>
+      </select>
+    </div>
+    <label class="chk" id="only-err-label"><input type="checkbox" id="only-err" onchange="page=1;render()"/> Seulement les erreurs</label>
+    <div class="sp"></div>
+    <button class="btn-ghost" onclick="load()">↻ Actualiser</button>
+    <button class="btn-ghost" onclick="location.href='index.html'">← Retour</button>
+  </div>
+
+  <!-- body -->
+  <div class="grid">
+    <div class="cal-wrap" id="cal-wrap">
+      <div class="cal-head">
+        <button class="cal-nav" onclick="moveMonth(-1)">‹</button>
+        <span class="cal-month" id="cal-month">—</span>
+        <button class="cal-nav" onclick="moveMonth(1)">›</button>
+        <button class="cal-refresh" onclick="load()">Actualiser</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#eef2ff;border:1px solid #c7d2fe;"></span> Jour courant</span>
+        <span><span class="dot t-ok"></span> Événements valides</span>
+        <span><span class="dot t-err"></span> Événements en erreur</span>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr id="thead-row"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty" style="display:none;"><div class="i">ⓘ</div>Aucun événement</div>
+      <div class="pager">
+        <button class="pg-btn" id="pg-first" onclick="goPage(1)">⏮</button>
+        <button class="pg-btn" id="pg-prev" onclick="goPage(page-1)">‹</button>
+        <span class="pg-cur" id="pg-cur">1</span>
+        <span>/ <span id="pg-total">1</span></span>
+        <button class="pg-btn" id="pg-next" onclick="goPage(page+1)">›</button>
+        <button class="pg-btn" id="pg-last" onclick="goPage(totalPages)">⏭</button>
+        <select id="per-page" onchange="perPage=parseInt(this.value);page=1;render()">
+          <option>25</option><option selected>50</option><option>100</option>
+        </select>
+        <span>par page</span>
+        <span class="sp" style="flex:1"></span>
+        <span id="count-label"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+<script>
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const sbH = { apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY };
+async function sbGet(t,q){ const r=await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{headers:sbH}); if(!r.ok) return []; return r.json(); }
+
+const TZ = 'Africa/Lagos'; // GMT+1, identique au Bénin
+const DOW = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+let tab = 'employee';
+let viewMonth = new Date(); viewMonth.setDate(1);
+let selectedDay = null;     // 'YYYY-MM-DD' ou null = tout le mois
+let monthEvents = [];
+let empMap = {};
+let page = 1, perPage = 50, totalPages = 1;
+let authNotice = null;   // null | 'login' | 'role' (onglet Modifications)
+
+function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function dayKey(ts){ const d=new Date(ts); if(isNaN(d))return ''; return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d); }
+function hm(ts){ const d=new Date(ts); if(isNaN(d))return '—'; return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:TZ}); }
+function todayKey(){ return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
+function fraudLabel(k){ return k==='geofence'?'Hors zone':k==='locked_edit'?'Édition verrouillée':'Reconnaissance échouée'; }
+function typeCap(t){ return t? t.charAt(0).toUpperCase()+t.slice(1) : '—'; }
+function auditTarget(r){
+  const d = r.new_data || r.old_data || {};
+  if(r.entity==='employees') return d.full_name || '';
+  if(r.entity==='leaves')    return d.start_date ? ('Congé du '+d.start_date) : '';
+  if(r.entity==='schedules') return d.name || '';
+  return r.entity_id ? ('#'+String(r.entity_id).slice(0,8)) : '';
+}
+function auditPill(action){
+  if(action==='DELETE') return '<span class="pill p-err">Suppression</span>';
+  if(action==='INSERT') return '<span class="pill p-ok">Création</span>';
+  return '<span class="pill p-neutral">Modification</span>';
+}
+
+function setTab(t){
+  tab=t; selectedDay=null; page=1; authNotice=null;
+  document.getElementById('seg-emp').classList.toggle('active', t==='employee');
+  document.getElementById('seg-vis').classList.toggle('active', t==='visitor');
+  document.getElementById('seg-aud').classList.toggle('active', t==='audit');
+  load();
+}
+function toggleCal(){ document.getElementById('cal-wrap').classList.toggle('hide'); }
+function moveMonth(d){ viewMonth.setMonth(viewMonth.getMonth()+d); selectedDay=null; page=1; load(); }
+function selectDay(k){ selectedDay = (selectedDay===k)?null:k; page=1; render(); }
+function goPage(p){ if(p<1||p>totalPages) return; page=p; render(); }
+
+async function load(){
+  // bornes du mois (+/- 1 jour de marge pour le décalage horaire)
+  const y=viewMonth.getFullYear(), m=viewMonth.getMonth();
+  const from=new Date(Date.UTC(y,m,1)); from.setUTCDate(from.getUTCDate()-1);
+  const to  =new Date(Date.UTC(y,m+1,1)); to.setUTCDate(to.getUTCDate()+1);
+  const fromISO=from.toISOString(), toISO=to.toISOString();
+
+  if(!Object.keys(empMap).length){
+    const emps = await sbGet('employees','select=id,full_name') || [];
+    (emps||[]).forEach(e=>empMap[e.id]=e.full_name);
+  }
+
+  let events=[];
+  if(tab==='employee'){
+    const [pts, fraud] = await Promise.all([
+      sbGet('pointages', `created_at=gte.${fromISO}&created_at=lt.${toISO}&order=created_at.desc&limit=2000`),
+      sbGet('fraud_alerts', `occurred_at=gte.${fromISO}&occurred_at=lt.${toISO}&order=occurred_at.desc&limit=1000`)
+    ]);
+    (pts||[]).forEach(p=>events.push({
+      time:p.created_at, day:dayKey(p.created_at), name: empMap[p.employee_id]||'Employé inconnu',
+      type: typeCap(p.type), rawType: p.type||'', error:false,
+      detail: (p.face_confidence!=null)? ('Reconnaissance · '+parseFloat(p.face_confidence).toFixed(1)+'%') : 'Manuel',
+      status: typeCap(p.type)
+    }));
+    (fraud||[]).forEach(f=>events.push({
+      time:f.occurred_at, day:dayKey(f.occurred_at), name: empMap[f.employee_id]||'—',
+      type: fraudLabel(f.kind), rawType:'erreur', error:true,
+      detail: f.message||'', status:'Erreur'
+    }));
+  } else if(tab==='visitor'){
+    const appts = await sbGet('appointments',
+      `or=(arrival_time.gte.${fromISO},departure_time.gte.${fromISO})&order=arrival_time.desc&limit=2000`) || [];
+    (appts||[]).forEach(a=>{
+      if(a.arrival_time && a.arrival_time>=fromISO && a.arrival_time<toISO)
+        events.push({ time:a.arrival_time, day:dayKey(a.arrival_time), name:a.visitor_name||'Visiteur',
+          type:'Arrivée', rawType:'arrivée', error:false, detail:a.purpose||'', status:'Arrivée' });
+      if(a.departure_time && a.departure_time>=fromISO && a.departure_time<toISO)
+        events.push({ time:a.departure_time, day:dayKey(a.departure_time), name:a.visitor_name||'Visiteur',
+          type:'Départ', rawType:'départ', error:false, detail:a.purpose||'', status:'Départ' });
+    });
+  } else { // Modifications (audit_log) — lecture réservée patron/RH
+    authNotice = null;
+    let st = null;
+    try{
+      const s = await LC.validSession();
+      if(!s){ authNotice='login'; }
+      else { st = await LC.loadStaff(); if(!st){ authNotice='login'; } else if(['patron','rh'].indexOf(st.role)===-1){ authNotice='role'; } }
+    }catch(e){ authNotice='login'; }
+    if(!authNotice){
+      const rows = await LC.sbGet('audit_log', `select=*&occurred_at=gte.${fromISO}&occurred_at=lt.${toISO}&order=occurred_at.desc&limit=2000`) || [];
+      (rows||[]).forEach(r=>events.push({
+        time:r.occurred_at, day:dayKey(r.occurred_at),
+        name: r.actor_name || 'Système / non identifié',
+        type: r.summary || ((r.entity||'')+' '+(r.action||'')),
+        rawType:'audit', action:r.action, error:false,
+        detail: auditTarget(r), status:r.action
+      }));
+    }
+  }
+  events.sort((a,b)=> new Date(b.time)-new Date(a.time));
+  monthEvents = events;
+  renderCalendar();
+  render();
+}
+
+function renderCalendar(){
+  document.getElementById('cal-month').textContent = MONTHS[viewMonth.getMonth()]+' '+viewMonth.getFullYear();
+  // comptes par jour
+  const cnt = {};
+  monthEvents.forEach(e=>{ if(!cnt[e.day]) cnt[e.day]={ok:0,err:0}; e.error?cnt[e.day].err++:cnt[e.day].ok++; });
+
+  const y=viewMonth.getFullYear(), m=viewMonth.getMonth();
+  const first=new Date(y,m,1);
+  let startDow=(first.getDay()+6)%7; // Lundi=0
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const tdy=todayKey();
+
+  let html = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startDow;i++) html += `<div class="cal-cell out"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const c=cnt[key];
+    let tags = !c ? `<span class="cal-tag t-none">Aucun</span>`
+      : `${c.ok?`<span class="cal-tag t-ok">${c.ok} ✓</span>`:''}${c.err?`<span class="cal-tag t-err">${c.err} ⚠</span>`:''}`;
+    html += `<div class="cal-cell ${key===tdy?'today':''} ${key===selectedDay?'sel':''}" onclick="selectDay('${key}')">
+      <span class="cal-d">${d}</span>${tags}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function render(){
+  // en-têtes selon l'onglet
+  let h1='Nom', h2='Type', h4='Méthode', h5='Statut';
+  if(tab==='visitor'){ h4='Motif'; }
+  if(tab==='audit'){ h1='Auteur'; h2='Événement'; h4='Cible'; h5='Action'; }
+  document.getElementById('thead-row').innerHTML =
+    `<th>${h1}</th><th>${h2}</th><th>Heure</th><th>${h4}</th><th>${h5}</th>`;
+  document.getElementById('type-filter').style.display = (tab==='employee')?'':'none';
+  document.getElementById('only-err-label').style.display = (tab==='employee')?'':'none';
+
+  const q = (document.getElementById('q').value||'').toLowerCase().trim();
+  const onlyErr = document.getElementById('only-err').checked;
+  const typeF = document.getElementById('type-filter').value;
+
+  const tb=document.getElementById('tbody'), empty=document.getElementById('empty');
+
+  // Onglet Modifications : connexion requise
+  if(tab==='audit' && authNotice){
+    tb.innerHTML='';
+    empty.style.display='block';
+    empty.innerHTML = (authNotice==='role')
+      ? `<div class="i">🔒</div>Accès réservé au patron et aux RH.`
+      : `<div class="i">🔒</div>Connexion requise pour consulter les modifications.<br><br><button class="btn-blue" onclick="location.href='login.html'">Se connecter</button>`;
+    document.getElementById('pg-cur').textContent='1';
+    document.getElementById('pg-total').textContent='1';
+    document.getElementById('count-label').textContent='';
+    renderCalendar();
+    return;
+  }
+
+  let rows = monthEvents.slice();
+  if(selectedDay) rows = rows.filter(e=>e.day===selectedDay);
+  if(onlyErr && tab==='employee') rows = rows.filter(e=>e.error);
+  if(q)           rows = rows.filter(e=>(e.name||'').toLowerCase().includes(q));
+  if(typeF && tab==='employee') rows = rows.filter(e=>e.rawType===typeF);
+
+  const total = rows.length;
+  totalPages = Math.max(1, Math.ceil(total/perPage));
+  if(page>totalPages) page=totalPages;
+  const slice = rows.slice((page-1)*perPage, page*perPage);
+
+  if(!slice.length){
+    tb.innerHTML=''; empty.style.display='block';
+    empty.innerHTML='<div class="i">ⓘ</div>Aucun événement';
+  } else {
+    empty.style.display='none';
+    tb.innerHTML = slice.map(e=>{
+      const statusPill = e.error
+        ? `<span class="pill p-err">⚠ Erreur</span>`
+        : e.rawType==='audit' ? auditPill(e.action)
+        : (e.rawType==='entrée'||e.rawType==='arrivée') ? `<span class="pill p-ok">${esc(e.status)}</span>`
+        : `<span class="pill p-neutral">${esc(e.status)}</span>`;
+      return `<tr class="${e.error?'err':''}">
+        <td class="name-c">${esc(e.name)}</td>
+        <td>${esc(e.type)}</td>
+        <td>${hm(e.time)}<span style="color:var(--muted2)"> · ${esc(e.day.slice(8)+'/'+e.day.slice(5,7))}</span></td>
+        <td style="color:var(--muted)">${esc(e.detail)||'—'}</td>
+        <td>${statusPill}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('pg-cur').textContent = page;
+  document.getElementById('pg-total').textContent = totalPages;
+  document.getElementById('pg-first').disabled = page<=1;
+  document.getElementById('pg-prev').disabled  = page<=1;
+  document.getElementById('pg-next').disabled  = page>=totalPages;
+  document.getElementById('pg-last').disabled  = page>=totalPages;
+  document.getElementById('count-label').textContent =
+    `${total} événement${total>1?'s':''}` + (selectedDay?` · ${selectedDay.slice(8)+'/'+selectedDay.slice(5,7)}`:` · ${MONTHS[viewMonth.getMonth()]}`);
+  renderCalendar();
+}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,1945 @@
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Light Check — Rapports</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{
+      --yellow:#f5c542;--yellow-dim:rgba(245,197,66,0.12);--yellow-dark:#c9a030;
+      --dark:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;
+      --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+      --red:#e74c3c;--blue:#58a6ff;--green:#3fb950;--purple:#bc8cff;--orange:#f78166;
+      --radius:14px;
+    }
+    html,body{height:100%;background:var(--dark);color:var(--text);font-family:'Instrument Sans',sans-serif;overflow-x:hidden;}
+
+    /* ── TOP BAR ── */
+    .topbar{position:sticky;top:0;z-index:50;background:var(--dark);border-bottom:1px solid var(--border);
+      padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .topbar-left{display:flex;align-items:center;gap:10px;}
+    .back-btn{background:transparent;border:1px solid var(--border);border-radius:8px;
+      width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+      color:var(--text2);font-size:1.1rem;cursor:pointer;text-decoration:none;transition:all 0.15s;}
+    .back-btn:hover{background:var(--surface2);color:var(--text);}
+    .topbar-brand{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;}
+    .topbar-brand em{font-style:italic;color:var(--yellow);}
+    .live-badge{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;
+      font-size:0.62rem;color:var(--yellow);background:var(--yellow-dim);
+      padding:3px 8px;border-radius:20px;border:1px solid rgba(245,197,66,0.2);}
+    .live-dot{width:5px;height:5px;border-radius:50%;background:var(--yellow);animation:blink 1.5s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+    /* ── TABS ── */
+    .tabs-wrap{padding:12px 16px 0;background:var(--dark);position:sticky;top:52px;z-index:40;border-bottom:1px solid var(--border);}
+    .tabs{display:flex;gap:0;background:var(--surface2);border-radius:10px;padding:3px;overflow-x:auto;}
+    .tab{flex-shrink:0;padding:7px 16px;border-radius:8px;border:none;background:transparent;
+      color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:0.82rem;font-weight:500;
+      cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+    .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+    .tab-pane{display:none;padding:12px 16px 100px;}
+    .tab-pane.active{display:block;animation:fadeUp 0.2s ease;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+    /* ── PAGE HEADER ── */
+    .page-header{padding:16px 16px 4px;}
+    .page-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.4px;}
+    .page-sub{color:var(--text2);font-size:0.82rem;margin-top:3px;}
+
+    /* ── REPORT CARDS ── */
+    .report-list{display:flex;flex-direction:column;gap:10px;padding:12px 16px 100px;}
+    .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      display:flex;align-items:flex-start;gap:14px;padding:16px;cursor:pointer;
+      transition:all 0.15s;position:relative;text-align:left;}
+    .report-card:hover{border-color:rgba(245,197,66,0.3);background:var(--surface2);}
+    .report-card:active{transform:scale(0.99);}
+    .report-card.new-report{border-style:dashed;border-color:var(--border);}
+    .report-card.new-report:hover{border-color:var(--yellow);}
+
+    .report-icon{width:46px;height:46px;border-radius:12px;background:var(--surface2);
+      border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;font-size:1.4rem;}
+    .report-body{flex:1;min-width:0;}
+    .report-title{font-size:0.9rem;font-weight:600;margin-bottom:5px;color:var(--text);}
+    .report-desc{font-size:0.78rem;color:var(--text2);line-height:1.5;}
+    .report-meta{display:flex;align-items:center;gap:6px;margin-top:8px;}
+    .report-tag{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;padding:2px 7px;
+      border-radius:20px;font-weight:500;}
+    .tag-y{background:var(--yellow-dim);color:var(--yellow);}
+    .tag-b{background:rgba(88,166,255,0.12);color:var(--blue);}
+    .tag-g{background:rgba(63,185,80,0.12);color:var(--green);}
+    .tag-p{background:rgba(188,140,255,0.12);color:var(--purple);}
+    .tag-o{background:rgba(247,129,102,0.12);color:var(--orange);}
+
+    .report-more{position:absolute;top:12px;right:12px;background:transparent;border:none;
+      color:var(--text3);font-size:1.1rem;cursor:pointer;padding:4px 6px;border-radius:6px;
+      line-height:1;transition:all 0.15s;}
+    .report-more:hover{background:var(--surface2);color:var(--text2);}
+
+    /* ── REPORT PANEL (slide-up) ── */
+    .panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+      backdrop-filter:blur(6px);z-index:200;align-items:flex-end;justify-content:center;}
+    .panel-overlay.open{display:flex;}
+    .panel-sheet{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;
+      max-height:90vh;display:flex;flex-direction:column;animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1);}
+    @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    .panel-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:12px auto 0;}
+    .panel-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}
+    .panel-head-info{flex:1;}
+    .panel-head-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;}
+    .panel-head-sub{color:var(--text2);font-size:0.78rem;margin-top:3px;}
+    .panel-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;color:var(--text2);font-size:1rem;flex-shrink:0;margin-left:12px;}
+    .panel-close:hover{background:var(--border);}
+    .panel-toolbar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .panel-body{flex:1;overflow-y:auto;padding:16px 20px 32px;}
+
+    /* Filters */
+    .filter-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .fi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      padding:7px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;
+      font-size:0.82rem;outline:none;transition:border-color 0.15s;}
+    .fi:focus{border-color:var(--yellow);}
+    .fi-date{width:130px;}
+    .fsel{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      padding:7px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;
+      font-size:0.82rem;outline:none;appearance:none;}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      padding:7px 14px;border-radius:8px;border:none;font-family:'Instrument Sans',sans-serif;
+      font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+    .btn-yellow{background:var(--yellow);color:#0d1117;}
+    .btn-yellow:hover{background:var(--yellow-dark);}
+    .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+    .btn-ghost:hover{background:var(--surface2);color:var(--text);}
+    .btn-sm{padding:5px 10px;font-size:0.75rem;}
+
+    /* Stats row */
+    .stat-mini-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+    .stat-mini{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;}
+    .stat-mini-label{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);}
+    .stat-mini-val{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;color:var(--yellow);margin-top:2px;}
+
+    /* Table */
+    .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+    table{width:100%;border-collapse:collapse;min-width:400px;}
+    thead tr{background:var(--surface2);}
+    th{padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;
+      font-size:0.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);
+      font-weight:500;white-space:nowrap;}
+    td{padding:10px 12px;border-top:1px solid var(--border);font-size:0.82rem;vertical-align:middle;}
+    tr:hover td{background:rgba(255,255,255,0.02);}
+    .mono{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
+    .muted{color:var(--text2);}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+      font-size:0.68rem;font-family:'IBM Plex Mono',monospace;font-weight:500;white-space:nowrap;}
+    .bg{background:rgba(63,185,80,0.12);color:var(--green);}
+    .by{background:var(--yellow-dim);color:var(--yellow);}
+    .bo{background:rgba(247,129,102,0.12);color:var(--orange);}
+    .bb{background:rgba(88,166,255,0.12);color:var(--blue);}
+    .conf-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:3px;width:60px;}
+    .conf-fill{height:100%;border-radius:2px;background:var(--yellow);}
+
+    /* Loading / empty */
+    .loading{text-align:center;padding:40px 20px;color:var(--text3);}
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);
+      border-top-color:var(--yellow);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:8px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .empty{text-align:center;padding:40px 20px;color:var(--text3);}
+    .empty-icon{font-size:2rem;margin-bottom:8px;}
+
+    /* Section title */
+    .section-title{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;
+      letter-spacing:2px;color:var(--text3);margin:20px 0 10px;padding-left:2px;}
+
+    /* Export bar */
+    .export-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:4px;height:4px;}
+    ::-webkit-scrollbar-track{background:var(--dark);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    /* INDEX UI OVERRIDE START */
+    :root{
+      --bg:#f2f4f7;--yellow:#12b76a;--yellow-dim:#ecfdf3;--yellow-dark:#027a48;
+      --dark:#f2f4f7;--surface:#ffffff;--surface2:#f9fafb;--border:#e4e7ec;
+      --text:#101828;--text2:#667085;--text3:#98a2b3;
+      --red:#f04438;--blue:#2e90fa;--green:#12b76a;--purple:#7f56d9;--orange:#f79009;
+      --green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+      --red-bg:#fef3f2;--red-border:#fecdca;--amber:#f79009;--amber-bg:#fffaeb;
+      --amber-border:#fed0aa;--amber-dark:#b54708;--blue-bg:#eff8ff;--blue-border:#b2ddff;
+      --purple-bg:#f9f5ff;--purple-border:#d6bbfb;
+      --radius:12px;--shadow:0 1px 3px rgba(16,24,40,0.1),0 1px 2px rgba(16,24,40,0.06);
+      --shadow-md:0 4px 8px -2px rgba(16,24,40,0.1),0 2px 4px -2px rgba(16,24,40,0.06);
+    }
+    html,body{min-height:100%;height:auto;background:var(--bg);color:var(--text);overflow-x:hidden;}
+    .content-wrap{min-height:100vh;background:var(--bg);}
+    .container{max-width:600px;margin:0 auto;padding:16px;}
+    .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+      height:56px;display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+    .topbar-left{display:flex;align-items:center;gap:10px;}
+    .hamburger{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text2);padding:4px;}
+    .topbar-brand{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;}
+    .topbar-brand em{font-style:italic;color:var(--green);}
+    .topbar-right{display:flex;align-items:center;gap:8px;}
+    .icon-btn{width:36px;height:36px;border-radius:50%;border:none;background:transparent;
+      display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;
+      color:var(--text2);position:relative;transition:background 0.15s;text-decoration:none;}
+    .icon-btn:hover{background:var(--bg);}
+    .avatar-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),#0d9f58);
+      display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;
+      color:#fff;border:none;cursor:pointer;}
+    .live-badge{color:var(--green-dark);background:var(--green-bg);border:1px solid var(--green-border);}
+    .live-dot{background:var(--green);}
+    .page-header{padding:0 0 14px;}
+    .page-title{font-size:1.55rem;letter-spacing:-0.3px;}
+    .tabs-wrap{position:static;top:auto;background:transparent;border-bottom:none;padding:0;margin-bottom:14px;}
+    .tabs{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);}
+    .tab.active{background:var(--green-bg);color:var(--green-dark);box-shadow:none;}
+    .tab-pane{padding:0 0 32px;}
+    .report-list{padding:0 0 32px !important;gap:10px;}
+    .report-card{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius);}
+    .report-card:hover{border-color:var(--green-border);background:var(--surface);box-shadow:var(--shadow-md);}
+    .report-card.new-report:hover{border-color:var(--green);}
+    .report-icon{background:var(--bg);border:1px solid var(--border);border-radius:10px;}
+    .report-title{color:var(--text);}
+    .tag-y,.by{background:var(--green-bg);color:var(--green-dark);}
+    .tag-g,.bg{background:var(--green-bg);color:var(--green-dark);}
+    .tag-b,.bb{background:var(--blue-bg);color:var(--blue);}
+    .tag-p{background:var(--purple-bg);color:var(--purple);}
+    .tag-o,.bo{background:var(--amber-bg);color:var(--amber-dark);}
+    .panel-overlay{background:rgba(16,24,40,0.42);backdrop-filter:blur(4px);}
+    .panel-sheet{background:var(--surface);box-shadow:0 -12px 32px rgba(16,24,40,0.16);}
+    .panel-close,.fi,.fsel{background:var(--surface2);border:1px solid var(--border);color:var(--text);}
+    .fi:focus,.fsel:focus{border-color:var(--green);}
+    .btn-yellow{background:var(--green);color:#fff;}
+    .btn-yellow:hover{background:var(--green-dark);}
+    .btn-ghost{background:var(--surface);color:var(--text2);border:1px solid var(--border);}
+    .btn-ghost:hover{background:var(--bg);color:var(--text);}
+    .stat-mini{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);}
+    .stat-mini-val{color:var(--green-dark);}
+    .tbl-wrap{background:var(--surface);border:1px solid var(--border);}
+    thead tr{background:var(--surface2);}
+    tr:hover td{background:#f9fafb;}
+    .conf-fill{background:var(--green);}
+    .spinner{border-color:var(--border);border-top-color:var(--green);}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:2px;}
+
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;backdrop-filter:blur(2px);}
+    .drawer-overlay.open{display:block;animation:fadeIn 0.2s ease;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    .nav-drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,85vw);background:var(--surface);
+      z-index:400;display:flex;flex-direction:column;transform:translateX(-100%);
+      transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:var(--shadow-md);}
+    .nav-drawer.open{transform:translateX(0);}
+    .drawer-header{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+    .drawer-brand{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;}
+    .drawer-brand em{font-style:italic;color:var(--green);}
+    .drawer-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;
+      border:none;background:var(--bg);cursor:pointer;font-size:1rem;color:var(--text2);
+      display:flex;align-items:center;justify-content:center;}
+    .drawer-scroll{flex:1;overflow-y:auto;padding:8px 0;}
+    .drawer-section{font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--text3);
+      font-family:'IBM Plex Mono',monospace;padding:12px 16px 4px;font-weight:600;}
+    .drawer-item{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;
+      border:none;background:transparent;width:100%;text-align:left;font-family:'Instrument Sans',sans-serif;
+      font-size:0.9rem;color:var(--text2);transition:all 0.15s;border-radius:0;}
+    .drawer-item:hover{background:var(--bg);color:var(--text);}
+    .drawer-item.active{background:var(--green-bg);color:var(--green-dark);font-weight:600;}
+    .drawer-item .di-icon{font-size:1.1rem;width:22px;text-align:center;flex-shrink:0;}
+    .drawer-item .di-arrow{margin-left:auto;font-size:0.7rem;color:var(--text3);}
+    .drawer-divider{height:1px;background:var(--border);margin:6px 0;}
+    .drawer-footer{padding:16px;border-top:1px solid var(--border);}
+    .drawer-user{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .drawer-user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--green),#0d9f58);
+      display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0;}
+    .drawer-user-name{font-size:0.875rem;font-weight:600;}
+    .drawer-user-role,.drawer-user-email{font-size:0.72rem;color:var(--text2);}
+    .drawer-role-btn{width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--border);
+      background:transparent;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;
+      font-weight:500;color:var(--green-dark);cursor:pointer;transition:all 0.15s;}
+    .drawer-role-btn:hover{background:var(--green-bg);border-color:var(--green-border);}
+    @media(min-width:768px){
+      .container{max-width:900px;padding:24px 28px;}
+      .report-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+      .tab-pane#tab-personnalise .report-list{display:flex;}
+    }
+    @media(min-width:1024px){
+      .nav-drawer{transform:translateX(0) !important;position:fixed;top:0;left:0;bottom:0;
+        width:260px;border-right:1px solid var(--border);box-shadow:none;z-index:50;}
+      .drawer-overlay{display:none !important;}
+      .drawer-close,.hamburger{display:none;}
+      .topbar{left:260px;width:calc(100% - 260px);position:fixed;top:0;right:0;z-index:60;}
+      .topbar-brand{display:none;}
+      body{padding-top:56px;}
+      .content-wrap{margin-left:260px;min-height:100vh;background:var(--bg);}
+      .container{max-width:1100px;padding:28px 32px;}
+      .report-list{grid-template-columns:1fr 1fr;gap:16px;}
+    }
+    /* INDEX UI OVERRIDE END */
+    </style>
+    </head>
+    <body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="openDrawer()">&#9776;</button>
+        <div class="topbar-brand">Light <em>Check</em></div>
+      </div>
+      <div class="topbar-right">
+        <div class="clock" id="clock" style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--text2);"></div>
+        <button class="icon-btn" onclick="window.location.href='settings.html'" title="Param&egrave;tres">&#9881;</button>
+        <button class="avatar-btn" onclick="goTo('admin.html')" title="Console admin">LC</button>
+      </div>
+    </div>
+
+    <!-- NAV DRAWER OVERLAY -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+    <!-- NAV DRAWER -->
+    <div class="nav-drawer" id="nav-drawer">
+      <div class="drawer-header">
+        <div class="drawer-brand">Light <em>Check</em></div>
+        <button class="drawer-close" onclick="closeDrawer()">&#10005;</button>
+      </div>
+      <div class="drawer-scroll">
+        <div class="drawer-section">Navigation</div>
+        <button class="drawer-item" onclick="goTo('index.html')"><span class="di-icon">&#8962;</span> Tableau de bord <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item" onclick="goTo('users.html')"><span class="di-icon">&#128101;</span> Gestion des utilisateurs <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item" onclick="goTo('groups.html')"><span class="di-icon">&#128100;</span> Groupes d'utilisateurs <span class="di-arrow">&rsaquo;</span></button>
+        <div class="drawer-divider"></div>
+        <div class="drawer-section">Planification</div>
+        <button class="drawer-item" onclick="goTo('schedules.html')"><span class="di-icon">&#128336;</span> Horaires et &eacute;quipes <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item" onclick="goTo('locations.html')"><span class="di-icon">&#128205;</span> Localisations <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item" onclick="goTo('appointments.html')"><span class="di-icon">&#128197;</span> Rendez-vous <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item" onclick="window.location.href='conges.html'"><span class="di-icon">&#127958;</span> Cong&eacute;s et jours f&eacute;ri&eacute;s <span class="di-arrow">&rsaquo;</span></button>
+        <div class="drawer-divider"></div>
+        <div class="drawer-section">Syst&egrave;me</div>
+        <button class="drawer-item" onclick="goTo('admin.html#devices')"><span class="di-icon">&#128241;</span> P&eacute;riph&eacute;riques <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item" onclick="goTo('admin.html#live')"><span class="di-icon">&#128203;</span> Journal des &eacute;v&eacute;nements <span class="di-arrow">&rsaquo;</span></button>
+        <button class="drawer-item active" onclick="closeDrawer()"><span class="di-icon">&#128202;</span> Rapports</button>
+        <button class="drawer-item" onclick="goTo('settings.html')"><span class="di-icon">&#9881;</span> Param&egrave;tres <span class="di-arrow">&rsaquo;</span></button>
+        <div class="drawer-divider"></div>
+        <button class="drawer-item" onclick="goTo('attend.html')"><span class="di-icon">&#8681;</span> Acc&egrave;s employ&eacute; (Pointage) <span class="di-arrow">&rsaquo;</span></button>
+      </div>
+      <div class="drawer-footer">
+        <div class="drawer-user">
+          <div class="drawer-user-avatar">LC</div>
+          <div>
+            <div class="drawer-user-name">Light Check</div>
+            <div class="drawer-user-email">Module rapports</div>
+            <div class="drawer-user-role">Compte administrateur</div>
+          </div>
+        </div>
+        <button class="drawer-role-btn" onclick="goTo('admin.html')">Aller &agrave; la console admin</button>
+      </div>
+    </div>
+
+    <main class="content-wrap">
+      <div class="container">
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-title">Rapports</div>
+      <div class="page-sub">Sélectionnez un rapport pour générer et exporter vos données</div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-wrap">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('dashboard',this)">Tableau de bord</button>
+        <button class="tab" onclick="switchTab('presence',this)">Présence & Pointage</button>
+        <button class="tab" onclick="switchTab('employes',this)">Employés</button>
+        <button class="tab" onclick="switchTab('personnalise',this)">Personnalisé</button>
+        <button class="tab" onclick="switchTab('archives',this)">Archives</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 1 — PRÉSENCE & POINTAGE ══ -->
+    <div class="tab-pane active" id="tab-dashboard">
+      <style>
+        #tab-dashboard .dash-wrap{padding:12px 0 100px;}
+        #tab-dashboard .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+        #tab-dashboard .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+        #tab-dashboard .kpi-label{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);}
+        #tab-dashboard .kpi-val{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:700;margin-top:4px;line-height:1;}
+        #tab-dashboard .chart-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+        #tab-dashboard .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+        #tab-dashboard .chart-card h4{font-size:0.85rem;font-weight:600;margin:0 0 10px;color:var(--text);}
+        #tab-dashboard .chart-box{position:relative;height:200px;}
+        @media(min-width:600px){#tab-dashboard .kpi-grid{grid-template-columns:repeat(5,1fr);}}
+        @media(min-width:760px){#tab-dashboard .chart-grid{grid-template-columns:1fr 1fr;}}
+      </style>
+      <div class="dash-wrap">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;">
+          <div>
+            <div class="page-title" style="font-size:1.3rem;">Tableau de bord</div>
+            <div class="page-sub" id="dash-updated">Chargement…</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="initDashboard()" style="white-space:nowrap;">&#8635; Actualiser</button>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Pr&eacute;sents aujourd'hui</div><div class="kpi-val" id="dash-present" style="color:var(--green);">&mdash;</div></div>
+          <div class="kpi-card"><div class="kpi-label">Absents aujourd'hui</div><div class="kpi-val" id="dash-absent" style="color:var(--orange);">&mdash;</div></div>
+          <div class="kpi-card"><div class="kpi-label">Retards aujourd'hui</div><div class="kpi-val" id="dash-retard" style="color:var(--red);">&mdash;</div></div>
+          <div class="kpi-card"><div class="kpi-label">Heures travaill&eacute;es</div><div class="kpi-val" id="dash-hours" style="color:var(--blue);">&mdash;</div></div>
+          <div class="kpi-card"><div class="kpi-label">RDV du jour</div><div class="kpi-val" id="dash-rdv" style="color:var(--purple);">&mdash;</div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card"><h4>Pr&eacute;sence &mdash; 30 derniers jours</h4><div class="chart-box"><canvas id="chartPresence30"></canvas></div></div>
+          <div class="chart-card"><h4>Retards &mdash; 30 derniers jours</h4><div class="chart-box"><canvas id="chartRetard30"></canvas></div></div>
+          <div class="chart-card"><h4>Absences &mdash; 12 derniers mois</h4><div class="chart-box"><canvas id="chartAbs12"></canvas></div></div>
+          <div class="chart-card"><h4>Productivit&eacute; par &eacute;quipe (30 j)</h4><div class="chart-box"><canvas id="chartTeam"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-presence">
+      <div class="report-list" style="padding:12px 0 100px;">
+
+        <div class="report-card" onclick="openReport('heures-total')">
+          <div class="report-icon">⏱</div>
+          <div class="report-body">
+            <div class="report-title">Rapport total des heures</div>
+            <div class="report-desc">Affiche les heures travaillées par chaque employé, utile pour les calculs de paie incluant les heures supplémentaires.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-y">Paie</span>
+              <span class="report-tag tag-g">Exportable</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'heures-total')">⋮</button>
+        </div>
+
+        <div class="report-card" onclick="openReport('heures-synthese')">
+          <div class="report-icon">📊</div>
+          <div class="report-body">
+            <div class="report-title">Rapport de synthèse des heures</div>
+            <div class="report-desc">Vue synthétique des heures permettant une comparaison facile entre périodes et entre employés.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-b">Analyse</span>
+              <span class="report-tag tag-g">Exportable</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'heures-synthese')">⋮</button>
+        </div>
+
+        <div class="report-card" onclick="openReport('presence')">
+          <div class="report-icon">📋</div>
+          <div class="report-body">
+            <div class="report-title">Rapport de présence</div>
+            <div class="report-desc">Suivi des présences et absences — catégorisées par motif (congé, jour férié, remplacement) avec horaires et plage de dates.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-y">RH</span>
+              <span class="report-tag tag-g">Exportable</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'presence')">⋮</button>
+        </div>
+
+        <div class="report-card" onclick="openReport('evenements')">
+          <div class="report-icon">🔄</div>
+          <div class="report-body">
+            <div class="report-title">Rapport des événements</div>
+            <div class="report-desc">Suit tous les événements système — tentatives d'accès, heures d'entrée/sortie et activités liées à la sécurité.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-o">Sécurité</span>
+              <span class="report-tag tag-g">Exportable</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'evenements')">⋮</button>
+        </div>
+
+        <div class="report-card" onclick="openReport('productivite')">
+          <div class="report-icon">📈</div>
+          <div class="report-body">
+            <div class="report-title">Rapport de productivité</div>
+            <div class="report-desc">Analyse les métriques de productivité des employés — heures productives, taux de ponctualité et ratios d'efficacité.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-p">Performance</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'productivite')">⋮</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ TAB 2 — EMPLOYÉS ══ -->
+    <div class="tab-pane" id="tab-employes">
+      <div class="report-list" style="padding:12px 0 100px;">
+
+        <div class="report-card" onclick="openReport('employes-detail')">
+          <div class="report-icon">👤</div>
+          <div class="report-body">
+            <div class="report-title">Rapport détaillé des employés</div>
+            <div class="report-desc">Informations complètes sur les employés — coordonnées, poste, statut et historique d'accès au système.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-b">RH</span>
+              <span class="report-tag tag-g">Exportable</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'employes-detail')">⋮</button>
+        </div>
+
+        <div class="report-card" onclick="openReport('appareils')">
+          <div class="report-icon">📱</div>
+          <div class="report-body">
+            <div class="report-title">Rapport des appareils</div>
+            <div class="report-desc">Liste les appareils enregistrés dans le système avec le type d'appareil, la localisation, le statut et la dernière date d'activité.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-o">Technique</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'appareils')">⋮</button>
+        </div>
+
+        <div class="report-card" onclick="openReport('visages')">
+          <div class="report-icon">🤳</div>
+          <div class="report-body">
+            <div class="report-title">Rapport biométrique</div>
+            <div class="report-desc">Statut de l'enregistrement du visage et scores de confiance Face++ moyens par employé.</div>
+            <div class="report-meta">
+              <span class="report-tag tag-p">Biométrie</span>
+              <span class="report-tag tag-g">Exportable</span>
+            </div>
+          </div>
+          <button class="report-more" onclick="event.stopPropagation();showMenu(event,'visages')">⋮</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ TAB 3 — PERSONNALISÉ ══ -->
+    <div class="tab-pane" id="tab-personnalise">
+      <div class="report-list" style="padding:12px 0 100px;">
+
+        <div class="report-card new-report" onclick="openReport('custom')">
+          <div class="report-icon" style="background:var(--yellow-dim);border-color:rgba(245,197,66,0.3);">+</div>
+          <div class="report-body">
+            <div class="report-title" style="color:var(--yellow);">Nouveau rapport personnalisé</div>
+            <div class="report-desc">Créez un rapport sur mesure en choisissant vos employés, vos colonnes, votre période et le format d'export.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-archives">
+      <div class="report-list" style="padding:12px 0 100px;">
+        <div class="report-card" style="cursor:default;">
+          <div class="report-icon">&#9881;&#65039;</div>
+          <div class="report-body">
+            <div class="report-title">G&eacute;n&eacute;rer un rapport automatique</div>
+            <div class="report-desc">Calcule un instantan&eacute; de pr&eacute;sence pour la p&eacute;riode choisie et l'archive dans la base de donn&eacute;es.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+              <button class="btn btn-yellow btn-sm" onclick="archiveAutoReport('daily')">Quotidien</button>
+              <button class="btn btn-yellow btn-sm" onclick="archiveAutoReport('weekly')">Hebdomadaire</button>
+              <button class="btn btn-yellow btn-sm" onclick="archiveAutoReport('monthly')">Mensuel</button>
+              <button class="btn btn-yellow btn-sm" onclick="archiveAutoReport('yearly')">Annuel</button>
+            </div>
+            <div class="muted" id="auto-status" style="margin-top:10px;font-size:0.8rem;"></div>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:8px;">Historique des rapports archiv&eacute;s</div>
+        <div id="archives-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ REPORT PANEL ══ -->
+    <div class="panel-overlay" id="panel-overlay" onclick="maybeClose(event)">
+      <div class="panel-sheet" id="panel-sheet">
+        <div class="panel-handle"></div>
+        <div class="panel-head">
+          <div class="panel-head-info">
+            <div class="panel-head-title" id="panel-title">—</div>
+            <div class="panel-head-sub" id="panel-sub">—</div>
+          </div>
+          <div class="panel-close" onclick="closePanel()">✕</div>
+        </div>
+        <div class="panel-toolbar" id="panel-toolbar"></div>
+        <div class="panel-body" id="panel-body">
+          <div class="loading"><div class="spinner"></div><div>Chargement…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="lc-dialog.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+    // ══ CONFIG ══
+    const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+    const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+    const sbH = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+
+    async function sbGet(t, q=''){
+      return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, { headers: sbH })).json();
+    }
+
+    // ══ TABS ══
+    function switchTab(id, el){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('tab-'+id).classList.add('active');
+    }
+
+    // ══ PANEL ══
+    let currentReportId = null;
+    let cachedData = {};
+
+    function openPanel(title, sub, toolbarHtml, bodyFn){
+      document.getElementById('panel-title').textContent = title;
+      document.getElementById('panel-sub').textContent   = sub;
+      document.getElementById('panel-toolbar').innerHTML  = toolbarHtml;
+      document.getElementById('panel-body').innerHTML    = '<div class="loading"><div class="spinner"></div><div>Chargement…</div></div>';
+      document.getElementById('panel-overlay').classList.add('open');
+      bodyFn();
+    }
+    function closePanel(){
+      document.getElementById('panel-overlay').classList.remove('open');
+      currentReportId = null;
+    }
+    function maybeClose(e){
+      if(e.target===document.getElementById('panel-overlay')) closePanel();
+    }
+
+    // ══ DATE HELPERS ══
+    function todayStr(){ return new Date().toISOString().split('T')[0]; }
+    function monthStart(){ const d=new Date(); d.setDate(1); return d.toISOString().split('T')[0]; }
+    function fmtDate(s){ return new Date(s).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+    function fmtTime(s){ return new Date(s).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+    function diffHours(a,b){ return ((new Date(b)-new Date(a))/3600000).toFixed(1); }
+
+    // ══ OPEN REPORT ══
+    async function openReport(id){
+      currentReportId = id;
+      const today = todayStr();
+      const ms = monthStart();
+
+      if(id==='heures-total'){
+        openPanel('Rapport total des heures','Heures travaillées par employé',
+          `<input class="fi fi-date" type="date" id="r-from" value="${ms}"/>
+           <input class="fi fi-date" type="date" id="r-to"   value="${today}"/>
+           <button class="btn btn-yellow btn-sm" onclick="genHeuresTotal()">Générer</button>
+           <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>`,
+          genHeuresTotal);
+      }
+      else if(id==='heures-synthese'){
+        openPanel('Rapport de synthèse des heures','Comparatif hebdomadaire par employé',
+          `<input class="fi fi-date" type="date" id="r-from" value="${ms}"/>
+           <input class="fi fi-date" type="date" id="r-to"   value="${today}"/>
+           <button class="btn btn-yellow btn-sm" onclick="genHeureSynthese()">Générer</button>
+           <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>`,
+          genHeureSynthese);
+      }
+      else if(id==='presence'){
+        openPanel('Rapport de présence','Présences et absences par employé',
+          `<input class="fi fi-date" type="date" id="r-from" value="${ms}"/>
+           <input class="fi fi-date" type="date" id="r-to"   value="${today}"/>
+           <button class="btn btn-yellow btn-sm" onclick="genPresence()">Générer</button>
+           <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>`,
+          genPresence);
+      }
+      else if(id==='evenements'){
+        openPanel('Rapport des événements','Tous les pointages et événements système',
+          `<input class="fi fi-date" type="date" id="r-from" value="${today}"/>
+           <input class="fi fi-date" type="date" id="r-to"   value="${today}"/>
+           <button class="btn btn-yellow btn-sm" onclick="genEvenements()">Générer</button>
+           <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>`,
+          genEvenements);
+      }
+      else if(id==='productivite'){
+        openPanel('Rapport de productivité','Taux de ponctualité et présence par employé',
+          `<input class="fi fi-date" type="date" id="r-from" value="${ms}"/>
+           <input class="fi fi-date" type="date" id="r-to"   value="${today}"/>
+           <button class="btn btn-yellow btn-sm" onclick="genProductivite()">Générer</button>`,
+          genProductivite);
+      }
+      else if(id==='employes-detail'){
+        openPanel('Rapport détaillé des employés','Liste complète avec statut et accès',
+          `<button class="btn btn-yellow btn-sm" onclick="genEmployesDetail()">Actualiser</button>
+           <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>`,
+          genEmployesDetail);
+      }
+      else if(id==='appareils'){
+        openPanel('Rapport des appareils','Appareils utilisés pour les pointages',
+          `<button class="btn btn-yellow btn-sm" onclick="genAppareils()">Actualiser</button>`,
+          genAppareils);
+      }
+      else if(id==='visages'){
+        openPanel('Rapport biométrique','Enregistrement facial et scores de confiance',
+          `<button class="btn btn-yellow btn-sm" onclick="genVisages()">Actualiser</button>
+           <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>`,
+          genVisages);
+      }
+      else if(id==='custom'){
+        openPanel('Rapport personnalisé','Choisissez vos paramètres',
+          '',
+          genCustomBuilder);
+      }
+    }
+
+    // ── Util: set body content ──
+    function setBody(html){ document.getElementById('panel-body').innerHTML = html; }
+    function getFrom(){ return document.getElementById('r-from')?.value || monthStart(); }
+    function getTo(){ return document.getElementById('r-to')?.value || todayStr(); }
+
+    // ── Badge helper ──
+    function typeBadge(t){
+      const m={'entrée':'<span class="badge bg">↑ Entrée</span>',
+        'sortie':'<span class="badge bo">↓ Sortie</span>',
+        'pause':'<span class="badge by">⏸ Pause</span>',
+        'retour':'<span class="badge bb">▶ Retour</span>',
+        'déconnexion':'<span class="badge" style="background:rgba(139,148,158,0.15);color:#8b949e;">↩ Déconnexion</span>'};
+      return m[t]||`<span class="badge">${t}</span>`;
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT HEURES TOTAL
+    // ══════════════════════════════
+    async function genHeuresTotal(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Calcul des heures…</div></div>');
+      const [emps, pts] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`)
+      ]);
+      // Build per-employee session list
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]={...e,entries:[],totalMin:0,sessions:0});
+      pts.forEach(p=>{
+        if(empMap[p.employee_id]) empMap[p.employee_id].entries.push(p);
+      });
+      // Calculate hours: pair each entrée with the next sortie
+      const rows = emps.map(e=>{
+        const ev = empMap[e.id].entries.filter(p=>p.type==='entrée'||p.type==='sortie');
+        let totalMin=0, sessions=0;
+        for(let i=0;i<ev.length-1;i++){
+          if(ev[i].type==='entrée'&&ev[i+1].type==='sortie'){
+            totalMin+=( new Date(ev[i+1].created_at) - new Date(ev[i].created_at) ) / 60000;
+            sessions++;
+          }
+        }
+        const h=Math.floor(totalMin/60), m=Math.round(totalMin%60);
+        return {name:e.full_name,post:e.post||'—',sessions,totalMin,label:`${h}h${m.toString().padStart(2,'0')}`};
+      });
+
+      const totalPts = pts.length;
+      const totalMin = rows.reduce((a,r)=>a+r.totalMin,0);
+      const totalH = Math.floor(totalMin/60), totalM=Math.round(totalMin%60);
+
+      cachedData.rows = rows;
+      cachedData.headers = ['Employé','Poste','Sessions','Heures totales'];
+
+      setBody(`
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="stat-mini-label">Employés</div><div class="stat-mini-val">${emps.length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Pointages</div><div class="stat-mini-val">${totalPts}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Total</div><div class="stat-mini-val">${totalH}h${totalM.toString().padStart(2,'0')}</div></div>
+        </div>
+        <div class="section-title">Par employé · ${fmtDate(from)} – ${fmtDate(to)}</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Sessions</th><th>Heures totales</th></tr></thead>
+          <tbody>${rows.length?rows.map(r=>`<tr>
+            <td><strong>${r.name}</strong></td>
+            <td class="muted">${r.post}</td>
+            <td class="mono">${r.sessions}</td>
+            <td><span style="font-family:'IBM Plex Mono',monospace;color:var(--yellow);font-weight:600;">${r.label}</span></td>
+          </tr>`).join(''):'<tr><td colspan="4" class="muted" style="text-align:center;padding:24px;">Aucune donnée pour cette période.</td></tr>'}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ Exporter CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ Exporter PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentJSON()">⬇ Exporter JSON</button>
+        </div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT HEURES SYNTHÈSE
+    // ══════════════════════════════
+    async function genHeureSynthese(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Calcul…</div></div>');
+      const [emps, pts] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`)
+      ]);
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]={name:e.full_name,post:e.post||'—',days:{},ptCount:0});
+      pts.forEach(p=>{
+        if(!empMap[p.employee_id]) return;
+        empMap[p.employee_id].ptCount++;
+        const day=p.created_at.split('T')[0];
+        if(!empMap[p.employee_id].days[day]) empMap[p.employee_id].days[day]=[];
+        empMap[p.employee_id].days[day].push(p);
+      });
+      const rows = emps.map(e=>{
+        const emp = empMap[e.id];
+        const daysPresent = Object.keys(emp.days).length;
+        let totalMin=0;
+        Object.values(emp.days).forEach(evs=>{
+          evs.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+          for(let i=0;i<evs.length-1;i++){
+            if(evs[i].type==='entrée'&&evs[i+1].type==='sortie'){
+              totalMin+=(new Date(evs[i+1].created_at)-new Date(evs[i].created_at))/60000;
+            }
+          }
+        });
+        const h=Math.floor(totalMin/60), m=Math.round(totalMin%60);
+        const avg=daysPresent?Math.round(totalMin/daysPresent):0;
+        const ah=Math.floor(avg/60), am=Math.round(avg%60);
+        return {name:emp.name,post:emp.post,daysPresent,totalLabel:`${h}h${m.toString().padStart(2,'0')}`,avgLabel:`${ah}h${am.toString().padStart(2,'0')}`,ptCount:emp.ptCount};
+      });
+
+      cachedData.rows = rows;
+      cachedData.headers = ['Employé','Poste','Jours présents','Total heures','Moy/jour','Pointages'];
+
+      setBody(`
+        <div class="section-title">Synthèse · ${fmtDate(from)} – ${fmtDate(to)}</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Jours présents</th><th>Total heures</th><th>Moy / jour</th><th>Pointages</th></tr></thead>
+          <tbody>${rows.length?rows.map(r=>`<tr>
+            <td><strong>${r.name}</strong></td>
+            <td class="muted">${r.post}</td>
+            <td class="mono">${r.daysPresent}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;color:var(--yellow);font-weight:600;">${r.totalLabel}</td>
+            <td class="mono muted">${r.avgLabel}</td>
+            <td class="mono">${r.ptCount}</td>
+          </tr>`).join(''):'<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">Aucune donnée.</td></tr>'}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ Exporter CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ Exporter PDF</button>
+        </div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT PRÉSENCE
+    // ══════════════════════════════
+    async function genPresence(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Calcul…</div></div>');
+      const [emps, pts] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`type=eq.entrée&created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`)
+      ]);
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]={name:e.full_name,post:e.post||'—',days:new Set()});
+      pts.forEach(p=>{
+        if(empMap[p.employee_id]) empMap[p.employee_id].days.add(p.created_at.split('T')[0]);
+      });
+
+      // Count business days in range
+      let businessDays=0;
+      const cur=new Date(from);
+      const end=new Date(to);
+      while(cur<=end){ if(cur.getDay()!==0&&cur.getDay()!==6) businessDays++; cur.setDate(cur.getDate()+1); }
+
+      const rows = emps.map(e=>{
+        const emp=empMap[e.id];
+        const present=emp.days.size;
+        const absent=Math.max(0,businessDays-present);
+        const rate=businessDays>0?Math.round(present/businessDays*100):0;
+        return {name:emp.name,post:emp.post,present,absent,rate};
+      });
+
+      cachedData.rows=rows;
+      cachedData.headers=['Employé','Poste','Jours présents','Jours absents','Taux de présence (%)'];
+
+      const avg=rows.length?Math.round(rows.reduce((a,r)=>a+r.rate,0)/rows.length):0;
+
+      setBody(`
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="stat-mini-label">Jours ouvrés</div><div class="stat-mini-val">${businessDays}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Effectif</div><div class="stat-mini-val">${emps.length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Taux moy.</div><div class="stat-mini-val">${avg}%</div></div>
+        </div>
+        <div class="section-title">Présence · ${fmtDate(from)} – ${fmtDate(to)}</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Présents</th><th>Absents</th><th>Taux</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>
+            <td><strong>${r.name}</strong></td>
+            <td class="muted">${r.post}</td>
+            <td class="mono" style="color:var(--green);">${r.present}</td>
+            <td class="mono" style="color:var(--orange);">${r.absent}</td>
+            <td>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:${r.rate>=80?'var(--green)':r.rate>=50?'var(--yellow)':'var(--orange)'};">${r.rate}%</div>
+              <div class="conf-bar"><div class="conf-fill" style="width:${r.rate}%;background:${r.rate>=80?'var(--green)':r.rate>=50?'var(--yellow)':'var(--orange)'}"></div></div>
+            </td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ Exporter CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ Exporter PDF</button>
+        </div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT ÉVÉNEMENTS
+    // ══════════════════════════════
+    async function genEvenements(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Chargement…</div></div>');
+      const [emps, pts] = await Promise.all([
+        sbGet('employees',''),
+        sbGet('pointages',`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.desc&limit=200`)
+      ]);
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]=e);
+      cachedData.rows=pts.map(p=>{
+        const e=empMap[p.employee_id]||{full_name:'Inconnu',post:'—'};
+        return {Employé:e.full_name,Poste:e.post||'—',Type:p.type,Date:fmtDate(p.created_at),Heure:fmtTime(p.created_at),Confiance:p.face_confidence||'—',GPS:`${p.latitude||'—'},${p.longitude||'—'}`};
+      });
+      cachedData.headers=['Employé','Poste','Type','Date','Heure','Confiance','GPS'];
+
+      setBody(`
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="stat-mini-label">Événements</div><div class="stat-mini-val">${pts.length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Employés</div><div class="stat-mini-val">${new Set(pts.map(p=>p.employee_id)).size}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Période</div><div class="stat-mini-val" style="font-size:0.9rem;">${fmtDate(from)}</div></div>
+        </div>
+        <div class="section-title">Événements · ${fmtDate(from)} – ${fmtDate(to)}</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Type</th><th>Date</th><th>Heure</th><th>Confiance</th><th>GPS</th></tr></thead>
+          <tbody>${pts.length?pts.map(p=>{
+            const e=empMap[p.employee_id]||{full_name:'Inconnu'};
+            const conf=p.face_confidence!=null?parseFloat(p.face_confidence):null;
+            return `<tr>
+              <td><strong>${e.full_name}</strong></td>
+              <td>${typeBadge(p.type)}</td>
+              <td class="mono muted">${fmtDate(p.created_at)}</td>
+              <td class="mono">${fmtTime(p.created_at)}</td>
+              <td>${conf!=null?`<div class="mono">${conf.toFixed(1)}%</div><div class="conf-bar"><div class="conf-fill" style="width:${Math.min(conf,100)}%"></div></div>`:'<span class="muted">Manuel</span>'}</td>
+              <td class="mono muted" style="font-size:0.7rem;">${p.latitude?parseFloat(p.latitude).toFixed(3)+', '+parseFloat(p.longitude).toFixed(3):'—'}</td>
+            </tr>`;
+          }).join(''):'<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">Aucun événement.</td></tr>'}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentJSON()">⬇ JSON</button>
+        </div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT PRODUCTIVITÉ
+    // ══════════════════════════════
+    async function genProductivite(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Calcul…</div></div>');
+      const [emps, pts] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`)
+      ]);
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]={name:e.full_name,post:e.post||'—',entries:[],confScores:[]});
+      pts.forEach(p=>{
+        if(empMap[p.employee_id]){
+          empMap[p.employee_id].entries.push(p);
+          if(p.face_confidence!=null) empMap[p.employee_id].confScores.push(parseFloat(p.face_confidence));
+        }
+      });
+      let busD=0; const cur=new Date(from),end=new Date(to);
+      while(cur<=end){if(cur.getDay()!==0&&cur.getDay()!==6)busD++;cur.setDate(cur.getDate()+1);}
+
+      const rows=emps.map(e=>{
+        const emp=empMap[e.id];
+        const days=new Set(emp.entries.filter(p=>p.type==='entrée').map(p=>p.created_at.split('T')[0])).size;
+        const rate=busD>0?Math.round(days/busD*100):0;
+        const avgConf=emp.confScores.length?Math.round(emp.confScores.reduce((a,b)=>a+b,0)/emp.confScores.length):null;
+        return {name:emp.name,post:emp.post,days,rate,avgConf,manuals:emp.entries.filter(p=>p.face_confidence==null&&p.type!=='déconnexion').length};
+      });
+
+      setBody(`
+        <div class="section-title">Productivité · ${fmtDate(from)} – ${fmtDate(to)}</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Taux présence</th><th>Conf. Face++ moy.</th><th>Pointages manuels</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>
+            <td><strong>${r.name}</strong></td>
+            <td class="muted">${r.post}</td>
+            <td>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:${r.rate>=80?'var(--green)':r.rate>=50?'var(--yellow)':'var(--orange)'};">${r.rate}%</div>
+              <div class="conf-bar"><div class="conf-fill" style="width:${r.rate}%;background:${r.rate>=80?'var(--green)':r.rate>=50?'var(--yellow)':'var(--orange)'}"></div></div>
+            </td>
+            <td>${r.avgConf!=null?`<div class="mono">${r.avgConf}%</div><div class="conf-bar"><div class="conf-fill" style="width:${r.avgConf}%"></div></div>`:'<span class="muted">—</span>'}</td>
+            <td class="mono ${r.manuals>0?'':'muted'}" style="${r.manuals>0?'color:var(--orange);':''}">${r.manuals||'0'}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT EMPLOYÉS DÉTAIL
+    // ══════════════════════════════
+    async function genEmployesDetail(){
+      setBody('<div class="loading"><div class="spinner"></div><div>Chargement…</div></div>');
+      const emps = await sbGet('employees','order=full_name.asc');
+      cachedData.rows=emps;
+      cachedData.headers=['Nom','Poste','Email','Téléphone','Token','Visage','Statut'];
+      setBody(`
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="stat-mini-label">Total</div><div class="stat-mini-val">${emps.length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Actifs</div><div class="stat-mini-val" style="color:var(--green);">${emps.filter(e=>e.status==='actif').length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Biométrie</div><div class="stat-mini-val">${emps.filter(e=>e.face_token).length}</div></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Nom</th><th>Poste</th><th>Email</th><th>Token</th><th>Visage</th><th>Statut</th></tr></thead>
+          <tbody>${emps.map(e=>`<tr>
+            <td><strong>${e.full_name}</strong></td>
+            <td class="muted">${e.post||'—'}</td>
+            <td class="mono muted" style="font-size:0.72rem;">${e.email||'—'}</td>
+            <td><span class="badge" style="background:rgba(188,140,255,0.12);color:var(--purple);">${e.login_token||'—'}</span></td>
+            <td>${e.face_token?'<span class="badge bg">✓</span>':'<span class="badge bo">✗</span>'}</td>
+            <td><span class="badge ${e.status==='actif'?'bg':'bo'}">${e.status}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>
+        </div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT APPAREILS
+    // ══════════════════════════════
+    async function genAppareils(){
+      setBody('<div class="loading"><div class="spinner"></div><div>Chargement…</div></div>');
+      const pts = await sbGet('pointages','order=created_at.desc&limit=1000');
+      const emps = await sbGet('employees','');
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]=e);
+      // Derive unique "devices" as employees who have pointed at least once
+      const devMap={};
+      pts.forEach(p=>{
+        if(!devMap[p.employee_id]){
+          devMap[p.employee_id]={
+            emp:empMap[p.employee_id]||{full_name:'Inconnu',post:'—'},
+            firstSeen:p.created_at, lastSeen:p.created_at, count:0,
+            hasGPS:false, hasFace:false
+          };
+        }
+        devMap[p.employee_id].lastSeen=p.created_at;
+        devMap[p.employee_id].count++;
+        if(p.latitude) devMap[p.employee_id].hasGPS=true;
+        if(p.face_confidence!=null) devMap[p.employee_id].hasFace=true;
+      });
+      const rows=Object.values(devMap);
+      setBody(`
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="stat-mini-label">Appareils</div><div class="stat-mini-val">${rows.length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Avec GPS</div><div class="stat-mini-val">${rows.filter(r=>r.hasGPS).length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Face++</div><div class="stat-mini-val">${rows.filter(r=>r.hasFace).length}</div></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Pointages</th><th>GPS</th><th>Biométrie</th><th>Dernière activité</th></tr></thead>
+          <tbody>${rows.length?rows.map(r=>`<tr>
+            <td><strong>${r.emp.full_name}</strong></td>
+            <td class="muted">${r.emp.post||'—'}</td>
+            <td class="mono">${r.count}</td>
+            <td>${r.hasGPS?'<span class="badge bg">Actif</span>':'<span class="badge bo">—</span>'}</td>
+            <td>${r.hasFace?'<span class="badge bg">Face++</span>':'<span class="badge by">Manuel</span>'}</td>
+            <td class="mono muted" style="font-size:0.72rem;">${fmtDate(r.lastSeen)} ${fmtTime(r.lastSeen)}</td>
+          </tr>`).join(''):'<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">Aucune donnée.</td></tr>'}</tbody>
+        </table></div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT BIOMÉTRIQUE
+    // ══════════════════════════════
+    async function genVisages(){
+      setBody('<div class="loading"><div class="spinner"></div><div>Chargement…</div></div>');
+      const [emps, pts] = await Promise.all([
+        sbGet('employees','order=full_name.asc'),
+        sbGet('pointages','face_confidence=not.is.null&order=created_at.desc')
+      ]);
+      const confMap={};
+      pts.forEach(p=>{
+        if(!confMap[p.employee_id]) confMap[p.employee_id]=[];
+        confMap[p.employee_id].push(parseFloat(p.face_confidence));
+      });
+      const rows=emps.map(e=>{
+        const scores=confMap[e.id]||[];
+        const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+        return {name:e.full_name,post:e.post||'—',hasface:!!e.face_token,scans:scores.length,avg};
+      });
+      cachedData.rows=rows;
+      cachedData.headers=['Employé','Poste','Visage enregistré','Scans Face++','Score moy. (%)'];
+      setBody(`
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="stat-mini-label">Enregistrés</div><div class="stat-mini-val" style="color:var(--green);">${rows.filter(r=>r.hasface).length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Non enreg.</div><div class="stat-mini-val" style="color:var(--orange);">${rows.filter(r=>!r.hasface).length}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Scans tot.</div><div class="stat-mini-val">${pts.length}</div></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Visage</th><th>Scans</th><th>Score moy.</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>
+            <td><strong>${r.name}</strong></td>
+            <td class="muted">${r.post}</td>
+            <td>${r.hasface?'<span class="badge bg">✓ Enregistré</span>':'<span class="badge bo">Non enregistré</span>'}</td>
+            <td class="mono">${r.scans}</td>
+            <td>${r.avg!=null?`<div class="mono">${r.avg}%</div><div class="conf-bar"><div class="conf-fill" style="width:${r.avg}%"></div></div>`:'<span class="muted">—</span>'}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>
+        </div>`);
+    }
+
+    // ══════════════════════════════
+    //  RAPPORT PERSONNALISÉ (builder)
+    // ══════════════════════════════
+    async function genCustomBuilder(){
+      const emps = await sbGet('employees','order=full_name.asc');
+      setBody(`
+        <div class="section-title">Paramètres du rapport</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <div class="section-title" style="margin-top:0;">Période</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input class="fi fi-date" type="date" id="c-from" value="${monthStart()}"/>
+              <input class="fi fi-date" type="date" id="c-to"   value="${todayStr()}"/>
+            </div>
+          </div>
+          <div>
+            <div class="section-title" style="margin-top:0;">Employé(s)</div>
+            <select class="fi" style="width:100%;" id="c-emp">
+              <option value="">Tous les employés</option>
+              ${emps.map(e=>`<option value="${e.id}">${e.full_name} — ${e.post||'—'}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <div class="section-title" style="margin-top:0;">Type d'événement</div>
+            <select class="fi" style="width:100%;" id="c-type">
+              <option value="">Tous les types</option>
+              <option value="entrée">Entrée</option>
+              <option value="sortie">Sortie</option>
+              <option value="pause">Pause</option>
+              <option value="retour">Retour de pause</option>
+              <option value="déconnexion">Déconnexion</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button class="btn btn-yellow" style="flex:1;" onclick="runCustomReport()">Générer le rapport</button>
+          </div>
+        </div>
+        <div id="custom-result" style="margin-top:16px;"></div>`);
+    }
+
+    async function runCustomReport(){
+      const from = document.getElementById('c-from').value;
+      const to   = document.getElementById('c-to').value;
+      const emp  = document.getElementById('c-emp').value;
+      const type = document.getElementById('c-type').value;
+      const el   = document.getElementById('custom-result');
+      el.innerHTML = '<div class="loading"><div class="spinner"></div><div>Chargement…</div></div>';
+
+      let filter = `created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.desc`;
+      if(emp)  filter += `&employee_id=eq.${emp}`;
+      if(type) filter += `&type=eq.${type}`;
+
+      const [pts, emps] = await Promise.all([sbGet('pointages', filter), sbGet('employees','')]);
+      const empMap={};
+      emps.forEach(e=>empMap[e.id]=e);
+      cachedData.rows=pts;
+      cachedData.headers=['Employé','Type','Date','Heure','Confiance','GPS'];
+
+      el.innerHTML = `
+        <div class="section-title">${pts.length} résultat(s) · ${fmtDate(from)} – ${fmtDate(to)}</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Type</th><th>Date</th><th>Heure</th><th>Confiance</th></tr></thead>
+          <tbody>${pts.length?pts.map(p=>{
+            const e=empMap[p.employee_id]||{full_name:'Inconnu'};
+            const conf=p.face_confidence!=null?parseFloat(p.face_confidence):null;
+            return `<tr>
+              <td><strong>${e.full_name}</strong></td>
+              <td>${typeBadge(p.type)}</td>
+              <td class="mono muted">${fmtDate(p.created_at)}</td>
+              <td class="mono">${fmtTime(p.created_at)}</td>
+              <td>${conf!=null?conf.toFixed(1)+'%':'<span class="muted">Manuel</span>'}</td>
+            </tr>`;}).join(''):'<tr><td colspan="5" class="muted" style="text-align:center;padding:24px;">Aucun résultat.</td></tr>'}</tbody>
+        </table></div>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentJSON()">⬇ JSON</button>
+        </div>`;
+    }
+
+    // ══════════════════════════════
+    //  EXPORT
+    // ══════════════════════════════
+    function exportCurrentCSV(){
+      if(!cachedData.rows||!cachedData.rows.length){ alert('Aucune donnée à exporter.'); return; }
+      const rows=cachedData.rows;
+      const headers=cachedData.headers;
+      let csv;
+      if(headers && typeof rows[0]==='object' && !Array.isArray(rows[0])){
+        // plain object rows
+        const keys=Object.keys(rows[0]);
+        csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${r[k]??''}"`).join(','))].join('\n');
+      } else {
+        csv=[headers.join(','),...rows.map(r=>headers.map((_,i)=>`"${r[i]??r??''}"`).join(','))].join('\n');
+      }
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+      a.download='lightcheck-rapport.csv'; a.click();
+    }
+    function exportCurrentJSON(){
+      if(!cachedData.rows||!cachedData.rows.length){ alert('Aucune donnée à exporter.'); return; }
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([JSON.stringify(cachedData.rows,null,2)],{type:'application/json'}));
+      a.download='lightcheck-rapport.json'; a.click();
+    }
+
+    // ── Contextual menu (simple) ──
+    // LIGHTCHECK RH REPORTING EXTENSION START
+    /* Lightcheck RH reporting extension */
+    function dateInputValue(d){ const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().split('T')[0]; }
+    todayStr = function(){ return dateInputValue(new Date()); };
+    monthStart = function(){ const d=new Date(); d.setDate(1); return dateInputValue(d); };
+    function yearStart(){ const d=new Date(); d.setMonth(0,1); return dateInputValue(d); }
+    function weekStart(){ const d=new Date(); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return dateInputValue(d); }
+    function presetDates(preset){
+      if(preset==='today') return {from:todayStr(),to:todayStr()};
+      if(preset==='week') return {from:weekStart(),to:todayStr()};
+      if(preset==='year') return {from:yearStart(),to:todayStr()};
+      return {from:monthStart(),to:todayStr()};
+    }
+    function applyPeriodPreset(prefix){
+      const preset=document.getElementById(`${prefix}-preset`)?.value;
+      if(!preset || preset==='custom') return;
+      const d=presetDates(preset);
+      const from=document.getElementById(`${prefix}-from`);
+      const to=document.getElementById(`${prefix}-to`);
+      if(from) from.value=d.from;
+      if(to) to.value=d.to;
+    }
+    function periodToolbar(fnName, preset='month'){
+      const d=presetDates(preset);
+      return `<select class="fsel" id="r-preset" onchange="applyPeriodPreset('r')">
+          <option value="today" ${preset==='today'?'selected':''}>Aujourd'hui</option>
+          <option value="week" ${preset==='week'?'selected':''}>Cette semaine</option>
+          <option value="month" ${preset==='month'?'selected':''}>Ce mois</option>
+          <option value="year" ${preset==='year'?'selected':''}>Cette année</option>
+          <option value="custom" ${preset==='custom'?'selected':''}>Personnalisé</option>
+        </select>
+        <input class="fi fi-date" type="date" id="r-from" value="${d.from}" onchange="document.getElementById('r-preset').value='custom'"/>
+        <input class="fi fi-date" type="date" id="r-to" value="${d.to}" onchange="document.getElementById('r-preset').value='custom'"/>
+        <button class="btn btn-yellow btn-sm" onclick="${fnName}()">Générer</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentXLSX()">⬇ XLSX</button>`;
+    }
+    function businessDates(from,to){
+      const days=[]; const cur=new Date(`${from}T00:00:00`), end=new Date(`${to}T00:00:00`);
+      while(cur<=end){ if(cur.getDay()!==0&&cur.getDay()!==6) days.push(dateInputValue(cur)); cur.setDate(cur.getDate()+1); }
+      return days;
+    }
+    function minutesFromTime(t){ const m=String(t||'').match(/(\d{1,2}):(\d{2})/); return m ? parseInt(m[1],10)*60+parseInt(m[2],10) : null; }
+    function minutesFromDate(s){ const d=new Date(s); return d.getHours()*60+d.getMinutes(); }
+    function minLabel(min){ const h=Math.floor(min/60), m=Math.round(min%60); return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`; }
+    function yesNo(v){ return v===true || v==='true' || v===1 || v==='1'; }
+    function getAbsenceDate(a){ return a.date_absence || a.date || (a.created_at||'').split('T')[0] || ''; }
+    function absenceLabel(a){ return a?.motif || a?.type || 'Absence'; }
+    function getScheduleForEmployee(emp, horaires){
+      if(!horaires?.length) return null;
+      return horaires.find(h=>h.id===emp.horaire_id || h.id===emp.schedule_id || h.employee_id===emp.id) ||
+        horaires.find(h=>h.default || h.is_default) || horaires[0];
+    }
+    function haversineMeters(aLat,aLon,bLat,bLon){
+      const R=6371000, toRad=x=>x*Math.PI/180;
+      const dLat=toRad(bLat-aLat), dLon=toRad(bLon-aLon);
+      const x=Math.sin(dLat/2)**2 + Math.cos(toRad(aLat))*Math.cos(toRad(bLat))*Math.sin(dLon/2)**2;
+      return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    }
+    function locatePointage(p, locations){
+      if(p.location_id){
+        const byId=locations.find(l=>String(l.id)===String(p.location_id));
+        if(byId) return byId;
+      }
+      if(p.latitude==null || p.longitude==null) return null;
+      const lat=parseFloat(p.latitude), lon=parseFloat(p.longitude);
+      let best=null, bestDist=Infinity;
+      locations.forEach(l=>{
+        if(l.latitude==null || l.longitude==null) return;
+        const dist=haversineMeters(lat,lon,parseFloat(l.latitude),parseFloat(l.longitude));
+        const radius=parseFloat(l.radius_m || l.radius || 100);
+        if(dist<=radius && dist<bestDist){ best=l; bestDist=dist; }
+      });
+      return best;
+    }
+    function lcWaitPdfLib(cb){
+      if(window.jspdf && window.jspdf.jsPDF) return cb();
+      let n=0; const t=setInterval(()=>{
+        if(window.jspdf && window.jspdf.jsPDF){ clearInterval(t); cb(); }
+        else if(++n>50){ clearInterval(t); alert('Module PDF indisponible (vérifiez la connexion internet).'); }
+      },100);
+    }
+    function exportCurrentPDF(){
+      const matrix=exportMatrix();
+      if(!matrix){ alert('Aucune donnée à exporter.'); return; }
+      lcWaitPdfLib(()=>{
+        const { jsPDF } = window.jspdf;
+        const landscape = matrix.headers.length>6;
+        const doc=new jsPDF({orientation:landscape?'landscape':'portrait',unit:'pt',format:'a4'});
+        const pageW=doc.internal.pageSize.getWidth(), pageH=doc.internal.pageSize.getHeight();
+        const title=(document.getElementById('panel-title')?.textContent||'Rapport').trim();
+        const sub=(document.getElementById('panel-sub')?.textContent||'').trim();
+        const now=new Date().toLocaleString('fr-FR');
+        // Bandeau de marque
+        doc.setFillColor(13,17,23); doc.rect(0,0,pageW,56,'F');
+        doc.setTextColor(245,197,66); doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text('Light Check',40,32);
+        doc.setTextColor(230,237,243); doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text('Systeme de pointage biometrique',40,46);
+        doc.setTextColor(245,197,66); doc.setFontSize(8); doc.text(now,pageW-40,32,{align:'right'});
+        // Titre + sous-titre
+        doc.setTextColor(20,20,20); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(title,40,86);
+        let y=92;
+        if(sub){ doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(110,110,110); doc.text(sub,40,102); y=108; }
+        // Filet dore
+        doc.setDrawColor(245,197,66); doc.setLineWidth(2); doc.line(40,y+4,pageW-40,y+4);
+        doc.autoTable({
+          head:[matrix.headers],
+          body:matrix.rows.map(r=>r.map(c=>c==null?'':String(c))),
+          startY:y+12,
+          styles:{fontSize:8,cellPadding:4,overflow:'linebreak',lineColor:[230,230,230],lineWidth:0.5},
+          headStyles:{fillColor:[24,26,26],textColor:[245,197,66],fontStyle:'bold'},
+          alternateRowStyles:{fillColor:[247,248,250]},
+          margin:{left:40,right:40,top:70},
+          didDrawPage:(data)=>{
+            doc.setFontSize(8); doc.setTextColor(150,150,150);
+            doc.text('Light Check \u2014 '+now,40,pageH-18);
+            doc.text('Page '+data.pageNumber,pageW-40,pageH-18,{align:'right'});
+          }
+        });
+        const safe=title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+        doc.save('lightcheck-'+(safe||'rapport')+'.pdf');
+      });
+    }
+    function exportButtons(){
+      return `<div class="export-row">
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentCSV()">⬇ Exporter CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">⬇ Exporter PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentXLSX()">⬇ Exporter XLSX</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentJSON()">⬇ Exporter JSON</button>
+        <button class="btn btn-ghost btn-sm" onclick="archiveCurrentReport()">💾 Archiver</button>
+      </div>`;
+    }
+    function addRhReportCards(){
+      const list=document.querySelector('#tab-presence .report-list');
+      if(!list || document.querySelector('[onclick="openReport(\'retards\')"]')) return;
+      const anchor=[...list.querySelectorAll('.report-card')].find(c=>c.getAttribute('onclick')?.includes("'presence'"));
+      const html=`
+        <div class="report-card" onclick="openReport('quotidien')"><div class="report-icon">📅</div><div class="report-body"><div class="report-title">Rapport quotidien</div><div class="report-desc">Vue RH jour par jour : présence, absence déclarée, motif, première entrée et dernière sortie.</div><div class="report-meta"><span class="report-tag tag-y">RH</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'quotidien')">⋮</button></div>
+        <div class="report-card" onclick="openReport('retards')"><div class="report-icon">⏰</div><div class="report-body"><div class="report-title">Rapport retards</div><div class="report-desc">Compare l'heure prévue issue des horaires avec la première entrée réelle et calcule le retard en minutes.</div><div class="report-meta"><span class="report-tag tag-o">Ponctualité</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'retards')">⋮</button></div>
+        <div class="report-card" onclick="openReport('absences')"><div class="report-icon">📝</div><div class="report-body"><div class="report-title">Rapport absences</div><div class="report-desc">Liste les absences enregistrées avec date, motif et statut justifié ou injustifié.</div><div class="report-meta"><span class="report-tag tag-y">RH</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'absences')">⋮</button></div>
+        <div class="report-card" onclick="openReport('sites')"><div class="report-icon">📍</div><div class="report-body"><div class="report-title">Rapport multi-sites</div><div class="report-desc">Agrège les présences par localisation à partir des sites configurés et des coordonnées GPS des pointages.</div><div class="report-meta"><span class="report-tag tag-b">Sites</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'sites')">⋮</button></div>`;
+      anchor?.insertAdjacentHTML('afterend', html);
+    }
+    addRhReportCards();
+    const baseOpenReport = openReport;
+    openReport = async function(id){
+      currentReportId=id;
+      if(id==='presence') return openPanel('Rapport de présence','Présences, absences justifiées et absences injustifiées',periodToolbar('genPresence','month'),genPresence);
+      if(id==='quotidien') return openPanel('Rapport quotidien','Statut RH par employé et par journée',periodToolbar('genRapportQuotidien','today'),genRapportQuotidien);
+      if(id==='retards') return openPanel('Rapport retards',"Arrivées après l'heure prévue et la tolérance",periodToolbar('genRetards','month'),genRetards);
+      if(id==='absences') return openPanel('Rapport absences','Absences déclarées, motifs et justification',periodToolbar('genAbsences','month'),genAbsences);
+      if(id==='sites') return openPanel('Rapport multi-sites','Présences agrégées par localisation',periodToolbar('genSites','month'),genSites);
+      return baseOpenReport(id);
+    };
+
+    genPresence = async function(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Calcul RH…</div></div>');
+      const [emps, pts, absences] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`type=eq.entrée&created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`),
+        sbGet('absences',`date_absence=gte.${from}&date_absence=lte.${to}&order=date_absence.asc`)
+      ]);
+      const days=businessDates(from,to), empMap={};
+      emps.forEach(e=>empMap[e.id]={name:e.full_name,post:e.post||'—',present:new Set(),justified:new Set(),unjustified:new Set(),motifs:{}});
+      pts.forEach(p=>{ if(empMap[p.employee_id]) empMap[p.employee_id].present.add(p.created_at.split('T')[0]); });
+      absences.forEach(a=>{
+        const d=getAbsenceDate(a), emp=empMap[a.employee_id];
+        if(!emp || !d) return;
+        (yesNo(a.justifie ?? a.justified) ? emp.justified : emp.unjustified).add(d);
+        emp.motifs[d]=absenceLabel(a);
+      });
+      const rows=emps.map(e=>{
+        const emp=empMap[e.id]; let present=0, conge=0, maladie=0, mission=0, justified=0, unjustified=0;
+        days.forEach(d=>{
+          if(emp.present.has(d)){ present++; return; }
+          const motif=(emp.motifs[d]||'').toLowerCase();
+          if(emp.justified.has(d)){
+            justified++;
+            if(motif.includes('congé') || motif.includes('conge')) conge++;
+            else if(motif.includes('malad')) maladie++;
+            else if(motif.includes('mission')) mission++;
+          } else unjustified++;
+        });
+        const rate=days.length?Math.round(present/days.length*100):0;
+        return {Employé:emp.name,Poste:emp.post,Présent:present,Congé:conge,Maladie:maladie,Mission:mission,'Absence justifiée':justified,'Absence injustifiée':unjustified,'Taux présence (%)':rate};
+      });
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{});
+      const avg=rows.length?Math.round(rows.reduce((a,r)=>a+r['Taux présence (%)'],0)/rows.length):0;
+      setBody(`<div class="stat-mini-row"><div class="stat-mini"><div class="stat-mini-label">Jours ouvrés</div><div class="stat-mini-val">${days.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Taux moy.</div><div class="stat-mini-val">${avg}%</div></div><div class="stat-mini"><div class="stat-mini-label">Injustifiées</div><div class="stat-mini-val" style="color:var(--orange);">${rows.reduce((a,r)=>a+r['Absence injustifiée'],0)}</div></div></div>
+        <div class="section-title">Présence RH · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Employé</th><th>Poste</th><th>Présent</th><th>Congé</th><th>Maladie</th><th>Mission</th><th>Justifiée</th><th>Injustifiée</th><th>Taux</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${r.Employé}</strong></td><td class="muted">${r.Poste}</td><td class="mono" style="color:var(--green);">${r.Présent}</td><td class="mono">${r.Congé}</td><td class="mono">${r.Maladie}</td><td class="mono">${r.Mission}</td><td class="mono" style="color:var(--blue);">${r['Absence justifiée']}</td><td class="mono" style="color:var(--orange);">${r['Absence injustifiée']}</td><td class="mono">${r['Taux présence (%)']}%</td></tr>`).join('')}</tbody></table></div>${exportButtons()}`);
+    };
+
+    async function genRapportQuotidien(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Lecture quotidienne…</div></div>');
+      const [emps, pts, absences] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`),
+        sbGet('absences',`date_absence=gte.${from}&date_absence=lte.${to}&order=date_absence.asc`)
+      ]);
+      const byEmpDay={}, absMap={}, days=businessDates(from,to), rows=[];
+      pts.forEach(p=>{ const key=`${p.employee_id}|${p.created_at.split('T')[0]}`; (byEmpDay[key] ||= []).push(p); });
+      absences.forEach(a=>{ absMap[`${a.employee_id}|${getAbsenceDate(a)}`]=a; });
+      emps.forEach(e=>days.forEach(d=>{
+        const ev=(byEmpDay[`${e.id}|${d}`]||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+        const entries=ev.filter(p=>p.type==='entrée'), exits=ev.filter(p=>p.type==='sortie'), abs=absMap[`${e.id}|${d}`];
+        const status=entries.length?'Présent':abs ? (yesNo(abs.justifie ?? abs.justified)?'Absence justifiée':'Absence injustifiée') : 'Absence injustifiée';
+        rows.push({Employé:e.full_name,Poste:e.post||'—',Date:fmtDate(d),Statut:status,Motif:abs?absenceLabel(abs):'—','Première entrée':entries[0]?fmtTime(entries[0].created_at):'—','Dernière sortie':exits.at(-1)?fmtTime(exits.at(-1).created_at):'—',Pointages:ev.length});
+      }));
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{});
+      setBody(`<div class="stat-mini-row"><div class="stat-mini"><div class="stat-mini-label">Lignes</div><div class="stat-mini-val">${rows.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Présents</div><div class="stat-mini-val" style="color:var(--green);">${rows.filter(r=>r.Statut==='Présent').length}</div></div><div class="stat-mini"><div class="stat-mini-label">Absences</div><div class="stat-mini-val" style="color:var(--orange);">${rows.filter(r=>r.Statut!=='Présent').length}</div></div></div>
+        <div class="section-title">Quotidien · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Employé</th><th>Date</th><th>Statut</th><th>Motif</th><th>Entrée</th><th>Sortie</th><th>Pointages</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${r.Employé}</strong><div class="muted">${r.Poste}</div></td><td class="mono">${r.Date}</td><td><span class="badge ${r.Statut==='Présent'?'bg':r.Statut.includes('justifiée')?'bb':'bo'}">${r.Statut}</span></td><td>${r.Motif}</td><td class="mono">${r['Première entrée']}</td><td class="mono">${r['Dernière sortie']}</td><td class="mono">${r.Pointages}</td></tr>`).join('')}</tbody></table></div>${exportButtons()}`);
+    }
+
+    async function genRetards(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Calcul des retards…</div></div>');
+      const [emps, pts, horaires] = await Promise.all([
+        sbGet('employees','status=eq.actif&order=full_name.asc'),
+        sbGet('pointages',`type=eq.entrée&created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`),
+        sbGet('horaires','')
+      ]);
+      const empMap={}; emps.forEach(e=>empMap[e.id]=e);
+      const firstByDay={};
+      pts.forEach(p=>{ const key=`${p.employee_id}|${p.created_at.split('T')[0]}`; if(!firstByDay[key]) firstByDay[key]=p; });
+      const rows=[];
+      Object.values(firstByDay).forEach(p=>{
+        const e=empMap[p.employee_id]; if(!e) return;
+        const h=getScheduleForEmployee(e,horaires), startMin=minutesFromTime(h?.heure_debut || h?.start_time || h?.start);
+        if(startMin==null) return;
+        const tolerance=parseInt(h?.tolerance_retard ?? h?.late_tolerance ?? 0,10) || 0;
+        const late=Math.max(0,minutesFromDate(p.created_at)-startMin-tolerance);
+        if(late>0) rows.push({Employé:e.full_name,Poste:e.post||'—',Date:fmtDate(p.created_at),'Heure prévue':minLabel(startMin),Arrivée:fmtTime(p.created_at),'Tolérance (min)':tolerance,'Retard (min)':late});
+      });
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{'Employé':'','Poste':'','Date':'','Heure prévue':'','Arrivée':'','Tolérance (min)':'','Retard (min)':''});
+      setBody(`<div class="stat-mini-row"><div class="stat-mini"><div class="stat-mini-label">Retards</div><div class="stat-mini-val">${rows.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Minutes</div><div class="stat-mini-val" style="color:var(--orange);">${rows.reduce((a,r)=>a+r['Retard (min)'],0)}</div></div><div class="stat-mini"><div class="stat-mini-label">Employés</div><div class="stat-mini-val">${new Set(rows.map(r=>r.Employé)).size}</div></div></div>
+        <div class="section-title">Retards · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Employé</th><th>Date</th><th>Heure prévue</th><th>Arrivée</th><th>Retard</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.Employé}</strong><div class="muted">${r.Poste}</div></td><td class="mono">${r.Date}</td><td class="mono">${r['Heure prévue']}</td><td class="mono">${r.Arrivée}</td><td class="mono" style="color:var(--orange);">${r['Retard (min)']} min</td></tr>`).join(''):'<tr><td colspan="5" class="muted" style="text-align:center;padding:24px;">Aucun retard détecté.</td></tr>'}</tbody></table></div>${exportButtons()}`);
+    }
+
+    async function genAbsences(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Chargement des absences…</div></div>');
+      const [emps, absences] = await Promise.all([sbGet('employees','order=full_name.asc'), sbGet('absences',`date_absence=gte.${from}&date_absence=lte.${to}&order=date_absence.desc`)]);
+      const empMap={}; emps.forEach(e=>empMap[e.id]=e);
+      const rows=absences.map(a=>{ const e=empMap[a.employee_id]||{full_name:'Inconnu',post:'—'}; return {Employé:e.full_name,Poste:e.post||'—',Date:fmtDate(getAbsenceDate(a)),Motif:absenceLabel(a),Justifiée:yesNo(a.justifie ?? a.justified)?'Oui':'Non'}; });
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{'Employé':'','Poste':'','Date':'','Motif':'','Justifiée':''});
+      setBody(`<div class="stat-mini-row"><div class="stat-mini"><div class="stat-mini-label">Absences</div><div class="stat-mini-val">${rows.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Justifiées</div><div class="stat-mini-val" style="color:var(--green);">${rows.filter(r=>r.Justifiée==='Oui').length}</div></div><div class="stat-mini"><div class="stat-mini-label">Injustifiées</div><div class="stat-mini-val" style="color:var(--orange);">${rows.filter(r=>r.Justifiée==='Non').length}</div></div></div>
+        <div class="section-title">Absences · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Employé</th><th>Date</th><th>Motif</th><th>Justifiée</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.Employé}</strong><div class="muted">${r.Poste}</div></td><td class="mono">${r.Date}</td><td>${r.Motif}</td><td><span class="badge ${r.Justifiée==='Oui'?'bg':'bo'}">${r.Justifiée}</span></td></tr>`).join(''):'<tr><td colspan="4" class="muted" style="text-align:center;padding:24px;">Aucune absence.</td></tr>'}</tbody></table></div>${exportButtons()}`);
+    }
+
+    async function genSites(){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Agrégation des sites…</div></div>');
+      const [locations, pts] = await Promise.all([sbGet('locations','order=name.asc'), sbGet('pointages',`type=eq.entrée&created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`)]);
+      const siteMap={}; locations.forEach(l=>siteMap[l.id]={Site:l.name||l.nom||`Site ${l.id}`,Latitude:l.latitude||'—',Longitude:l.longitude||'—','Rayon (m)':l.radius_m||l.radius||'—',Présences:0,Employés:new Set()});
+      let horsSite=0;
+      pts.forEach(p=>{ const loc=locatePointage(p,locations); if(!loc){ horsSite++; return; } const row=siteMap[loc.id]; row.Présences++; row.Employés.add(p.employee_id); });
+      const rows=Object.values(siteMap).map(r=>({...r,Employés:r.Employés.size})).sort((a,b)=>b.Présences-a.Présences);
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{'Site':'','Latitude':'','Longitude':'','Rayon (m)':'','Présences':'','Employés':''});
+      setBody(`<div class="stat-mini-row"><div class="stat-mini"><div class="stat-mini-label">Sites</div><div class="stat-mini-val">${locations.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Présences</div><div class="stat-mini-val">${pts.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Hors site</div><div class="stat-mini-val" style="color:var(--orange);">${horsSite}</div></div></div>
+        <div class="section-title">Multi-sites · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Site</th><th>Présences</th><th>Employés</th><th>Latitude</th><th>Longitude</th><th>Rayon</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.Site}</strong></td><td class="mono" style="color:var(--yellow);">${r.Présences}</td><td class="mono">${r.Employés}</td><td class="mono muted">${r.Latitude}</td><td class="mono muted">${r.Longitude}</td><td class="mono">${r['Rayon (m)']}</td></tr>`).join(''):'<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">Aucun site configuré.</td></tr>'}</tbody></table></div>${exportButtons()}`);
+    }
+
+    genCustomBuilder = async function(){
+      const [emps, locations] = await Promise.all([sbGet('employees','order=full_name.asc'), sbGet('locations','order=name.asc')]);
+      const posts=[...new Set(emps.map(e=>e.post).filter(Boolean))].sort();
+      const statuses=[...new Set(emps.map(e=>e.status).filter(Boolean))].sort();
+      setBody(`<div class="section-title">Paramètres du rapport</div><div style="display:flex;flex-direction:column;gap:12px;">
+        <div><div class="section-title" style="margin-top:0;">Période</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><select class="fsel" id="c-preset" onchange="applyPeriodPreset('c')"><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month" selected>Ce mois</option><option value="year">Cette année</option><option value="custom">Personnalisé</option></select><input class="fi fi-date" type="date" id="c-from" value="${monthStart()}" onchange="document.getElementById('c-preset').value='custom'"/><input class="fi fi-date" type="date" id="c-to" value="${todayStr()}" onchange="document.getElementById('c-preset').value='custom'"/></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><select class="fi" id="c-emp"><option value="">Tous les employés</option>${emps.map(e=>`<option value="${e.id}">${e.full_name} — ${e.post||'—'}</option>`).join('')}</select><select class="fi" id="c-post"><option value="">Tous les postes</option>${posts.map(p=>`<option value="${p}">${p}</option>`).join('')}</select><select class="fi" id="c-status"><option value="">Tous les statuts</option>${statuses.map(st=>`<option value="${st}">${st}</option>`).join('')}</select><select class="fi" id="c-type"><option value="">Tous les pointages</option><option value="entrée">Entrée</option><option value="sortie">Sortie</option><option value="pause">Pause</option><option value="retour">Retour de pause</option><option value="déconnexion">Déconnexion</option></select><select class="fi" id="c-location"><option value="">Toutes localisations</option>${locations.map(l=>`<option value="${l.id}">${l.name||l.nom||'Site '+l.id}</option>`).join('')}</select><select class="fi" id="c-presence"><option value="">Présence : toutes</option><option value="present">Présents</option><option value="absent">Sans pointage</option></select><select class="fi" id="c-absence"><option value="">Absence : toutes</option><option value="with">Avec absence</option><option value="without">Sans absence</option></select><select class="fi" id="c-justifie"><option value="">Justification : toutes</option><option value="true">Absence justifiée</option><option value="false">Absence injustifiée</option></select><select class="fi" id="c-retard"><option value="">Retard : tous</option><option value="late">En retard</option><option value="ontime">À l'heure</option></select><input class="fi" type="number" id="c-conf-min" min="0" max="100" placeholder="Confiance min"/><input class="fi" type="number" id="c-conf-max" min="0" max="100" placeholder="Confiance max"/></div>
+        <div style="display:flex;gap:8px;margin-top:4px;"><button class="btn btn-yellow" style="flex:1;" onclick="runCustomReport()">Générer le rapport</button></div></div><div id="custom-result" style="margin-top:16px;"></div>`);
+    };
+
+    runCustomReport = async function(){
+      const from=document.getElementById('c-from').value, to=document.getElementById('c-to').value, emp=document.getElementById('c-emp').value, type=document.getElementById('c-type').value;
+      const post=document.getElementById('c-post').value, status=document.getElementById('c-status').value, locationId=document.getElementById('c-location').value, presence=document.getElementById('c-presence').value;
+      const absenceMode=document.getElementById('c-absence').value, justifie=document.getElementById('c-justifie').value, retard=document.getElementById('c-retard').value, confMin=document.getElementById('c-conf-min').value, confMax=document.getElementById('c-conf-max').value;
+      const el=document.getElementById('custom-result'); el.innerHTML='<div class="loading"><div class="spinner"></div><div>Chargement enrichi…</div></div>';
+      let filter=`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.desc`;
+      if(emp) filter+=`&employee_id=eq.${emp}`; if(type) filter+=`&type=eq.${type}`; if(confMin) filter+=`&face_confidence=gte.${confMin}`; if(confMax) filter+=`&face_confidence=lte.${confMax}`;
+      const [pts, emps, absences, horaires, locations] = await Promise.all([sbGet('pointages',filter), sbGet('employees',''), sbGet('absences',`date_absence=gte.${from}&date_absence=lte.${to}`), sbGet('horaires',''), sbGet('locations','')]);
+      const empMap={}, absByEmp={}; emps.forEach(e=>empMap[e.id]=e); absences.forEach(a=>{ (absByEmp[a.employee_id] ||= []).push(a); });
+      const hasPointage=new Set(pts.map(p=>p.employee_id));
+      let rows=pts.map(p=>{
+        const e=empMap[p.employee_id]||{full_name:'Inconnu',post:'—'}, loc=locatePointage(p,locations), h=getScheduleForEmployee(e,horaires), startMin=minutesFromTime(h?.heure_debut || h?.start_time || h?.start);
+        const tolerance=parseInt(h?.tolerance_retard ?? h?.late_tolerance ?? 0,10)||0, late=startMin!=null && p.type==='entrée' ? Math.max(0,minutesFromDate(p.created_at)-startMin-tolerance) : 0, empAbs=absByEmp[p.employee_id]||[];
+        return {Employé:e.full_name,Poste:e.post||'—',Statut:e.status||'—',Type:p.type,Date:fmtDate(p.created_at),Heure:fmtTime(p.created_at),Localisation:loc?(loc.name||loc.nom||`Site ${loc.id}`):'—',Présence:hasPointage.has(p.employee_id)?'Oui':'Non',Absence:empAbs.length?'Oui':'Non','Absence justifiée':empAbs.some(a=>yesNo(a.justifie ?? a.justified))?'Oui':empAbs.length?'Non':'—','Retard (min)':late,Confiance:p.face_confidence!=null?parseFloat(p.face_confidence):'—',GPS:p.latitude?`${p.latitude}, ${p.longitude}`:'—',_emp:e,_loc:loc};
+      });
+      if(post) rows=rows.filter(r=>r._emp.post===post); if(status) rows=rows.filter(r=>r._emp.status===status); if(locationId) rows=rows.filter(r=>r._loc && String(r._loc.id)===String(locationId));
+      if(presence==='present') rows=rows.filter(r=>r.Présence==='Oui'); if(presence==='absent') rows=rows.filter(r=>r.Présence==='Non');
+      if(absenceMode==='with') rows=rows.filter(r=>r.Absence==='Oui'); if(absenceMode==='without') rows=rows.filter(r=>r.Absence==='Non');
+      if(justifie==='true') rows=rows.filter(r=>r['Absence justifiée']==='Oui'); if(justifie==='false') rows=rows.filter(r=>r.Absence==='Oui' && r['Absence justifiée']!=='Oui');
+      if(retard==='late') rows=rows.filter(r=>r['Retard (min)']>0); if(retard==='ontime') rows=rows.filter(r=>r['Retard (min)']===0);
+      rows=rows.map(({_emp,_loc,...r})=>r);
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{'Employé':'','Poste':'','Statut':'','Type':'','Date':'','Heure':'','Localisation':'','Présence':'','Absence':'','Absence justifiée':'','Retard (min)':'','Confiance':'','GPS':''});
+      el.innerHTML=`<div class="section-title">${rows.length} résultat(s) · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Employé</th><th>Type</th><th>Date</th><th>Heure</th><th>Site</th><th>Absence</th><th>Retard</th><th>Confiance</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.Employé}</strong><div class="muted">${r.Poste} · ${r.Statut}</div></td><td>${typeBadge(r.Type)}</td><td class="mono muted">${r.Date}</td><td class="mono">${r.Heure}</td><td>${r.Localisation}</td><td>${r.Absence==='Oui'?`<span class="badge ${r['Absence justifiée']==='Oui'?'bg':'bo'}">${r['Absence justifiée']==='Oui'?'Justifiée':'Injustifiée'}</span>`:'<span class="muted">—</span>'}</td><td class="mono" style="color:${r['Retard (min)']>0?'var(--orange)':'var(--text2)'};">${r['Retard (min)']||0}</td><td>${r.Confiance!=='—'?r.Confiance+'%':'<span class="muted">Manuel</span>'}</td></tr>`).join(''):'<tr><td colspan="8" class="muted" style="text-align:center;padding:24px;">Aucun résultat.</td></tr>'}</tbody></table></div>${exportButtons()}`;
+    };
+
+    function exportMatrix(){
+      const rows=cachedData.rows||[];
+      if(!rows.length) return null;
+      if(typeof rows[0]==='object' && !Array.isArray(rows[0])){
+        const keys=Object.keys(rows[0]), headers=(cachedData.headers&&cachedData.headers.length===keys.length)?cachedData.headers:keys;
+        return {headers, rows:rows.map(r=>keys.map(k=>r[k]??''))};
+      }
+      const headers=cachedData.headers||[];
+      return {headers, rows:rows.map(r=>Array.isArray(r)?r:headers.map(()=>r))};
+    }
+    function csvEscape(v){ return `"${String(v??'').replace(/"/g,'""')}"`; }
+    exportCurrentCSV = function(){
+      const matrix=exportMatrix();
+      if(!matrix){ alert('Aucune donnée à exporter.'); return; }
+      const csv=[matrix.headers.map(csvEscape).join(','),...matrix.rows.map(r=>r.map(csvEscape).join(','))].join('\n');
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+      a.download='lightcheck-rapport.csv'; a.click();
+    };
+    function xmlEscape(v){ return String(v??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+    function colName(n){ let s=''; while(n>=0){ s=String.fromCharCode(n%26+65)+s; n=Math.floor(n/26)-1; } return s; }
+    function crc32(bytes){ let c=~0; for(const b of bytes){ c^=b; for(let k=0;k<8;k++) c=(c>>>1)^(0xedb88320&-(c&1)); } return ~c>>>0; }
+    function u16(n){ return [n&255,(n>>>8)&255]; }
+    function u32(n){ return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]; }
+    function dosParts(){ const d=new Date(); return {time:(d.getHours()<<11)|(d.getMinutes()<<5)|Math.floor(d.getSeconds()/2), date:((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate()}; }
+    function bytesOf(s){ return Array.from(new TextEncoder().encode(s)); }
+    function buildZip(files){
+      const parts=[], central=[]; let offset=0; const dt=dosParts();
+      files.forEach(f=>{
+        const name=bytesOf(f.name), data=bytesOf(f.content), crc=crc32(data);
+        const local=[...u32(0x04034b50),...u16(20),...u16(0),...u16(0),...u16(dt.time),...u16(dt.date),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name,...data];
+        parts.push(...local);
+        central.push(...u32(0x02014b50),...u16(20),...u16(20),...u16(0),...u16(0),...u16(dt.time),...u16(dt.date),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name);
+        offset+=local.length;
+      });
+      const centralOffset=parts.length, centralSize=central.length;
+      return new Uint8Array([...parts,...central,...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(centralSize),...u32(centralOffset),...u16(0)]);
+    }
+    function exportCurrentXLSX(){
+      const matrix=exportMatrix();
+      if(!matrix){ alert('Aucune donnée à exporter.'); return; }
+      const all=[matrix.headers,...matrix.rows];
+      const sheetRows=all.map((row,r)=>`<row r="${r+1}">${row.map((v,c)=>`<c r="${colName(c)}${r+1}" t="inlineStr"><is><t>${xmlEscape(v)}</t></is></c>`).join('')}</row>`).join('');
+      const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sheetRows}</sheetData></worksheet>`;
+      const files=[
+        {name:'[Content_Types].xml',content:'<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'},
+        {name:'_rels/.rels',content:'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+        {name:'xl/workbook.xml',content:'<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Rapport" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+        {name:'xl/_rels/workbook.xml.rels',content:'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'},
+        {name:'xl/worksheets/sheet1.xml',content:sheet}
+      ];
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([buildZip(files)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+      a.download='lightcheck-rapport.xlsx'; a.click();
+    }
+
+    // LIGHTCHECK RH REPORTING EXTENSION END
+
+    // INDEX UI HELPERS START
+    function openDrawer(){
+      document.getElementById('nav-drawer')?.classList.add('open');
+      document.getElementById('drawer-overlay')?.classList.add('open');
+      document.body.style.overflow='hidden';
+    }
+    function closeDrawer(){
+      document.getElementById('nav-drawer')?.classList.remove('open');
+      document.getElementById('drawer-overlay')?.classList.remove('open');
+      document.body.style.overflow='';
+    }
+    function goTo(url){ window.location.href=url; }
+    function showComingSoon(label){ alert(label + ' sera disponible prochainement.'); }
+    function updateClock(){
+      const el=document.getElementById('clock');
+      if(el) el.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
+    updateClock();
+    setInterval(updateClock,30000);
+    // INDEX UI HELPERS END
+    function showMenu(e, id){
+      // Just open the report panel for now
+      openReport(id);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // LIGHTCHECK — EXTENSION ORGANISATION RH (département / service / équipe / manager)
+    // Exploite les colonnes Supabase : employees.department, .service, .team, .manager_id
+    // ══════════════════════════════════════════════════════════════════
+
+    // ── Builder personnalisé enrichi (ajoute les 4 dimensions RH) ──
+    genCustomBuilder = async function(){
+      const [emps, locations] = await Promise.all([sbGet('employees','order=full_name.asc'), sbGet('locations','order=name.asc')]);
+      const posts=[...new Set(emps.map(e=>e.post).filter(Boolean))].sort();
+      const statuses=[...new Set(emps.map(e=>e.status).filter(Boolean))].sort();
+      const departments=[...new Set(emps.map(e=>e.department).filter(Boolean))].sort();
+      const services=[...new Set(emps.map(e=>e.service).filter(Boolean))].sort();
+      const teams=[...new Set(emps.map(e=>e.team).filter(Boolean))].sort();
+      const empName={}; emps.forEach(e=>empName[e.id]=e.full_name);
+      const managerIds=[...new Set(emps.map(e=>e.manager_id).filter(Boolean))];
+      const managers=managerIds.map(id=>({id,name:empName[id]||('Manager '+id)})).sort((a,b)=>a.name.localeCompare(b.name));
+      const opt=(v,l)=>`<option value="${v}">${l}</option>`;
+      setBody(`<div class="section-title">Paramètres du rapport</div><div style="display:flex;flex-direction:column;gap:12px;">
+        <div><div class="section-title" style="margin-top:0;">Période</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><select class="fsel" id="c-preset" onchange="applyPeriodPreset('c')"><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month" selected>Ce mois</option><option value="year">Cette année</option><option value="custom">Personnalisé</option></select><input class="fi fi-date" type="date" id="c-from" value="${monthStart()}" onchange="document.getElementById('c-preset').value='custom'"/><input class="fi fi-date" type="date" id="c-to" value="${todayStr()}" onchange="document.getElementById('c-preset').value='custom'"/></div></div>
+        <div><div class="section-title" style="margin-top:0;">Organisation RH</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <select class="fi" id="c-dept"><option value="">Tous les départements</option>${departments.map(d=>opt(d,d)).join('')}</select>
+          <select class="fi" id="c-service"><option value="">Tous les services</option>${services.map(s=>opt(s,s)).join('')}</select>
+          <select class="fi" id="c-team"><option value="">Toutes les équipes</option>${teams.map(t=>opt(t,t)).join('')}</select>
+          <select class="fi" id="c-manager"><option value="">Tous les managers</option>${managers.map(m=>opt(m.id,m.name)).join('')}</select>
+        </div></div>
+        <div><div class="section-title" style="margin-top:0;">Filtres détaillés</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><select class="fi" id="c-emp"><option value="">Tous les employés</option>${emps.map(e=>`<option value="${e.id}">${e.full_name} — ${e.post||'—'}</option>`).join('')}</select><select class="fi" id="c-post"><option value="">Tous les postes</option>${posts.map(p=>`<option value="${p}">${p}</option>`).join('')}</select><select class="fi" id="c-status"><option value="">Tous les statuts</option>${statuses.map(st=>`<option value="${st}">${st}</option>`).join('')}</select><select class="fi" id="c-type"><option value="">Tous les pointages</option><option value="entrée">Entrée</option><option value="sortie">Sortie</option><option value="pause">Pause</option><option value="retour">Retour de pause</option><option value="déconnexion">Déconnexion</option></select><select class="fi" id="c-location"><option value="">Toutes localisations</option>${locations.map(l=>`<option value="${l.id}">${l.name||l.nom||'Site '+l.id}</option>`).join('')}</select><select class="fi" id="c-presence"><option value="">Présence : toutes</option><option value="present">Présents</option><option value="absent">Sans pointage</option></select><select class="fi" id="c-absence"><option value="">Absence : toutes</option><option value="with">Avec absence</option><option value="without">Sans absence</option></select><select class="fi" id="c-justifie"><option value="">Justification : toutes</option><option value="true">Absence justifiée</option><option value="false">Absence injustifiée</option></select><select class="fi" id="c-retard"><option value="">Retard : tous</option><option value="late">En retard</option><option value="ontime">À l'heure</option></select><input class="fi" type="number" id="c-conf-min" min="0" max="100" placeholder="Confiance min"/><input class="fi" type="number" id="c-conf-max" min="0" max="100" placeholder="Confiance max"/></div></div>
+        <div style="display:flex;gap:8px;margin-top:4px;"><button class="btn btn-yellow" style="flex:1;" onclick="runCustomReport()">Générer le rapport</button></div></div><div id="custom-result" style="margin-top:16px;"></div>`);
+    };
+
+    // ── Génération personnalisée enrichie (colonnes + filtres RH) ──
+    runCustomReport = async function(){
+      const from=document.getElementById('c-from').value, to=document.getElementById('c-to').value, emp=document.getElementById('c-emp').value, type=document.getElementById('c-type').value;
+      const post=document.getElementById('c-post').value, status=document.getElementById('c-status').value, locationId=document.getElementById('c-location').value, presence=document.getElementById('c-presence').value;
+      const absenceMode=document.getElementById('c-absence').value, justifie=document.getElementById('c-justifie').value, retard=document.getElementById('c-retard').value, confMin=document.getElementById('c-conf-min').value, confMax=document.getElementById('c-conf-max').value;
+      const dept=document.getElementById('c-dept').value, service=document.getElementById('c-service').value, team=document.getElementById('c-team').value, manager=document.getElementById('c-manager').value;
+      const el=document.getElementById('custom-result'); el.innerHTML='<div class="loading"><div class="spinner"></div><div>Chargement enrichi…</div></div>';
+      let filter=`created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.desc`;
+      if(emp) filter+=`&employee_id=eq.${emp}`; if(type) filter+=`&type=eq.${type}`; if(confMin) filter+=`&face_confidence=gte.${confMin}`; if(confMax) filter+=`&face_confidence=lte.${confMax}`;
+      const [pts, emps, absences, horaires, locations] = await Promise.all([sbGet('pointages',filter), sbGet('employees',''), sbGet('absences',`date_absence=gte.${from}&date_absence=lte.${to}`), sbGet('horaires',''), sbGet('locations','')]);
+      const empMap={}, absByEmp={}; emps.forEach(e=>empMap[e.id]=e); absences.forEach(a=>{ (absByEmp[a.employee_id] ||= []).push(a); });
+      const hasPointage=new Set(pts.map(p=>p.employee_id));
+      let rows=pts.map(p=>{
+        const e=empMap[p.employee_id]||{full_name:'Inconnu',post:'—'}, loc=locatePointage(p,locations), h=getScheduleForEmployee(e,horaires), startMin=minutesFromTime(h?.heure_debut || h?.start_time || h?.start);
+        const tolerance=parseInt(h?.tolerance_retard ?? h?.late_tolerance ?? 0,10)||0, late=startMin!=null && p.type==='entrée' ? Math.max(0,minutesFromDate(p.created_at)-startMin-tolerance) : 0, empAbs=absByEmp[p.employee_id]||[];
+        return {Employé:e.full_name,Poste:e.post||'—',Statut:e.status||'—','Département':e.department||'—','Service':e.service||'—','Équipe':e.team||'—','Manager':(e.manager_id&&empMap[e.manager_id])?empMap[e.manager_id].full_name:'—',Type:p.type,Date:fmtDate(p.created_at),Heure:fmtTime(p.created_at),Localisation:loc?(loc.name||loc.nom||`Site ${loc.id}`):'—',Présence:hasPointage.has(p.employee_id)?'Oui':'Non',Absence:empAbs.length?'Oui':'Non','Absence justifiée':empAbs.some(a=>yesNo(a.justifie ?? a.justified))?'Oui':empAbs.length?'Non':'—','Retard (min)':late,Confiance:p.face_confidence!=null?parseFloat(p.face_confidence):'—',GPS:p.latitude?`${p.latitude}, ${p.longitude}`:'—',_emp:e,_loc:loc};
+      });
+      if(post) rows=rows.filter(r=>r._emp.post===post); if(status) rows=rows.filter(r=>r._emp.status===status); if(locationId) rows=rows.filter(r=>r._loc && String(r._loc.id)===String(locationId));
+      if(dept) rows=rows.filter(r=>r._emp.department===dept); if(service) rows=rows.filter(r=>r._emp.service===service); if(team) rows=rows.filter(r=>r._emp.team===team); if(manager) rows=rows.filter(r=>String(r._emp.manager_id||'')===String(manager));
+      if(presence==='present') rows=rows.filter(r=>r.Présence==='Oui'); if(presence==='absent') rows=rows.filter(r=>r.Présence==='Non');
+      if(absenceMode==='with') rows=rows.filter(r=>r.Absence==='Oui'); if(absenceMode==='without') rows=rows.filter(r=>r.Absence==='Non');
+      if(justifie==='true') rows=rows.filter(r=>r['Absence justifiée']==='Oui'); if(justifie==='false') rows=rows.filter(r=>r.Absence==='Oui' && r['Absence justifiée']!=='Oui');
+      if(retard==='late') rows=rows.filter(r=>r['Retard (min)']>0); if(retard==='ontime') rows=rows.filter(r=>r['Retard (min)']===0);
+      rows=rows.map(({_emp,_loc,...r})=>r);
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{'Employé':'','Poste':'','Statut':'','Département':'','Service':'','Équipe':'','Manager':'','Type':'','Date':'','Heure':'','Localisation':'','Présence':'','Absence':'','Absence justifiée':'','Retard (min)':'','Confiance':'','GPS':''});
+      el.innerHTML=`<div class="section-title">${rows.length} résultat(s) · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>Employé</th><th>Dépt. / Service</th><th>Type</th><th>Date</th><th>Heure</th><th>Site</th><th>Absence</th><th>Retard</th><th>Confiance</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.Employé}</strong><div class="muted">${r.Poste} · ${r.Statut}</div></td><td><div>${r['Département']}</div><div class="muted">${r['Service']}${r['Équipe']!=='—'?' · '+r['Équipe']:''}</div></td><td>${typeBadge(r.Type)}</td><td class="mono muted">${r.Date}</td><td class="mono">${r.Heure}</td><td>${r.Localisation}</td><td>${r.Absence==='Oui'?`<span class="badge ${r['Absence justifiée']==='Oui'?'bg':'bo'}">${r['Absence justifiée']==='Oui'?'Justifiée':'Injustifiée'}</span>`:'<span class="muted">—</span>'}</td><td class="mono" style="color:${r['Retard (min)']>0?'var(--orange)':'var(--text2)'};">${r['Retard (min)']||0}</td><td>${r.Confiance!=='—'?r.Confiance+'%':'<span class="muted">Manuel</span>'}</td></tr>`).join(''):'<tr><td colspan="9" class="muted" style="text-align:center;padding:24px;">Aucun résultat.</td></tr>'}</tbody></table></div>${exportButtons()}`;
+    };
+
+    // ── Agrégation générique par dimension RH ──
+    async function genOrgAggregate(dimension, label){
+      const from=getFrom(), to=getTo();
+      setBody('<div class="loading"><div class="spinner"></div><div>Agrégation '+label.toLowerCase()+'…</div></div>');
+      const [emps, pts] = await Promise.all([sbGet('employees',''), sbGet('pointages',`type=eq.entrée&created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59`)]);
+      const empMap={}; emps.forEach(e=>empMap[e.id]=e);
+      const keyOf=e=> dimension==='manager' ? (e.manager_id ? (empMap[e.manager_id]?.full_name || ('Manager '+e.manager_id)) : 'Sans manager') : (e[dimension] || 'Non défini');
+      const groups={};
+      const ensure=k=>(groups[k] ||= {[label]:k,Effectif:0,Présences:0,_emps:new Set()});
+      emps.forEach(e=>{ ensure(keyOf(e)).Effectif++; });
+      pts.forEach(p=>{ const e=empMap[p.employee_id]; if(!e) return; const g=ensure(keyOf(e)); g.Présences++; g._emps.add(p.employee_id); });
+      const rows=Object.values(groups).map(g=>({[label]:g[label],Effectif:g.Effectif,Présences:g.Présences,'Employés présents':g._emps.size,'Taux présence (%)':g.Effectif?Math.round(g._emps.size/g.Effectif*100):0})).sort((a,b)=>b.Présences-a.Présences);
+      cachedData.rows=rows; cachedData.headers=Object.keys(rows[0]||{[label]:'',Effectif:'',Présences:'','Employés présents':'','Taux présence (%)':''});
+      const totalPres=rows.reduce((s,r)=>s+r.Présences,0);
+      setBody(`<div class="stat-mini-row"><div class="stat-mini"><div class="stat-mini-label">${label}s</div><div class="stat-mini-val">${rows.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Effectif</div><div class="stat-mini-val">${emps.length}</div></div><div class="stat-mini"><div class="stat-mini-label">Présences</div><div class="stat-mini-val">${totalPres}</div></div></div>
+        <div class="section-title">${label} · ${fmtDate(from)} – ${fmtDate(to)}</div><div class="tbl-wrap"><table><thead><tr><th>${label}</th><th>Effectif</th><th>Présents</th><th>Présences</th><th>Taux</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r[label]}</strong></td><td class="mono">${r.Effectif}</td><td class="mono" style="color:var(--green);">${r['Employés présents']}</td><td class="mono" style="color:var(--yellow);">${r.Présences}</td><td class="mono">${r['Taux présence (%)']}%</td></tr>`).join(''):`<tr><td colspan="5" class="muted" style="text-align:center;padding:24px;">Aucune donnée. Vérifie que le champ « ${label} » est renseigné sur les fiches employés.</td></tr>`}</tbody></table></div>${exportButtons()}`);
+    }
+    async function genDepartements(){ return genOrgAggregate('department','Département'); }
+    async function genServices(){ return genOrgAggregate('service','Service'); }
+    async function genEquipes(){ return genOrgAggregate('team','Équipe'); }
+    async function genManagers(){ return genOrgAggregate('manager','Manager'); }
+
+    // ── Cartes des rapports d'organisation RH ──
+    function addRhOrgReportCards(){
+      const list=document.querySelector('#tab-presence .report-list');
+      if(!list || document.querySelector("[onclick=\"openReport('departements')\"]")) return;
+      const cards=[...list.querySelectorAll('.report-card')];
+      const anchor=cards.find(c=>c.getAttribute('onclick')?.includes("'sites'")) || cards[cards.length-1];
+      const html=`
+        <div class="report-card" onclick="openReport('departements')"><div class="report-icon">🏢</div><div class="report-body"><div class="report-title">Rapport par département</div><div class="report-desc">Effectif, présences et taux de présence agrégés par département.</div><div class="report-meta"><span class="report-tag tag-y">RH</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'departements')">⋮</button></div>
+        <div class="report-card" onclick="openReport('services')"><div class="report-icon">🗂️</div><div class="report-body"><div class="report-title">Rapport par service</div><div class="report-desc">Effectif, présences et taux de présence agrégés par service.</div><div class="report-meta"><span class="report-tag tag-y">RH</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'services')">⋮</button></div>
+        <div class="report-card" onclick="openReport('equipes')"><div class="report-icon">👥</div><div class="report-body"><div class="report-title">Rapport par équipe</div><div class="report-desc">Effectif, présences et taux de présence agrégés par équipe.</div><div class="report-meta"><span class="report-tag tag-y">RH</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'equipes')">⋮</button></div>
+        <div class="report-card" onclick="openReport('managers')"><div class="report-icon">🧑‍💼</div><div class="report-body"><div class="report-title">Rapport par manager</div><div class="report-desc">Effectif et présences regroupés par responsable hiérarchique.</div><div class="report-meta"><span class="report-tag tag-p">Management</span><span class="report-tag tag-g">Exportable</span></div></div><button class="report-more" onclick="event.stopPropagation();showMenu(event,'managers')">⋮</button></div>`;
+      anchor?.insertAdjacentHTML('afterend', html);
+    }
+    addRhOrgReportCards();
+
+    // ── Routage des nouveaux rapports ──
+    const baseOpenReportOrg = openReport;
+    openReport = async function(id){
+      currentReportId=id;
+      if(id==='departements') return openPanel('Rapport par département','Présences agrégées par département',periodToolbar('genDepartements','month'),genDepartements);
+      if(id==='services') return openPanel('Rapport par service','Présences agrégées par service',periodToolbar('genServices','month'),genServices);
+      if(id==='equipes') return openPanel('Rapport par équipe','Présences agrégées par équipe',periodToolbar('genEquipes','month'),genEquipes);
+      if(id==='managers') return openPanel('Rapport par manager','Effectif et présences par responsable',periodToolbar('genManagers','month'),genManagers);
+      return baseOpenReportOrg(id);
+    };
+    // ══ FIN EXTENSION ORGANISATION RH ══
+
+    // ══════════════════════════════════════════════════════════════════
+    // LIGHTCHECK — TABLEAU DE BORD RH (Phase 6) : KPI du jour + 4 graphiques
+    // ══════════════════════════════════════════════════════════════════
+    let lcCharts = {};
+    function lcWaitChart(cb){
+      if(window.Chart) return cb();
+      let n=0; const t=setInterval(()=>{ if(window.Chart){ clearInterval(t); cb(); } else if(++n>60){ clearInterval(t); } },100);
+    }
+    function lcDateStr(d){ return d.toISOString().split('T')[0]; }
+    function lcShiftDate(days){ const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+days); return d; }
+    async function lcTryGet(tables, query){
+      for(const t of tables){
+        try{ const r=await sbGet(t, query); if(Array.isArray(r)) return r; }catch(e){}
+      }
+      return null;
+    }
+    function lcLateMinutes(emp, createdAtISO, horaires){
+      const h=getScheduleForEmployee(emp,horaires);
+      const startMin=minutesFromTime(h?.heure_debut || h?.start_time || h?.start);
+      if(startMin==null) return 0;
+      const tol=parseInt(h?.tolerance_retard ?? h?.late_tolerance ?? 0,10)||0;
+      return Math.max(0, minutesFromDate(createdAtISO)-startMin-tol);
+    }
+
+    async function initDashboard(){
+      const upd=document.getElementById('dash-updated'); if(upd) upd.textContent='Chargement des données…';
+      const today=todayStr();
+      const from30=lcDateStr(lcShiftDate(-29));
+      const d12=new Date(); d12.setDate(1); d12.setMonth(d12.getMonth()-11); const from12=lcDateStr(d12);
+
+      let emps, pts30, ptsToday, abs12, horaires, rdvAll;
+      try{
+        [emps, pts30, ptsToday, abs12, horaires] = await Promise.all([
+          sbGet('employees','status=eq.actif'),
+          sbGet('pointages',`created_at=gte.${from30}T00:00:00&created_at=lte.${today}T23:59:59&order=created_at.asc`),
+          sbGet('pointages',`created_at=gte.${today}T00:00:00&created_at=lte.${today}T23:59:59&order=created_at.asc`),
+          sbGet('absences',`date_absence=gte.${from12}&order=date_absence.asc`),
+          sbGet('horaires','')
+        ]);
+        try{ const r=await sbGet('appointments',`appointment_date=gte.${today}T00:00:00&appointment_date=lte.${today}T23:59:59`); rdvAll=Array.isArray(r)?r:null; }catch(e){ rdvAll=null; }
+      }catch(e){
+        if(upd) upd.textContent='Erreur de chargement. Réessayez.';
+        return;
+      }
+      const E  = Array.isArray(emps)?emps:[];
+      const P30= Array.isArray(pts30)?pts30:[];
+      const TT = Array.isArray(ptsToday)?ptsToday:[];
+      const A12= Array.isArray(abs12)?abs12:[];
+      const H  = Array.isArray(horaires)?horaires:[];
+      const empMap={}; E.forEach(e=>empMap[e.id]=e);
+
+      // ── KPI du jour ──
+      const presentSet=new Set(TT.filter(p=>p.type==='entrée').map(p=>p.employee_id));
+      const present=presentSet.size;
+      const absent=Math.max(0, E.length-present);
+      const firstToday={};
+      TT.filter(p=>p.type==='entrée').forEach(p=>{ const k=p.employee_id; if(!firstToday[k]||p.created_at<firstToday[k]) firstToday[k]=p.created_at; });
+      let retardToday=0;
+      Object.entries(firstToday).forEach(([id,iso])=>{ const e=empMap[id]; if(e && lcLateMinutes(e,iso,H)>0) retardToday++; });
+      let totMin=0; const byEmp={};
+      TT.forEach(p=>{ (byEmp[p.employee_id]=byEmp[p.employee_id]||[]).push(p); });
+      Object.values(byEmp).forEach(list=>{
+        const ent=list.filter(p=>p.type==='entrée').map(p=>p.created_at).sort();
+        const sor=list.filter(p=>p.type==='sortie').map(p=>p.created_at).sort();
+        if(ent.length && sor.length){ const m=(new Date(sor[sor.length-1])-new Date(ent[0]))/60000; if(m>0) totMin+=m; }
+      });
+      const hoursStr=Math.floor(totMin/60)+'h'+String(Math.round(totMin%60)).padStart(2,'0');
+      let rdvToday = rdvAll ? rdvAll.filter(a=>(a.status||'planifié')!=='annulé').length : null;
+
+      const setTxt=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+      setTxt('dash-present',present);
+      setTxt('dash-absent',absent);
+      setTxt('dash-retard',retardToday);
+      setTxt('dash-hours',hoursStr);
+      setTxt('dash-rdv', rdvToday==null?'—':rdvToday);
+
+      // ── Séries 30 jours ──
+      const dayLabels=[], dayKeys=[];
+      for(let i=29;i>=0;i--){ const d=lcShiftDate(-i); dayKeys.push(lcDateStr(d)); dayLabels.push(d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})); }
+      const presByDay={}, lateByDay={}; dayKeys.forEach(k=>{ presByDay[k]=new Set(); lateByDay[k]=new Set(); });
+      const firstEntree={};
+      P30.filter(p=>p.type==='entrée').forEach(p=>{
+        const day=p.created_at.split('T')[0];
+        if(presByDay[day]) presByDay[day].add(p.employee_id);
+        const key=p.employee_id+'|'+day;
+        if(!firstEntree[key] || p.created_at<firstEntree[key]) firstEntree[key]=p.created_at;
+      });
+      Object.entries(firstEntree).forEach(([key,iso])=>{
+        const [id,day]=key.split('|'); const e=empMap[id]; if(!e) return;
+        if(lateByDay[day] && lcLateMinutes(e,iso,H)>0) lateByDay[day].add(id);
+      });
+      const presData=dayKeys.map(k=>presByDay[k].size);
+      const lateData=dayKeys.map(k=>lateByDay[k].size);
+
+      // ── Absences 12 mois ──
+      const monLabels=[], monKeys=[];
+      for(let i=11;i>=0;i--){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i); monKeys.push(d.toISOString().slice(0,7)); monLabels.push(d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'})); }
+      const absByMon={}; monKeys.forEach(k=>absByMon[k]=0);
+      A12.forEach(a=>{ const k=(getAbsenceDate(a)||'').slice(0,7); if(k in absByMon) absByMon[k]++; });
+      const absData=monKeys.map(k=>absByMon[k]);
+
+      // ── Productivité par équipe (30 j) ──
+      const bWin=Math.max(1, businessDates(from30, today).length);
+      const teamOf=e=> e.team || e.department || 'Non défini';
+      const teamEff={}, teamPres={};
+      E.forEach(e=>{ const t=teamOf(e); teamEff[t]=(teamEff[t]||0)+1; teamPres[t]=teamPres[t]||new Set(); });
+      P30.filter(p=>p.type==='entrée').forEach(p=>{ const e=empMap[p.employee_id]; if(!e) return; const t=teamOf(e); (teamPres[t]=teamPres[t]||new Set()).add(p.employee_id+'|'+p.created_at.split('T')[0]); });
+      const teamLabels=Object.keys(teamEff).sort();
+      const teamData=teamLabels.map(t=>Math.round((teamPres[t]?teamPres[t].size:0)/((teamEff[t]||1)*bWin)*100));
+
+      if(upd) upd.textContent='Actualisé à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · effectif actif : '+E.length;
+
+      // ── Rendu graphiques ──
+      lcWaitChart(()=>{
+        Chart.defaults.color='#8b949e';
+        Chart.defaults.borderColor='rgba(48,54,61,0.5)';
+        Chart.defaults.font.family="'Instrument Sans',sans-serif";
+        const noLegend={plugins:{legend:{display:false}}};
+        const lineOpts=extra=>({responsive:true,maintainAspectRatio:false,...noLegend,scales:{x:{ticks:{maxTicksLimit:8,maxRotation:0}},y:{beginAtZero:true,ticks:{precision:0}}},...(extra||{})});
+        const barOpts=extra=>({responsive:true,maintainAspectRatio:false,...noLegend,scales:{x:{ticks:{maxRotation:0}},y:{beginAtZero:true,ticks:{precision:0}}},...(extra||{})});
+        lcRenderChart('chartPresence30',{type:'line',data:{labels:dayLabels,datasets:[{label:'Présents',data:presData,borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.15)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}]},options:lineOpts()});
+        lcRenderChart('chartRetard30',{type:'line',data:{labels:dayLabels,datasets:[{label:'Retards',data:lateData,borderColor:'#f78166',backgroundColor:'rgba(247,129,102,0.15)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}]},options:lineOpts()});
+        lcRenderChart('chartAbs12',{type:'bar',data:{labels:monLabels,datasets:[{label:'Absences',data:absData,backgroundColor:'#58a6ff',borderRadius:4}]},options:barOpts()});
+        lcRenderChart('chartTeam',{type:'bar',data:{labels:teamLabels,datasets:[{label:'Taux',data:teamData,backgroundColor:'#f5c542',borderRadius:4}]},options:barOpts({scales:{x:{ticks:{maxRotation:0}},y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}}})});
+      });
+    }
+    function lcRenderChart(id, config){
+      const cv=document.getElementById(id); if(!cv || !window.Chart) return;
+      if(lcCharts[id]) lcCharts[id].destroy();
+      lcCharts[id]=new Chart(cv.getContext('2d'), config);
+    }
+
+    // Rafraîchir le dashboard quand on revient sur l'onglet
+    const lcBaseSwitchTab = switchTab;
+    switchTab = function(id, el){ lcBaseSwitchTab(id, el); if(id==='dashboard') initDashboard(); };
+
+    // Chargement initial
+    initDashboard();
+    // ══ FIN TABLEAU DE BORD RH ══
+
+    // ══════════════════════════════════════════════════════════════════
+    // LIGHTCHECK — ARCHIVES & RAPPORTS AUTOMATIQUES (Phase 5)
+    // Table : generated_reports
+    // ══════════════════════════════════════════════════════════════════
+    async function sbInsert(t, d){
+      return (await fetch(`${SUPABASE_URL}/rest/v1/${t}`, {
+        method:'POST', headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},
+        body:JSON.stringify(d)
+      })).json();
+    }
+    async function sbDelete(t, q){
+      return fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, { method:'DELETE', headers:{...sbH,Prefer:'return=minimal'} });
+    }
+    let lcCompanyId;
+    async function lcGetCompanyId(){
+      if(lcCompanyId!==undefined) return lcCompanyId;
+      try{ const c=await sbGet('companies','limit=1'); lcCompanyId=(Array.isArray(c)&&c[0]?.id)||null; }catch(e){ lcCompanyId=null; }
+      return lcCompanyId;
+    }
+
+    // Archiver le rapport actuellement affiché dans le panneau
+    async function archiveCurrentReport(){
+      const rows=cachedData.rows||[], headers=cachedData.headers||[];
+      if(!rows.length){ alert("Aucune donnée à archiver. Générez d'abord un rapport."); return; }
+      const title=(document.getElementById('panel-title')?.textContent||'Rapport').trim();
+      const sub=(document.getElementById('panel-sub')?.textContent||'').trim();
+      const cid=await lcGetCompanyId();
+      const payload={ title, sub, headers, rows, generated_at:new Date().toISOString() };
+      const res=await sbInsert('generated_reports',{ company_id:cid, report_type:'manuel', generated_at:new Date().toISOString(), payload });
+      if(Array.isArray(res) && res[0]?.id) alert('Rapport archivé ✓');
+      else alert("Erreur d'archivage : "+(res?.message||"vérifiez que la table generated_reports existe (script SQL Phase 5)."));
+    }
+
+    // Générer + archiver un instantané de présence pour une période type
+    async function archiveAutoReport(type){
+      const st=document.getElementById('auto-status'); if(st) st.textContent='Génération en cours…';
+      let from, to=todayStr(), label;
+      if(type==='daily'){ from=todayStr(); label='Quotidien'; }
+      else if(type==='weekly'){ const d=new Date(); const dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); from=lcDateStr(d); label='Hebdomadaire'; }
+      else if(type==='monthly'){ from=monthStart(); label='Mensuel'; }
+      else { const d=new Date(); from=lcDateStr(new Date(d.getFullYear(),0,1)); label='Annuel'; }
+      let emps, pts, absences;
+      try{
+        [emps, pts, absences] = await Promise.all([
+          sbGet('employees','status=eq.actif&order=full_name.asc'),
+          sbGet('pointages',`type=eq.entrée&created_at=gte.${from}T00:00:00&created_at=lte.${to}T23:59:59&order=created_at.asc`),
+          sbGet('absences',`date_absence=gte.${from}&date_absence=lte.${to}`)
+        ]);
+      }catch(e){ if(st) st.textContent='Erreur de lecture des données.'; return; }
+      const E=Array.isArray(emps)?emps:[], P=Array.isArray(pts)?pts:[], A=Array.isArray(absences)?absences:[];
+      const days=businessDates(from,to);
+      const empMap={}; E.forEach(e=>empMap[e.id]={name:e.full_name,post:e.post||'—',present:new Set(),abs:new Set()});
+      P.forEach(p=>{ if(empMap[p.employee_id]) empMap[p.employee_id].present.add(p.created_at.split('T')[0]); });
+      A.forEach(a=>{ const d=getAbsenceDate(a); if(empMap[a.employee_id]&&d) empMap[a.employee_id].abs.add(d); });
+      const rows=E.map(e=>{ const m=empMap[e.id]; const pres=m.present.size; const rate=days.length?Math.round(pres/days.length*100):0;
+        return {Employé:m.name,Poste:m.post,'Jours présents':pres,'Jours absents':m.abs.size,'Jours ouvrés':days.length,'Taux présence (%)':rate}; });
+      const headers=Object.keys(rows[0]||{'Employé':'','Poste':'','Jours présents':'','Jours absents':'','Jours ouvrés':'','Taux présence (%)':''});
+      const cid=await lcGetCompanyId();
+      const payload={ title:`Rapport ${label}`, sub:`Présence du ${fmtDate(from)} au ${fmtDate(to)}`, period:{from,to}, headers, rows, generated_at:new Date().toISOString() };
+      const res=await sbInsert('generated_reports',{ company_id:cid, report_type:type, generated_at:new Date().toISOString(), payload });
+      if(Array.isArray(res) && res[0]?.id){ if(st) st.textContent=`Rapport ${label} archivé ✓ (${rows.length} employé(s))`; loadArchives(); }
+      else if(st) st.textContent='Erreur : '+(res?.message||'table generated_reports introuvable (exécutez le script SQL Phase 5).');
+    }
+
+    // Historique
+    let lcArchives={};
+    async function loadArchives(){
+      const el=document.getElementById('archives-list'); if(!el) return;
+      el.innerHTML='<div class="loading"><div class="spinner"></div><div>Chargement des archives…</div></div>';
+      let res; try{ res=await sbGet('generated_reports','order=generated_at.desc&limit=200'); }catch(e){ res=null; }
+      if(!Array.isArray(res)){ el.innerHTML='<div class="muted" style="padding:20px;text-align:center;">La table <code>generated_reports</code> n\'existe pas encore. Exécutez le script SQL de la Phase 5.</div>'; return; }
+      if(!res.length){ el.innerHTML='<div class="muted" style="padding:20px;text-align:center;">Aucun rapport archivé pour l\'instant.</div>'; return; }
+      const typeLabels={daily:'Quotidien',weekly:'Hebdomadaire',monthly:'Mensuel',yearly:'Annuel',manuel:'Manuel'};
+      lcArchives={};
+      el.innerHTML=res.map(r=>{
+        lcArchives[r.id]=r; const p=r.payload||{};
+        const when=new Date(r.generated_at||p.generated_at).toLocaleString('fr-FR');
+        const tag=typeLabels[r.report_type]||r.report_type||'—';
+        const n=(p.rows||[]).length;
+        return `<div class="report-card" style="cursor:default;"><div class="report-icon">🗃️</div><div class="report-body"><div class="report-title">${p.title||'Rapport'}</div><div class="report-desc">${p.sub||''} · ${n} ligne(s) · archivé le ${when}</div><div class="report-meta"><span class="report-tag tag-p">${tag}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="openArchive('${r.id}')">👁 Ouvrir</button><button class="btn btn-ghost btn-sm" onclick="deleteArchive('${r.id}')">🗑 Supprimer</button></div></div></div>`;
+      }).join('');
+    }
+    function openArchive(id){
+      const r=lcArchives[id]; if(!r) return; const p=r.payload||{};
+      cachedData.rows=p.rows||[]; cachedData.headers=p.headers||[];
+      const heads=p.headers||[];
+      const headHtml=heads.map(h=>`<th>${h}</th>`).join('');
+      const bodyHtml=(p.rows||[]).map(row=>`<tr>${heads.map(h=>`<td>${row[h]??''}</td>`).join('')}</tr>`).join('');
+      openPanel(p.title||'Rapport archivé', p.sub||'', '', ()=>{
+        setBody(`<div class="section-title">${(p.rows||[]).length} ligne(s) · archive</div><div class="tbl-wrap"><table><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml||'<tr><td class="muted" style="padding:20px;text-align:center;">Vide.</td></tr>'}</tbody></table></div>${exportButtons()}`);
+      });
+    }
+    async function deleteArchive(id){
+      if(!confirm('Supprimer définitivement ce rapport archivé ?')) return;
+      try{ await sbDelete('generated_reports',`id=eq.${id}`); }catch(e){}
+      loadArchives();
+    }
+
+    // Rafraîchir l'historique quand on ouvre l'onglet Archives
+    const lcBaseSwitchTab2 = switchTab;
+    switchTab = function(id, el){ lcBaseSwitchTab2(id, el); if(id==='archives') loadArchives(); };
+    // ══ FIN ARCHIVES & RAPPORTS AUTOMATIQUES ══
+
+
+
+    </script>
+    </body>
+    </html>

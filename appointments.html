@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Rendez-vous</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#fff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#2e90fa;--blue-bg:#eff8ff;--blue-border:#b2ddff;--blue-dark:#1d4ed8;
+  --purple:#7f56d9;--purple-bg:#f9f5ff;--purple-border:#d6bbfb;
+  --radius:10px;--shadow:0 1px 3px rgba(16,24,40,0.1);
+  --shadow-md:0 4px 8px -2px rgba(16,24,40,0.1);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;color:var(--text2);
+  padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:6px;
+  font-family:'Instrument Sans',sans-serif;transition:background 0.15s;}
+.back-btn:hover{background:var(--bg);color:var(--text);}
+.back-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
+.page-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;position:absolute;left:50%;transform:translateX(-50%);}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);}
+.icon-btn:hover{background:var(--bg);}
+
+/* CONTAINER */
+.container{max-width:1000px;margin:0 auto;padding:16px;}
+
+/* ACTION ROW */
+.action-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.btn-new{display:flex;align-items:center;gap:6px;background:var(--blue-dark);color:#fff;
+  border:none;border-radius:8px;padding:9px 16px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:600;cursor:pointer;transition:background 0.1s;white-space:nowrap;}
+.btn-new:hover{background:#1e40af;}
+.btn-advanced{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;
+  font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:500;
+  cursor:pointer;color:var(--text);transition:all 0.15s;}
+.btn-advanced:hover{background:var(--bg);}
+.btn-advanced svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
+.btn-refresh{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;
+  font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:500;
+  cursor:pointer;color:var(--text2);transition:all 0.15s;margin-left:auto;}
+.btn-refresh:hover{background:var(--bg);color:var(--text);}
+
+/* DATE RANGE */
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.date-range-wrap{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;
+  transition:border-color 0.15s;}
+.date-range-wrap:hover{border-color:var(--blue);}
+.date-range-text{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:var(--text);}
+.date-range-icon{color:var(--text2);font-size:0.95rem;}
+.filter-clear{background:none;border:none;color:var(--text3);font-size:0.75rem;cursor:pointer;
+  padding:2px 6px;border-radius:4px;font-family:inherit;}
+.filter-clear:hover{color:var(--text2);}
+.filter-chip{display:flex;align-items:center;gap:6px;background:var(--blue-bg);
+  border:1px solid var(--blue-border);border-radius:20px;padding:4px 10px;
+  font-size:0.75rem;color:var(--blue);font-weight:500;}
+.filter-chip button{background:none;border:none;cursor:pointer;color:var(--blue);
+  font-size:0.75rem;padding:0;line-height:1;}
+
+/* TABLE CARD */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f9fafb;border-bottom:1px solid var(--border);}
+th{padding:10px 14px;text-align:left;font-size:0.75rem;font-weight:600;color:var(--text2);
+  white-space:nowrap;user-select:none;}
+th.sortable{cursor:pointer;}
+th.sortable:hover{color:var(--text);}
+td{padding:11px 14px;border-top:1px solid var(--border);font-size:0.855rem;vertical-align:middle;}
+tr:hover td{background:#f9fafb;}
+
+/* VISITOR AVATAR */
+.vis-avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:0.72rem;font-weight:700;color:#fff;flex-shrink:0;margin-right:8px;}
+.vis-name{font-weight:500;}
+.vis-email{font-size:0.75rem;color:var(--text3);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+  font-size:0.72rem;font-weight:500;white-space:nowrap;}
+.badge-planned{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.badge-confirmed{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green-border);}
+.badge-cancelled{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-done{background:#f2f4f7;color:var(--text2);border:1px solid var(--border);}
+
+/* ROW ACTIONS */
+.row-actions{display:flex;gap:4px;justify-content:flex-end;}
+.row-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;
+  font-size:0.75rem;color:var(--text2);cursor:pointer;transition:all 0.12s;font-family:inherit;}
+.row-btn:hover{background:var(--bg);color:var(--text);}
+.row-btn.danger:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+
+/* EMPTY */
+.empty-row td{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-icon{font-size:2.5rem;margin-bottom:10px;}
+.empty-text{font-size:0.9rem;margin-bottom:6px;color:var(--text2);font-weight:500;}
+.empty-sub{font-size:0.8rem;color:var(--text3);}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+.page-info{font-size:0.82rem;color:var(--text2);}
+.page-nav{display:flex;align-items:center;gap:4px;}
+.page-btn{height:32px;min-width:32px;padding:0 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;color:var(--text2);transition:all 0.15s;font-family:'Instrument Sans',sans-serif;}
+.page-btn:hover:not(:disabled){background:var(--bg);color:var(--text);}
+.page-btn.active{background:var(--blue-dark);color:#fff;border-color:var(--blue-dark);}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+.spinner-dark{border:2px solid var(--border);border-top-color:var(--blue);animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-row td{text-align:center;padding:40px;color:var(--text3);}
+
+/* ═══════════════════════════════
+   MODAL
+═══════════════════════════════ */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);z-index:300;align-items:flex-end;justify-content:center;}
+.modal-bd.open{display:flex;animation:fadeIn 0.15s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;
+  width:100%;max-width:520px;animation:slideUp 0.25s ease;max-height:92vh;
+  overflow-y:auto;display:flex;flex-direction:column;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+/* Modal header — reference style: icon + title + × */
+.modal-header{display:flex;align-items:center;gap:12px;padding:20px 20px 0;margin-bottom:20px;}
+.modal-header-icon{width:40px;height:40px;background:var(--blue-bg);border:1px solid var(--blue-border);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.modal-header-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;flex:1;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.1rem;
+  width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;}
+.modal-close:hover{background:var(--bg);color:var(--text2);}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+.modal-body{padding:0 20px 20px;flex:1;overflow-y:auto;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;
+  align-items:center;justify-content:flex-end;gap:8px;}
+
+/* FORM */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:0.72rem;font-weight:600;color:var(--text2);margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:0.5px;}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;
+  outline:none;transition:border-color 0.15s;}
+.fi:focus{border-color:var(--blue);background:var(--surface);}
+.fi-date{font-family:'IBM Plex Mono',monospace;}
+.fsel{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;
+  outline:none;appearance:none;transition:border-color 0.15s;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23667085' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+.fsel:focus{border-color:var(--blue);background:var(--surface);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* Input with clear button */
+.fi-clearable{position:relative;}
+.fi-clearable .fi{padding-right:36px;}
+.fi-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  background:var(--blue-dark);color:#fff;border:none;border-radius:4px;
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;cursor:pointer;font-weight:700;}
+.fi-clear:hover{background:#1e40af;}
+
+/* Alert */
+.alert{padding:10px 14px;border-radius:8px;font-size:0.82rem;border:1px solid;
+  margin-bottom:12px;display:none;}
+.alert.show{display:flex;gap:8px;align-items:flex-start;}
+.alert-error{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
+
+/* Buttons */
+.btn-primary{padding:10px 20px;border-radius:8px;border:none;background:var(--blue-dark);
+  color:#fff;font-family:'Instrument Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;
+  transition:background 0.15s;}
+.btn-primary:hover{background:#1e40af;}
+.btn-ghost{padding:10px 16px;border-radius:8px;border:1.5px solid var(--border);
+  background:transparent;color:var(--text2);font-family:'Instrument Sans',sans-serif;
+  font-size:0.9rem;font-weight:500;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;gap:6px;}
+.btn-ghost:hover{background:var(--bg);}
+
+/* Advanced dropdown */
+.adv-dropdown{position:relative;}
+.adv-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:200;
+  min-width:200px;padding:4px 0;}
+.adv-menu.open{display:block;animation:dropIn 0.15s ease;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.adv-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:0.85rem;
+  color:var(--text);cursor:pointer;background:none;border:none;width:100%;text-align:left;
+  font-family:inherit;transition:background 0.1s;}
+.adv-item:hover{background:var(--bg);}
+.adv-item svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;color:var(--text2);}
+
+/* Detail modal */
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:10px 0;border-bottom:1px solid var(--border);font-size:0.875rem;gap:16px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{color:var(--text2);flex-shrink:0;}
+.detail-val{font-weight:500;text-align:right;word-break:break-word;}
+
+@media(min-width:768px){
+  .modal-bd{align-items:center;}
+  .modal{border-radius:16px;max-width:520px;}
+  .modal-handle{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="window.location.href='index.html'">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Tableau de bord
+    </button>
+  </div>
+  <div class="page-title">Rendez-vous</div>
+  <div style="display:flex;align-items:center;gap:6px;">
+    <button class="icon-btn" title="Actualiser" onclick="loadAppointments()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- ACTION ROW -->
+  <div class="action-row">
+    <button class="btn-new" onclick="openNewModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nouveau rendez-vous
+    </button>
+
+    <div class="adv-dropdown" id="adv-dropdown">
+      <button class="btn-advanced" onclick="toggleAdvMenu()">
+        <svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Avancé
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="adv-menu" id="adv-menu">
+        <button class="adv-item" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporter en CSV
+        </button>
+        <button class="adv-item" onclick="printList()">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimer
+        </button>
+        <button class="adv-item" onclick="closeAdvMenu();showFilters=!showFilters;renderFilters()">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Filtres avancés
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-refresh" onclick="loadAppointments()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+      </svg>
+      Actualiser
+    </button>
+  </div>
+
+  <!-- FILTER ROW -->
+  <div class="filter-row">
+    <div class="date-range-wrap" onclick="openDateFilter()">
+      <span class="date-range-icon">📅</span>
+      <span class="date-range-text" id="date-range-label">—</span>
+    </div>
+    <div id="active-filters"></div>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" onclick="sortBy('visitor_name')">Visiteur <span id="sort-visitor"></span></th>
+            <th class="sortable" onclick="sortBy('project')">Objet / Projet <span id="sort-project"></span></th>
+            <th class="sortable" onclick="sortBy('appointment_date')">Date & Heure <span id="sort-date"></span></th>
+            <th>Responsable</th>
+            <th>Statut</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appt-tbody">
+          <tr class="loading-row"><td colspan="6"><div style="display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;"></div>Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination" style="display:none;">
+      <div class="page-info" id="page-info">—</div>
+      <div class="page-nav" id="page-nav"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════
+     MODAL — NOUVEAU / MODIFIER RENDEZ-VOUS
+════════════════════════════════════ -->
+<div class="modal-bd" id="modal-new">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-header-icon">📅</div>
+      <div class="modal-header-title" id="modal-new-title">Nouveau rendez-vous</div>
+      <button class="modal-close" onclick="closeModal('modal-new')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-error" id="new-error">
+        <span>⚠</span><span id="new-error-msg">Erreur</span>
+      </div>
+
+      <!-- Visiteur -->
+      <div class="fg">
+        <label class="fl">Nom du visiteur *</label>
+        <input class="fi" id="nv-name" type="text" placeholder="Prénom Nom"/>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Email</label>
+          <input class="fi" id="nv-email" type="email" placeholder="email@exemple.com"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Téléphone</label>
+          <input class="fi" id="nv-phone" type="tel" placeholder="+33 6 …"/>
+        </div>
+      </div>
+
+      <!-- Objet -->
+      <div class="fg">
+        <label class="fl">Objet / Projet *</label>
+        <div class="fi-clearable">
+          <input class="fi" id="nv-project" type="text" placeholder="ex : Réunion commerciale"/>
+          <button class="fi-clear" onclick="document.getElementById('nv-project').value=''" title="Effacer">✕</button>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Date de début *</label>
+          <input class="fi fi-date" id="nv-date-from" type="datetime-local"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Date de fin</label>
+          <input class="fi fi-date" id="nv-date-to" type="datetime-local"/>
+        </div>
+      </div>
+
+      <!-- Responsable -->
+      <div class="fg">
+        <label class="fl">Responsable / Hôte</label>
+        <select class="fsel" id="nv-host">
+          <option value="">— Sélectionner un employé —</option>
+        </select>
+      </div>
+
+      <!-- Groupe -->
+      <div class="fg">
+        <label class="fl">Groupe / Horaire</label>
+        <div class="fi-clearable">
+          <select class="fsel" id="nv-schedule" style="padding-right:44px;">
+            <option value="">Tous</option>
+          </select>
+          <button class="fi-clear" onclick="document.getElementById('nv-schedule').value=''" title="Effacer">✕</button>
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="fg">
+        <label class="fl">Statut</label>
+        <select class="fsel" id="nv-status">
+          <option value="planifié">Planifié</option>
+          <option value="confirmé">Confirmé</option>
+          <option value="annulé">Annulé</option>
+          <option value="terminé">Terminé</option>
+        </select>
+      </div>
+
+      <!-- Notes -->
+      <div class="fg">
+        <label class="fl">Notes</label>
+        <textarea class="fi" id="nv-notes" rows="3" placeholder="Informations complémentaires…" style="resize:vertical;min-height:72px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-new')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Fermer
+      </button>
+      <button class="btn-primary" id="btn-save-new" onclick="saveAppointment()">
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-bd" id="modal-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-header-icon">📋</div>
+      <div class="modal-header-title" id="det-title">Détail du rendez-vous</div>
+      <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="det-body"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-detail')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Fermer
+      </button>
+      <button class="btn-primary" onclick="editFromDetail()">Modifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- DATE FILTER MODAL -->
+<div class="modal-bd" id="modal-date">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-header-icon">📅</div>
+      <div class="modal-header-title">Filtrer par date</div>
+      <button class="modal-close" onclick="closeModal('modal-date')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl">De</label>
+        <input class="fi fi-date" id="df-from" type="date"/>
+      </div>
+      <div class="fg">
+        <label class="fl">À</label>
+        <input class="fi fi-date" id="df-to" type="date"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-date');resetDateFilter()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Réinitialiser
+      </button>
+      <button class="btn-primary" onclick="applyDateFilter()">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const sbH = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+
+async function sbGet(t, q='')  { return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, {headers:sbH})).json(); }
+async function sbInsert(t, d)  { return (await fetch(`${SUPABASE_URL}/rest/v1/${t}`, {method:'POST', headers:{...sbH,'Content-Type':'application/json','Prefer':'return=representation'}, body:JSON.stringify(d)})).json(); }
+async function sbPatch(t, q, d){ return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, {method:'PATCH', headers:{...sbH,'Content-Type':'application/json','Prefer':'return=representation'}, body:JSON.stringify(d)})).json(); }
+async function sbDelete(t, q)  { return fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`, {method:'DELETE', headers:sbH}); }
+
+// ── STATE ──
+let appointments = [];
+let employees    = [];
+let currentPage  = 1;
+const PER_PAGE   = 15;
+let sortField    = 'appointment_date';
+let sortAsc      = true;
+let filterFrom   = null;
+let filterTo     = null;
+let editingId    = null;
+let detailAppt   = null;
+let showFilters  = false;
+
+// ── INIT ──
+(async function init(){
+  const today = new Date().toISOString().split('T')[0];
+  const weekEnd = new Date(Date.now() + 7*86400000).toISOString().split('T')[0];
+  filterFrom = today;
+  filterTo   = weekEnd;
+  updateDateRangeLabel();
+  await Promise.all([loadEmployees(), loadAppointments()]);
+})();
+
+// ── EMPLOYEES ──
+async function loadEmployees(){
+  try{
+    const rows = await sbGet('employees', 'status=eq.actif&select=id,full_name&order=full_name.asc');
+    if(Array.isArray(rows)) employees = rows;
+  }catch(e){ employees = []; }
+  populateHostSelect();
+}
+
+function populateHostSelect(){
+  const sel = document.getElementById('nv-host');
+  sel.innerHTML = '<option value="">— Sélectionner un employé —</option>';
+  employees.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.id; o.textContent = e.full_name;
+    sel.appendChild(o);
+  });
+}
+
+// ── APPOINTMENTS ──
+async function loadAppointments(){
+  const tbody = document.getElementById('appt-tbody');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="6"><div style="display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;"></div>Chargement…</td></tr>';
+
+  try{
+    let q = 'select=*&order=appointment_date.asc';
+    if(filterFrom) q += `&appointment_date=gte.${filterFrom}T00:00:00`;
+    if(filterTo)   q += `&appointment_date=lte.${filterTo}T23:59:59`;
+
+    const rows = await sbGet('appointments', q);
+
+    if(!Array.isArray(rows)){
+      // Table may not exist yet — show friendly empty state
+      appointments = [];
+    } else {
+      appointments = rows;
+    }
+  }catch(e){
+    appointments = [];
+  }
+
+  renderTable();
+}
+
+// ── RENDER TABLE ──
+function renderTable(){
+  // Sort
+  const sorted = [...appointments].sort((a,b)=>{
+    let va = a[sortField]||'', vb = b[sortField]||'';
+    if(va < vb) return sortAsc ? -1 : 1;
+    if(va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  // Paginate
+  const total = sorted.length;
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  if(currentPage > pages) currentPage = pages;
+  const start = (currentPage-1)*PER_PAGE;
+  const slice = sorted.slice(start, start+PER_PAGE);
+
+  const tbody = document.getElementById('appt-tbody');
+
+  if(!total){
+    tbody.innerHTML = `
+      <tr class="empty-row"><td colspan="6">
+        <div class="empty-icon">📅</div>
+        <div class="empty-text">Aucun rendez-visite</div>
+        <div class="empty-sub">Cliquez sur <strong>+ Nouveau rendez-vous</strong> pour en créer un.</div>
+      </td></tr>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = slice.map(a => {
+    const dateStr = a.appointment_date
+      ? new Date(a.appointment_date).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    const initials = (a.visitor_name||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+    const color = avatarColor(a.visitor_name||'');
+    const hostName = employees.find(e=>e.id===a.employee_id)?.full_name || (a.employee_id ? '—' : '');
+
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;">
+          <div class="vis-avatar" style="background:${color};">${initials}</div>
+          <div>
+            <div class="vis-name">${esc(a.visitor_name||'—')}</div>
+            ${a.visitor_email ? `<div class="vis-email">${esc(a.visitor_email)}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td>${esc(a.project||'—')}</td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;">${dateStr}</span></td>
+      <td>${hostName ? `<span style="font-size:0.82rem;">${esc(hostName)}</span>` : '<span style="color:var(--text3);font-size:0.82rem;">—</span>'}</td>
+      <td>${statusBadge(a.status||'planifié')}</td>
+      <td>
+        <div class="row-actions">
+          <button class="row-btn" onclick="openDetail('${a.id}')">Voir</button>
+          <button class="row-btn" onclick="openEdit('${a.id}')">Modifier</button>
+          <button class="row-btn danger" onclick="deleteAppointment('${a.id}')">Supprimer</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const pag = document.getElementById('pagination');
+  pag.style.display = total > PER_PAGE ? 'flex' : 'none';
+  document.getElementById('page-info').textContent = `${start+1}–${Math.min(start+PER_PAGE, total)} sur ${total} rendez-vous`;
+  const nav = document.getElementById('page-nav');
+  nav.innerHTML = '';
+  const addBtn = (label, page, disabled, active) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (active?' active':'');
+    b.disabled = disabled;
+    b.textContent = label;
+    b.onclick = () => { currentPage = page; renderTable(); };
+    nav.appendChild(b);
+  };
+  addBtn('‹', currentPage-1, currentPage===1, false);
+  for(let p=1;p<=pages;p++){
+    if(pages<=7 || Math.abs(p-currentPage)<=1 || p===1 || p===pages)
+      addBtn(p, p, false, p===currentPage);
+    else if(Math.abs(p-currentPage)===2 && pages>5){
+      const sp=document.createElement('span');
+      sp.textContent='…';sp.style.cssText='padding:0 4px;color:var(--text3);font-size:0.82rem;';
+      nav.appendChild(sp);
+    }
+  }
+  addBtn('›', currentPage+1, currentPage===pages, false);
+}
+
+// ── HELPERS ──
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+const COLORS = ['#7f56d9','#0ba5ec','#12b76a','#f79009','#f04438','#ee46bc','#6172f3','#17b26a'];
+function avatarColor(name){ let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
+
+function statusBadge(s){
+  const map = {
+    'planifié': 'badge-planned',
+    'confirmé': 'badge-confirmed',
+    'annulé':   'badge-cancelled',
+    'terminé':  'badge-done'
+  };
+  const labels = { 'planifié':'Planifié','confirmé':'Confirmé','annulé':'Annulé','terminé':'Terminé' };
+  return `<span class="badge ${map[s]||'badge-planned'}">${labels[s]||s}</span>`;
+}
+
+// ── SORT ──
+function sortBy(field){
+  if(sortField===field) sortAsc=!sortAsc;
+  else { sortField=field; sortAsc=true; }
+  renderTable();
+}
+
+// ── DATE FILTER ──
+function updateDateRangeLabel(){
+  const el = document.getElementById('date-range-label');
+  if(filterFrom && filterTo)
+    el.textContent = `${filterFrom} — ${filterTo}`;
+  else if(filterFrom)
+    el.textContent = `Depuis ${filterFrom}`;
+  else
+    el.textContent = 'Toutes les dates';
+}
+
+function openDateFilter(){
+  document.getElementById('df-from').value = filterFrom || '';
+  document.getElementById('df-to').value   = filterTo   || '';
+  openModal('modal-date');
+}
+
+function applyDateFilter(){
+  filterFrom = document.getElementById('df-from').value || null;
+  filterTo   = document.getElementById('df-to').value   || null;
+  closeModal('modal-date');
+  updateDateRangeLabel();
+  loadAppointments();
+}
+
+function resetDateFilter(){
+  filterFrom = null; filterTo = null;
+  updateDateRangeLabel();
+  loadAppointments();
+}
+
+function renderFilters(){} // placeholder for advanced filters
+
+// ── MODAL OPEN/CLOSE ──
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-bd').forEach(m =>
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); })
+);
+
+// ── NEW / EDIT ──
+function openNewModal(){
+  editingId = null;
+  document.getElementById('modal-new-title').textContent = 'Nouveau rendez-vous';
+  document.getElementById('btn-save-new').textContent = 'Enregistrer';
+  clearNewForm();
+  // Default: today datetime
+  const now = new Date();
+  now.setMinutes(Math.ceil(now.getMinutes()/15)*15, 0, 0);
+  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  const end = new Date(now.getTime() + 60*60000 - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('nv-date-from').value = local;
+  document.getElementById('nv-date-to').value   = end;
+  openModal('modal-new');
+}
+
+function openEdit(id){
+  const a = appointments.find(x=>x.id===id);
+  if(!a) return;
+  editingId = id;
+  document.getElementById('modal-new-title').textContent = 'Modifier le rendez-vous';
+  document.getElementById('btn-save-new').textContent = 'Mettre à jour';
+  document.getElementById('new-error').classList.remove('show');
+  document.getElementById('nv-name').value    = a.visitor_name || '';
+  document.getElementById('nv-email').value   = a.visitor_email || '';
+  document.getElementById('nv-phone').value   = a.visitor_phone || '';
+  document.getElementById('nv-project').value = a.project || '';
+  document.getElementById('nv-notes').value   = a.notes || '';
+  document.getElementById('nv-status').value  = a.status || 'planifié';
+  if(a.employee_id) document.getElementById('nv-host').value = a.employee_id;
+  if(a.appointment_date){
+    const local = new Date(new Date(a.appointment_date) - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('nv-date-from').value = local;
+  }
+  if(a.appointment_end){
+    const local = new Date(new Date(a.appointment_end) - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('nv-date-to').value = local;
+  }
+  closeModal('modal-detail');
+  openModal('modal-new');
+}
+
+function editFromDetail(){
+  if(detailAppt) openEdit(detailAppt.id);
+}
+
+function clearNewForm(){
+  ['nv-name','nv-email','nv-phone','nv-project','nv-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('nv-status').value = 'planifié';
+  document.getElementById('nv-host').value   = '';
+  document.getElementById('nv-schedule').value = '';
+  document.getElementById('new-error').classList.remove('show');
+}
+
+async function saveAppointment(){
+  const name    = document.getElementById('nv-name').value.trim();
+  const project = document.getElementById('nv-project').value.trim();
+  const dateFrom = document.getElementById('nv-date-from').value;
+
+  if(!name)     return showNewError('Le nom du visiteur est requis.');
+  if(!project)  return showNewError('L\'objet / projet est requis.');
+  if(!dateFrom) return showNewError('La date de début est requise.');
+
+  const btn = document.getElementById('btn-save-new');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enregistrement…';
+
+  const data = {
+    visitor_name:  name,
+    visitor_email: document.getElementById('nv-email').value.trim() || null,
+    visitor_phone: document.getElementById('nv-phone').value.trim() || null,
+    project:       project,
+    notes:         document.getElementById('nv-notes').value.trim() || null,
+    status:        document.getElementById('nv-status').value,
+    employee_id:   document.getElementById('nv-host').value || null,
+    appointment_date: new Date(dateFrom).toISOString(),
+    appointment_end:  document.getElementById('nv-date-to').value
+      ? new Date(document.getElementById('nv-date-to').value).toISOString() : null,
+  };
+
+  try{
+    let result;
+    if(editingId){
+      result = await sbPatch('appointments', `id=eq.${editingId}`, data);
+    } else {
+      result = await sbInsert('appointments', data);
+    }
+
+    if(result && result.code){
+      showNewError('Erreur Supabase : ' + (result.message || result.code));
+    } else {
+      closeModal('modal-new');
+      await loadAppointments();
+    }
+  }catch(e){
+    showNewError('Erreur réseau : ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = editingId ? 'Mettre à jour' : 'Enregistrer';
+}
+
+function showNewError(msg){
+  const el = document.getElementById('new-error');
+  document.getElementById('new-error-msg').textContent = msg;
+  el.classList.add('show');
+}
+
+// ── DETAIL ──
+function openDetail(id){
+  const a = appointments.find(x=>x.id===id);
+  if(!a) return;
+  detailAppt = a;
+  document.getElementById('det-title').textContent = a.visitor_name || 'Rendez-vous';
+  const hostName = employees.find(e=>e.id===a.employee_id)?.full_name || '—';
+  const dateStr = a.appointment_date
+    ? new Date(a.appointment_date).toLocaleString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : '—';
+  const endStr = a.appointment_end
+    ? new Date(a.appointment_end).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+    : null;
+
+  document.getElementById('det-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Visiteur</span><span class="detail-val">${esc(a.visitor_name||'—')}</span></div>
+    ${a.visitor_email?`<div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">${esc(a.visitor_email)}</span></div>`:''}
+    ${a.visitor_phone?`<div class="detail-row"><span class="detail-key">Téléphone</span><span class="detail-val">${esc(a.visitor_phone)}</span></div>`:''}
+    <div class="detail-row"><span class="detail-key">Objet</span><span class="detail-val">${esc(a.project||'—')}</span></div>
+    <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${dateStr}${endStr?' → '+endStr:''}</span></div>
+    <div class="detail-row"><span class="detail-key">Responsable</span><span class="detail-val">${esc(hostName)}</span></div>
+    <div class="detail-row"><span class="detail-key">Statut</span><span class="detail-val">${statusBadge(a.status||'planifié')}</span></div>
+    ${a.notes?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:0.82rem;max-width:260px;">${esc(a.notes)}</span></div>`:''}
+  `;
+  openModal('modal-detail');
+}
+
+// ── DELETE ──
+async function deleteAppointment(id){
+  const a = appointments.find(x=>x.id===id);
+  if(!a) return;
+  if(!confirm(`Supprimer le rendez-vous de ${a.visitor_name||'ce visiteur'} ?`)) return;
+  await sbDelete('appointments', `id=eq.${id}`);
+  await loadAppointments();
+}
+
+// ── ADVANCED MENU ──
+function toggleAdvMenu(){
+  document.getElementById('adv-menu').classList.toggle('open');
+}
+function closeAdvMenu(){
+  document.getElementById('adv-menu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if(!document.getElementById('adv-dropdown').contains(e.target)) closeAdvMenu();
+});
+
+function exportCSV(){
+  closeAdvMenu();
+  if(!appointments.length){ alert('Aucun rendez-vous à exporter.'); return; }
+  const headers = ['Visiteur','Email','Téléphone','Objet','Date','Fin','Responsable','Statut','Notes'];
+  const rows = appointments.map(a => {
+    const host = employees.find(e=>e.id===a.employee_id)?.full_name||'';
+    return [
+      a.visitor_name||'',a.visitor_email||'',a.visitor_phone||'',
+      a.project||'',a.appointment_date||'',a.appointment_end||'',
+      host,a.status||'',a.notes||''
+    ].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','),...rows].join('\n');
+  const link = document.createElement('a');
+  link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  link.download = `rendez-vous-${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+}
+
+function printList(){
+  closeAdvMenu();
+  window.print();
+}
+</script>
+</body>
+</html>

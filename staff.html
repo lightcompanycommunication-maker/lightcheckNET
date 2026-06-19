@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Light Check — Gestion des accès</title>
+<style>
+  :root{ --bg:#f6f7f9; --surface:#fff; --line:#e5e7eb; --ink:#111; --muted:#6b7280;
+    --blue:#1d4ed8; --green:#12b76a; --red:#e11d48; --amber:#f59e0b; --radius:12px; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  .top{ display:flex; align-items:center; gap:12px; padding:16px 22px; background:var(--surface); border-bottom:1px solid var(--line); }
+  .top h1{ font-size:1.05rem; margin:0; }
+  .role-chip{ font-size:.72rem; padding:3px 10px; border-radius:20px; background:#eef2ff; color:var(--blue); font-weight:600; }
+  .top .sp{ flex:1; }
+  .btn{ border:none; border-radius:9px; padding:9px 15px; font-family:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+  .btn-primary{ background:var(--blue); color:#fff; }
+  .btn-light{ background:#f1f3f5; color:#111; border:1px solid var(--line); }
+  .wrap{ max-width:920px; margin:22px auto; padding:0 18px; }
+  .toolbar{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; }
+  th,td{ text-align:left; padding:12px 14px; font-size:.85rem; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th{ font-size:.72rem; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); }
+  tr:last-child td{ border-bottom:none; }
+  .tag{ font-size:.7rem; padding:2px 8px; border-radius:20px; font-weight:600; }
+  .tag-rh{ background:#eef2ff; color:var(--blue); }
+  .tag-mgr{ background:#ecfdf3; color:var(--green); }
+  .tag-off{ background:#fef2f2; color:var(--red); }
+  .tag-on{ background:#ecfdf3; color:var(--green); }
+  .muted{ color:var(--muted); font-size:.78rem; }
+  .row-actions{ display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+  .mini{ font-size:.72rem; padding:5px 9px; border-radius:7px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+  .empty{ text-align:center; padding:40px; color:var(--muted); }
+  /* modal */
+  .bd{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); align-items:center; justify-content:center; padding:18px; z-index:50; }
+  .bd.open{ display:flex; }
+  .modal{ background:#fff; border-radius:16px; width:100%; max-width:440px; padding:22px; max-height:90vh; overflow-y:auto; }
+  .modal h3{ margin:0 0 14px; font-size:1.05rem; }
+  label{ display:block; font-size:.78rem; color:var(--muted); margin:10px 0 5px; }
+  input[type=text],input[type=email],input[type=password]{ width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:.9rem; font-family:inherit; outline:none; }
+  input:focus{ border-color:var(--blue); }
+  .scope-item{ display:flex; align-items:center; gap:9px; padding:9px; border:1px solid var(--line); border-radius:9px; margin-bottom:7px; cursor:pointer; font-size:.85rem; }
+  .scope-item input{ width:17px; height:17px; }
+  .modal-foot{ display:flex; gap:8px; margin-top:18px; }
+  .msg{ font-size:.8rem; margin-top:10px; min-height:1em; }
+  .msg.err{ color:var(--red); } .msg.ok{ color:var(--green); }
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>💡 Gestion des accès</h1>
+    <span class="role-chip" id="role-chip">—</span>
+    <span class="sp"></span>
+    <button class="btn btn-light" onclick="doLogout()">Se déconnecter</button>
+  </div>
+
+  <div class="wrap">
+    <div class="toolbar">
+      <button class="btn btn-primary" id="btn-add-rh"  onclick="openCreate('rh')">+ Créer un RH</button>
+      <button class="btn btn-primary" id="btn-add-mgr" onclick="openCreate('manager')">+ Créer un manager</button>
+      <button class="btn btn-light" onclick="refresh()">↻ Actualiser</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Nom</th><th>Rôle</th><th>Périmètre</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="5" class="empty">Chargement…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODALE : créer / modifier périmètre -->
+  <div class="bd" id="modal">
+    <div class="modal">
+      <h3 id="modal-title">—</h3>
+      <div id="create-fields">
+        <label>Nom complet</label>
+        <input type="text" id="f-name" placeholder="Prénom Nom"/>
+        <label>E-mail (servira d'identifiant)</label>
+        <input type="email" id="f-email" placeholder="personne@exemple.com"/>
+        <label>Mot de passe provisoire (min. 6 caractères)</label>
+        <input type="password" id="f-pass" placeholder="••••••••"/>
+      </div>
+      <label id="scope-label">Périmètre</label>
+      <div id="scope-area"></div>
+      <div class="msg" id="modal-msg"></div>
+      <div class="modal-foot">
+        <button class="btn btn-light" style="flex:1;" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary" style="flex:1;" id="modal-save" onclick="save()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+  <script>
+  const isNetlify = location.hostname.includes('netlify');
+  const STAFF_API = isNetlify ? '/.netlify/functions/staff-admin' : '/api/staff';
+
+  let me = null, allSites = [], allTeams = [], staffList = [];
+  let modalMode = 'create', modalRole = 'rh', modalTargetId = null;
+
+  async function api(payload){
+    let r;
+    try {
+      r = await fetch(STAFF_API, {
+        method:'POST',
+        headers: Object.assign({'Content-Type':'application/json'}, LC.authHeaders()),
+        body: JSON.stringify(payload)
+      });
+    } catch(e){
+      throw new Error('Serveur injoignable ('+STAFF_API+'). Vérifie que le serveur tourne.');
+    }
+    const text = await r.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch(e){
+      throw new Error('Réponse non-JSON ('+r.status+') sur '+STAFF_API+' — server.js pas redémarré, route /api/staff absente, ou fichier staff-admin-core.js manquant.');
+    }
+    if(!r.ok) throw new Error(data.error || ('Erreur '+r.status));
+    return data;
+  }
+
+  async function init(){
+    me = await LC.requireAuth({ roles:['patron','rh'], fallback:'index.html' });
+    if(!me) return;
+    document.getElementById('role-chip').textContent = me.role === 'patron' ? 'Patron' : 'RH';
+    // RH ne crée que des managers
+    if(me.role !== 'patron') document.getElementById('btn-add-rh').style.display = 'none';
+    await loadLookups();
+    await refresh();
+  }
+
+  async function loadLookups(){
+    try{ allSites = await LC.sbGet('locations','select=id,name&order=name') || []; }catch(e){ allSites=[]; }
+    try{
+      const emps = await LC.sbGet('employees','select=team') || [];
+      allTeams = [...new Set((emps||[]).map(e=>e.team).filter(Boolean))].sort();
+    }catch(e){ allTeams=[]; }
+  }
+
+  async function refresh(){
+    const tb = document.getElementById('tbody');
+    tb.innerHTML = '<tr><td colspan="5" class="empty">Chargement…</td></tr>';
+    try{
+      const data = await api({ action:'list' });
+      staffList = data.staff || [];
+    }catch(e){
+      tb.innerHTML = `<tr><td colspan="5" class="empty">Erreur : ${esc(e.message)}</td></tr>`; return;
+    }
+    if(!staffList.length){ tb.innerHTML = '<tr><td colspan="5" class="empty">Aucun compte pour le moment.</td></tr>'; return; }
+    tb.innerHTML = staffList.map(s=>{
+      const roleTag = s.role==='rh' ? '<span class="tag tag-rh">RH</span>' : '<span class="tag tag-mgr">Manager</span>';
+      const scope = s.role==='rh'
+        ? (s.site_names && s.site_names.length ? s.site_names.join(', ') : '<span class="muted">tous les sites</span>')
+        : (s.teams && s.teams.length ? s.teams.join(', ') : '<span class="muted">toutes les équipes</span>');
+      const status = s.active===false ? '<span class="tag tag-off">Inactif</span>' : '<span class="tag tag-on">Actif</span>';
+      return `<tr>
+        <td><strong>${esc(s.full_name||'—')}</strong><div class="muted">${esc(s.email||'')}</div></td>
+        <td>${roleTag}</td>
+        <td>${scope}</td>
+        <td>${status}</td>
+        <td><div class="row-actions">
+          <button class="mini" onclick="openScope('${s.id}')">Périmètre</button>
+          <button class="mini" onclick="resetPwd('${s.id}')">Mot de passe</button>
+          <button class="mini" onclick="toggleActive('${s.id}', ${s.active===false})">${s.active===false?'Activer':'Désactiver'}</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderScope(role, selected){
+    const area = document.getElementById('scope-area');
+    const sel = new Set(selected||[]);
+    if(role === 'rh'){
+      document.getElementById('scope-label').textContent = 'Sites autorisés (laisser vide = tous)';
+      area.innerHTML = allSites.length
+        ? allSites.map(s=>`<label class="scope-item"><input type="checkbox" class="sc" value="${s.id}" ${sel.has(s.id)?'checked':''}/> ${esc(s.name||'Site')}</label>`).join('')
+        : '<div class="muted">Aucun site créé (page Localisations).</div>';
+    } else {
+      document.getElementById('scope-label').textContent = 'Équipes gérées (laisser vide = toutes)';
+      const boxes = allTeams.map(t=>`<label class="scope-item"><input type="checkbox" class="sc" value="${esc(t)}" ${sel.has(t)?'checked':''}/> ${esc(t)}</label>`).join('');
+      area.innerHTML = boxes +
+        `<label>Autre(s) équipe(s) — séparées par des virgules</label>
+         <input type="text" id="teams-extra" placeholder="ex : Équipe A, Chantier Nord"/>`;
+    }
+  }
+
+  function collectScope(role){
+    const checked = Array.from(document.querySelectorAll('#scope-area .sc:checked')).map(c=>c.value);
+    if(role === 'rh') return { site_ids: checked };
+    const extra = (document.getElementById('teams-extra')?.value || '').split(',').map(t=>t.trim()).filter(Boolean);
+    return { teams: [...new Set(checked.concat(extra))] };
+  }
+
+  function openCreate(role){
+    modalMode='create'; modalRole=role; modalTargetId=null;
+    document.getElementById('modal-title').textContent = role==='rh' ? 'Créer un RH' : 'Créer un manager';
+    document.getElementById('create-fields').style.display = '';
+    document.getElementById('f-name').value=''; document.getElementById('f-email').value=''; document.getElementById('f-pass').value='';
+    document.getElementById('modal-msg').textContent='';
+    renderScope(role, []);
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function openScope(id){
+    const s = staffList.find(x=>x.id===id); if(!s) return;
+    modalMode='scope'; modalRole=s.role; modalTargetId=id;
+    document.getElementById('modal-title').textContent = 'Périmètre — ' + (s.full_name||'');
+    document.getElementById('create-fields').style.display = 'none';
+    document.getElementById('modal-msg').textContent='';
+    renderScope(s.role, s.role==='rh' ? (s.site_ids||[]) : (s.teams||[]));
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+  async function save(){
+    const msg = document.getElementById('modal-msg'); msg.className='msg'; msg.textContent='';
+    const btn = document.getElementById('modal-save'); btn.disabled=true; const old=btn.textContent; btn.textContent='…';
+    try{
+      const scope = collectScope(modalRole);
+      if(modalMode==='create'){
+        const full_name = document.getElementById('f-name').value.trim();
+        const email = document.getElementById('f-email').value.trim();
+        const password = document.getElementById('f-pass').value;
+        if(!full_name || !email){ throw new Error('Nom et e-mail obligatoires.'); }
+        if(password.length < 6){ throw new Error('Mot de passe : 6 caractères minimum.'); }
+        await api(Object.assign({ action:'create', full_name, email, password, role:modalRole }, scope));
+      } else {
+        await api(Object.assign({ action:'update', id:modalTargetId }, scope));
+      }
+      closeModal(); await refresh();
+    }catch(e){
+      msg.className='msg err'; msg.textContent = e.message;
+    }
+    btn.disabled=false; btn.textContent=old;
+  }
+
+  async function toggleActive(id, makeActive){
+    try{ await api({ action:'update', id, active: makeActive }); await refresh(); }
+    catch(e){ alert(e.message); }
+  }
+
+  async function resetPwd(id){
+    const p = prompt('Nouveau mot de passe (min. 6 caractères) :');
+    if(p===null) return;
+    if(p.length < 6){ alert('Trop court (min. 6).'); return; }
+    try{ await api({ action:'reset_password', id, password:p }); alert('Mot de passe réinitialisé.'); }
+    catch(e){ alert(e.message); }
+  }
+
+  async function doLogout(){ await LC.logout(); location.href = 'login.html'; }
+
+  function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+  init();
+  </script>
+</body>
+</html>

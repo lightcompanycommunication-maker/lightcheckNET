@@ -1,0 +1,48 @@
+# =========================================================
+#  Light Check — Configuration Netlify
+# =========================================================
+
+[build]
+  # Site statique : les pages .html sont publiées telles quelles depuis la racine.
+  publish = "."
+  # Pas de build front. Lors d'un déploiement Git, Netlify installe quand même
+  # automatiquement les dépendances de package.json (ex. @aws-sdk) pour les fonctions.
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# ---------------------------------------------------------
+#  Redirections API
+#  Les pages appellent /.netlify/functions/... quand l'URL finit par
+#  .netlify.app, MAIS appellent /api/... sur un domaine personnalisé.
+#  Ces règles renvoient /api/... vers les fonctions -> tout marche quel
+#  que soit le domaine. status = 200 => proxy transparent (pas de redirection visible).
+# ---------------------------------------------------------
+[[redirects]]
+  from = "/api/face/verify"
+  to = "/.netlify/functions/face-verify"
+  status = 200
+
+[[redirects]]
+  from = "/api/face/enroll"
+  to = "/.netlify/functions/face-enroll"
+  status = 200
+
+[[redirects]]
+  from = "/api/compare"
+  to = "/.netlify/functions/compare"
+  status = 200
+
+[[redirects]]
+  from = "/api/detect"
+  to = "/.netlify/functions/detect"
+  status = 200
+
+[[redirects]]
+  from = "/api/staff"
+  to = "/.netlify/functions/staff-admin"
+  status = 200

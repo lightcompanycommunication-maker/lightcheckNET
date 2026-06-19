@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Light Check — Tableau de bord</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#ffffff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#2e90fa;--blue-bg:#eff8ff;--blue-border:#b2ddff;
+  --purple:#7f56d9;--purple-bg:#f9f5ff;--purple-border:#d6bbfb;
+  --radius:12px;--shadow:0 1px 3px rgba(16,24,40,0.1),0 1px 2px rgba(16,24,40,0.06);
+  --shadow-md:0 4px 8px -2px rgba(16,24,40,0.1),0 2px 4px -2px rgba(16,24,40,0.06);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.hamburger{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text2);padding:4px;}
+.topbar-brand{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;}
+.topbar-brand em{font-style:italic;color:#FFCF00;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;
+  color:var(--text2);position:relative;transition:background 0.15s;}
+.icon-btn:hover{background:var(--bg);}
+.notif-badge{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;
+  background:var(--red);border:2px solid var(--surface);}
+.notif-badge.hidden{display:none;}
+.avatar-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),#0d9f58);
+  display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;
+  color:#fff;border:none;cursor:pointer;}
+
+/* ── PROFILE POPUP ── */
+.pp-backdrop{
+  position:fixed;inset:0;z-index:300;display:none;
+}
+.pp-backdrop.open{display:block;}
+.pp-panel{
+  position:absolute;top:56px;left:0;right:0;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 6px 24px rgba(16,24,40,0.12);
+  transform:translateY(-4px);
+  opacity:0;
+  transition:transform 0.18s ease, opacity 0.15s ease;
+  pointer-events:none;
+}
+.pp-backdrop.open .pp-panel{transform:translateY(0);opacity:1;pointer-events:all;}
+.pp-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:20px 20px 16px;
+  border-bottom:1px solid var(--border);
+}
+.pp-left{flex:1;min-width:0;}
+.pp-company-name{
+  font-weight:700;font-size:1.15rem;color:var(--text);
+  margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.pp-account-type{
+  font-size:0.85rem;color:var(--text2);
+  margin-bottom:10px;
+}
+.pp-auth-badge{
+  display:inline-block;
+  background:#4a5568;color:#fff;
+  font-size:0.78rem;font-weight:500;
+  padding:4px 14px;border-radius:20px;
+  margin-bottom:10px;
+}
+.pp-role{
+  font-size:0.88rem;font-weight:600;
+  color:var(--green);cursor:default;
+}
+.pp-org-icon{
+  width:72px;height:72px;flex-shrink:0;
+  background:#f0f0f0;border:1.5px solid #ddd;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;color:#888;margin-left:16px;
+}
+.pp-menu{padding:4px 0;}
+.pp-item{
+  display:block;width:100%;
+  padding:14px 20px;
+  font-size:1rem;color:var(--text);
+  background:none;border:none;text-align:left;
+  cursor:pointer;font-family:'Instrument Sans',sans-serif;
+  border-bottom:1px solid var(--border);
+  transition:background 0.1s;
+}
+.pp-item:last-child{border-bottom:none;}
+.pp-item:hover{background:var(--bg);}
+.pp-item:active{background:var(--border);}
+.pp-item.danger{color:var(--red);}
+
+/* ── NOTIFICATION DRAWER ── */
+.notif-drawer{position:fixed;top:56px;right:0;width:min(340px,100vw);background:var(--surface);
+  border-left:1px solid var(--border);border-bottom:1px solid var(--border);border-radius:0 0 0 var(--radius);
+  box-shadow:var(--shadow-md);z-index:200;display:none;max-height:70vh;overflow-y:auto;}
+.notif-drawer.open{display:block;animation:slideDown 0.2s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.notif-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;
+  align-items:center;justify-content:space-between;}
+.notif-title{font-weight:600;font-size:0.9rem;}
+.notif-clear{font-size:0.75rem;color:var(--green);cursor:pointer;border:none;background:none;font-family:inherit;}
+.notif-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item.unread{background:#f9fafb;}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--red);margin-top:5px;flex-shrink:0;}
+.notif-dot.read{background:var(--text3);}
+.notif-body{flex:1;}
+.notif-name{font-size:0.85rem;font-weight:500;}
+.notif-msg{font-size:0.78rem;color:var(--text2);margin-top:1px;}
+.notif-time{font-size:0.72rem;color:var(--text3);margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.notif-empty{padding:28px;text-align:center;color:var(--text3);font-size:0.85rem;}
+
+/* ── CONTAINER ── */
+.container{max-width:600px;margin:0 auto;padding:16px;}
+
+/* ── WELCOME ── */
+.welcome{margin-bottom:16px;}
+.welcome-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.3px;}
+.welcome-title em{font-style:italic;color:#FFCF00;}
+.welcome-sub{font-size:0.82rem;color:var(--text2);margin-top:2px;}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;color:var(--text);
+  outline:none;appearance:none;cursor:pointer;flex:1;max-width:180px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667085' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.tab-group{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px;margin-left:auto;}
+.tab-btn{padding:5px 12px;border-radius:6px;border:none;background:transparent;font-family:'Instrument Sans',sans-serif;
+  font-size:0.78rem;font-weight:500;cursor:pointer;color:var(--text2);transition:all 0.15s;}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--text2);font-family:'IBM Plex Mono',monospace;}
+.card-action{font-size:0.78rem;color:var(--green);cursor:pointer;border:none;background:none;
+  font-family:inherit;font-weight:500;}
+
+/* ── STAT CHIPS ── */
+.stat-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.stat-chip{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+.chip-val{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;line-height:1;}
+.chip-val.green{color:var(--green-dark);}
+.chip-val.red{color:var(--red);}
+.chip-val.amber{color:var(--amber-dark);}
+.chip-label{font-size:0.72rem;color:var(--text2);margin-top:3px;}
+
+/* ── DONUT CHART ── */
+.donut-wrap{display:flex;align-items:center;gap:20px;padding:4px 0 8px;}
+.donut-svg{flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:0.82rem;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-label{color:var(--text2);}
+.legend-val{font-weight:600;color:var(--text);margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
+
+/* ── ACTIVITY LIST ── */
+.activity-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;}
+.act-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:0.72rem;font-weight:700;color:#fff;flex-shrink:0;}
+.act-info{flex:1;min-width:0;}
+.act-name{font-size:0.875rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.act-detail{font-size:0.75rem;color:var(--text2);margin-top:1px;}
+.act-right{text-align:right;flex-shrink:0;}
+.act-time{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text3);}
+.act-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;
+  font-size:0.7rem;font-weight:600;margin-top:3px;}
+.badge-in{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green-border);}
+.badge-out{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-pause{background:var(--amber-bg);color:var(--amber-dark);border:1px solid var(--amber-border);}
+.badge-retour{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.badge-deconnexion{background:#f9f5ff;color:var(--purple);border:1px solid var(--purple-border);}
+
+/* LIVE pulse */
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);
+  border:1px solid var(--green-border);border-radius:20px;padding:3px 10px;
+  font-size:0.7rem;font-weight:600;color:var(--green-dark);}
+.live-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+
+/* ── DEVICES ── */
+.device-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.device-item:last-child{border-bottom:none;}
+.device-icon{width:36px;height:36px;background:var(--blue-bg);border:1px solid var(--blue-border);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.device-name{font-size:0.875rem;font-weight:500;}
+.device-token{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text3);}
+.device-status{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:0.72rem;color:var(--green-dark);}
+.device-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-month{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;}
+.cal-arrow{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text2);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day-name{text-align:center;font-size:0.68rem;color:var(--text3);font-weight:600;
+  text-transform:uppercase;padding:4px 0;font-family:'IBM Plex Mono',monospace;}
+.cal-day{text-align:center;padding:6px 2px;border-radius:8px;font-size:0.82rem;cursor:default;position:relative;}
+.cal-day.other-month{color:var(--text3);}
+.cal-day.today{background:var(--blue);color:#fff;font-weight:600;}
+.cal-day.has-pointage{font-weight:600;color:var(--green-dark);}
+.cal-day.has-pointage::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--green);}
+.cal-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--text2);}
+.cal-leg-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ── APPOINTMENTS TODAY CARD ── */
+.appt-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;
+  border-bottom:1px solid var(--border);}
+.appt-item:last-child{border-bottom:none;}
+.appt-time-col{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text3);
+  white-space:nowrap;padding-top:2px;min-width:44px;}
+.appt-info{flex:1;min-width:0;}
+.appt-name{font-size:0.855rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.appt-sub{font-size:0.75rem;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.appt-status{flex-shrink:0;}
+.appt-count{display:flex;align-items:baseline;gap:6px;margin-bottom:10px;}
+.appt-count-val{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:700;line-height:1;color:var(--blue-dark);}
+.appt-count-label{font-size:0.78rem;color:var(--text2);}
+
+/* ── QUICK LINKS ── */
+.quick-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.quick-link{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;display:flex;flex-direction:column;gap:6px;text-decoration:none;
+  cursor:pointer;transition:box-shadow 0.15s;box-shadow:var(--shadow);}
+.quick-link:hover{box-shadow:var(--shadow-md);}
+.ql-icon{font-size:1.4rem;}
+.ql-label{font-size:0.85rem;font-weight:600;color:var(--text);}
+.ql-sub{font-size:0.75rem;color:var(--text2);}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:28px 16px;color:var(--text3);}
+.empty-icon{font-size:2rem;margin-bottom:8px;}
+.empty-text{font-size:0.85rem;}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:none;}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);
+  border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading{display:flex;align-items:center;justify-content:center;padding:24px;gap:8px;color:var(--text2);font-size:0.85rem;}
+
+/* ── UTILS ── */
+.flex{display:flex;}.gap-8{gap:8px;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
+.mt-4{margin-top:4px;}.mt-8{margin-top:8px;}.mt-12{margin-top:12px;}
+.text-sm{font-size:0.82rem;}.muted{color:var(--text2);}
+.divider{height:1px;background:var(--border);margin:10px 0;}
+.refresh-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;
+  font-size:0.75rem;color:var(--text2);cursor:pointer;font-family:inherit;}
+.refresh-btn:hover{background:var(--bg);}
+
+/* ── NAV DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;backdrop-filter:blur(2px);}
+.drawer-overlay.open{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.nav-drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,85vw);background:var(--surface);
+  z-index:400;display:flex;flex-direction:column;transform:translateX(-100%);
+  transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:var(--shadow-md);}
+.nav-drawer.open{transform:translateX(0);}
+.drawer-header{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.drawer-brand{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;}
+.drawer-brand em{font-style:italic;color:#FFCF00;}
+.drawer-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;
+  border:none;background:var(--bg);cursor:pointer;font-size:1rem;color:var(--text2);
+  display:flex;align-items:center;justify-content:center;}
+.drawer-scroll{flex:1;overflow-y:auto;padding:8px 0;}
+.drawer-section{font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--text3);
+  font-family:'IBM Plex Mono',monospace;padding:12px 16px 4px;font-weight:600;}
+.drawer-item{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;
+  border:none;background:transparent;width:100%;text-align:left;font-family:'Instrument Sans',sans-serif;
+  font-size:0.9rem;color:var(--text2);transition:all 0.15s;border-radius:0;}
+.drawer-item:hover{background:var(--bg);color:var(--text);}
+.drawer-item.active{background:var(--green-bg);color:var(--green-dark);font-weight:600;}
+.drawer-item .di-icon{font-size:1.1rem;width:22px;text-align:center;flex-shrink:0;}
+.drawer-item .di-arrow{margin-left:auto;font-size:0.7rem;color:var(--text3);}
+.drawer-divider{height:1px;background:var(--border);margin:6px 0;}
+.drawer-footer{padding:16px;border-top:1px solid var(--border);}
+.drawer-user{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.drawer-user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--green),#0d9f58);
+  display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0;}
+.drawer-user-name{font-size:0.875rem;font-weight:600;}
+.drawer-user-role{font-size:0.72rem;color:var(--text2);}
+.drawer-user-email{font-size:0.72rem;color:var(--text3);}
+.drawer-role-btn{width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--border);
+  background:transparent;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;
+  font-weight:500;color:var(--green-dark);cursor:pointer;transition:all 0.15s;}
+.drawer-role-btn:hover{background:var(--green-bg);border-color:var(--green-border);}
+
+/* ══════════════════════════════════════
+   TABLET — 768px+
+══════════════════════════════════════ */
+@media(min-width:768px){
+  .container{max-width:900px;padding:24px 28px;}
+  .stat-chips{grid-template-columns:repeat(3,1fr);gap:12px;}
+  .quick-links{grid-template-columns:repeat(4,1fr);}
+
+  /* Two-column card layout */
+  .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .card-full{grid-column:1/-1;}
+
+  .welcome-title{font-size:1.6rem;}
+  .chip-val{font-size:1.8rem;}
+
+  /* Wider notification drawer */
+  .notif-drawer{width:360px;}
+}
+
+/* ══════════════════════════════════════
+   DESKTOP — 1024px+: persistent sidebar
+══════════════════════════════════════ */
+@media(min-width:1024px){
+
+  /* Lock sidebar open permanently */
+  .nav-drawer{
+    transform:translateX(0) !important;
+    position:fixed;top:0;left:0;bottom:0;
+    width:260px;border-right:1px solid var(--border);
+    box-shadow:none;z-index:50;
+  }
+  .drawer-overlay{ display:none !important; }
+  .drawer-close{ display:none; }
+  .hamburger{ display:none; }
+
+  /* Push topbar and content to the right of sidebar */
+  .topbar{
+    left:260px;
+    width:calc(100% - 260px);
+    position:fixed;top:0;right:0;
+    z-index:60;
+  }
+  .topbar-brand{ display:none; } /* brand already in sidebar */
+
+  body{ padding-top:56px; }
+
+  .content-wrap{
+    margin-left:260px;
+    min-height:100vh;
+    background:var(--bg);
+  }
+
+  .container{
+    max-width:1100px;
+    padding:28px 32px;
+  }
+
+  /* 3-column stat chips */
+  .stat-chips{grid-template-columns:repeat(3,1fr);gap:14px;}
+
+  /* 2-column main grid */
+  .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .card-full{grid-column:1/-1;}
+
+  /* Wider donut card */
+  .donut-wrap{gap:28px;}
+  .donut-svg{width:130px;height:130px;}
+
+  /* Quick links 4-col */
+  .quick-links{grid-template-columns:repeat(4,1fr);gap:14px;}
+
+  .welcome-title{font-size:1.8rem;}
+  .chip-val{font-size:2rem;}
+
+  /* Notification drawer */
+  .notif-drawer{width:380px;}
+}
+.pending-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#FFCF00,#ffdd4d);color:#1a1a1a;border-radius:14px;padding:14px 18px;margin:0 0 16px;box-shadow:0 2px 12px rgba(255,207,0,.35);overflow:hidden;max-height:140px;opacity:1;text-decoration:none;font-weight:600;transition:max-height .35s ease,opacity .3s ease,margin .35s ease,padding .35s ease,box-shadow .3s ease;}
+.pending-banner:hover{filter:brightness(.97);}
+.pending-banner.collapsed{max-height:0;opacity:0;margin:0;padding-top:0;padding-bottom:0;box-shadow:none;}
+.pending-banner .pb-icon{font-size:1.3rem;line-height:1;}
+.pending-banner .pb-text{flex:1;font-size:0.95rem;color:#1a1a1a;}
+.pending-banner .pb-text b{font-size:1.15rem;}
+.pending-banner .pb-cta{background:#111;color:#FFCF00;border-radius:20px;padding:6px 14px;font-size:0.82rem;font-weight:700;white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" onclick="openDrawer()">☰</button>
+    <div class="topbar-brand">Light <em>Check</em></div>
+  </div>
+  <div class="topbar-right">
+    <div class="clock" id="clock" style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--text2);"></div>
+    <button class="icon-btn" onclick="toggleNotifs()" id="notif-btn">
+      🔔
+      <div class="notif-badge hidden" id="notif-badge"></div>
+    </button>
+    <button class="icon-btn" onclick="window.location.href='settings.html'" title="Paramètres">⚙️</button>
+    <button class="avatar-btn" id="top-avatar" onclick="toggleProfilePopup()">A</button>
+  </div>
+</div>
+
+<!-- PROFILE POPUP -->
+<div class="pp-backdrop" id="pp-backdrop" onclick="closeProfilePopup()">
+  <div class="pp-panel" onclick="event.stopPropagation()">
+    <div class="pp-head">
+      <div class="pp-left">
+        <div class="pp-company-name" id="pp-company-name">Light Check</div>
+        <div class="pp-account-type" id="pp-account-type">Compte administrateur</div>
+        <div class="pp-auth-badge" id="pp-auth-badge">Administrateur</div><br/>
+        <div class="pp-role" id="pp-role">Propriétaire</div>
+      </div>
+      <div class="pp-org-icon">🏢</div>
+    </div>
+    <div class="pp-menu">
+      <label class="pp-item" id="toast-toggle-row" style="display:none;align-items:center;justify-content:space-between;cursor:pointer;">
+        <span>🔔 Toast instantané au pointage</span>
+        <input type="checkbox" id="toast-toggle" onchange="toggleToast(this.checked)" style="width:18px;height:18px;accent-color:var(--green);"/>
+      </label>
+      <button class="pp-item" data-patron-only onclick="closeProfilePopup(); window.location.href='admin.html'">Détails de l'organisation</button>
+      <button class="pp-item" onclick="closeProfilePopup(); window.location.href='users.html'">Gestion des employés</button>
+      <button class="pp-item" onclick="closeProfilePopup(); window.location.href='rapports.html'">Rapports</button>
+      <button class="pp-item" onclick="closeProfilePopup(); window.location.href='attend.html'">Page de pointage</button>
+      <button class="pp-item danger" onclick="lcLogout()">Se déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+<!-- NAV DRAWER -->
+<div class="nav-drawer" id="nav-drawer">
+  <div class="drawer-header">
+    <div class="drawer-brand">Light <em>Check</em></div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+
+  <div class="drawer-scroll">
+    <div class="drawer-section">Navigation</div>
+
+    <button class="drawer-item active" onclick="closeDrawer()">
+      <span class="di-icon">🏠</span> Tableau de bord
+    </button>
+
+    <button class="drawer-item" onclick="goTo('users.html')">
+      <span class="di-icon">👥</span> Gestion des utilisateurs
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('groups.html')">
+      <span class="di-icon">👤</span> Groupes d'utilisateurs
+      <span class="di-arrow">›</span>
+    </button>
+
+    <div class="drawer-divider"></div>
+    <div class="drawer-section">Planification</div>
+
+    <button class="drawer-item" onclick="goTo('schedules.html')">
+      <span class="di-icon">🕐</span> Horaires et équipes
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('locations.html')">
+      <span class="di-icon">📍</span> Localisations
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('appointments.html')">
+      <span class="di-icon">📅</span> Rendez-vous
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('conges.html')">
+      <span class="di-icon">🏖️</span> Congés et jours fériés
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('validations.html')">
+      <span class="di-icon">✅</span> Demandes à valider
+      <span class="di-arrow">›</span>
+    </button>
+
+    <div class="drawer-divider"></div>
+    <div class="drawer-section">Système</div>
+
+    <button class="drawer-item" data-patron-only onclick="goTo('admin.html#devices')">
+      <span class="di-icon">📱</span> Périphériques
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('audit.html')">
+      <span class="di-icon">📋</span> Journal des événements
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('rapports.html')">
+      <span class="di-icon">📊</span> Rapports
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('paie.html')">
+      <span class="di-icon">💶</span> Fiche de paie
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" data-patron-only onclick="goTo('settings.html')">
+      <span class="di-icon">⚙️</span> Paramètres
+      <span class="di-arrow">›</span>
+    </button>
+
+    <div class="drawer-divider"></div>
+
+    <button class="drawer-item" onclick="goTo('attend.html')">
+      <span class="di-icon">⬇️</span> Accès employé (Pointage)
+      <span class="di-arrow">›</span>
+    </button>
+
+    <button class="drawer-item" onclick="goTo('finger.html')">
+      <span class="di-icon">👆</span> Pointage par empreinte
+      <span class="di-arrow">›</span>
+    </button>
+  </div>
+
+  <div class="drawer-footer">
+    <div class="drawer-user">
+      <div class="drawer-user-avatar">LC</div>
+      <div>
+        <div class="drawer-user-name">Light Check</div>
+        <div class="drawer-user-email" id="drawer-company-name">—</div>
+        <div class="drawer-user-role" id="drawer-user-role-val">Compte administrateur</div>
+      </div>
+    </div>
+    <button class="drawer-role-btn" data-patron-only onclick="goTo('admin.html')">Aller à la console admin</button>
+  </div>
+</div>
+
+<!-- NOTIFICATION DRAWER -->
+<div class="notif-drawer" id="notif-drawer">
+  <div class="notif-header">
+    <div class="notif-title">Notifications</div>
+    <button class="notif-clear" onclick="markNotifsRead()">Tout marquer lu</button>
+  </div>
+  <div id="notif-list">
+    <div class="notif-empty">Aucune notification</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT WRAP (offset for desktop sidebar) -->
+<div class="content-wrap">
+<div class="container">
+
+  <!-- WELCOME -->
+  <div class="welcome">
+    <div class="welcome-title" id="welcome-title">Bonjour, <em>Admin</em> 👋</div>
+    <div class="welcome-sub" id="welcome-sub">—</div>
+  </div>
+
+  <!-- BANDEAU : DEMANDES DE CONGÉ EN ATTENTE (se replie quand il n'y en a plus) -->
+  <a id="pending-banner" class="pending-banner collapsed" href="validations.html">
+    <span class="pb-icon">🔔</span>
+    <span class="pb-text"><b id="pending-count">0</b> <span id="pending-label">demande de congé en attente</span></span>
+    <span class="pb-cta">Valider →</span>
+  </a>
+
+  <!-- FILTER ROW -->
+  <div class="filter-row">
+    <select class="filter-select" id="company-filter" onchange="onCompanyChange()">
+      <option value="">Toutes les sociétés</option>
+    </select>
+    <select class="filter-select" id="site-filter" onchange="onSiteChange()">
+      <option value="">Tous les sites</option>
+    </select>
+    <div class="tab-group">
+      <button class="tab-btn active" id="tab-emp" onclick="setTab('employe',this)">Employés</button>
+      <button class="tab-btn" id="tab-vis" onclick="setTab('visiteur',this)">Visiteurs</button>
+    </div>
+  </div>
+
+  <!-- STAT CHIPS -->
+  <div class="stat-chips">
+    <div class="stat-chip">
+      <div class="chip-val green" id="stat-present">—</div>
+      <div class="chip-label" id="chip-label-1">Entrée</div>
+    </div>
+    <div class="stat-chip">
+      <div class="chip-val red" id="stat-absent">—</div>
+      <div class="chip-label" id="chip-label-2">Sortie</div>
+    </div>
+    <div class="stat-chip">
+      <div class="chip-val amber" id="stat-pause">—</div>
+      <div class="chip-label" id="chip-label-3">En pause</div>
+    </div>
+  </div>
+
+  <!-- CARDS GRID (2-col on tablet/desktop) -->
+  <div class="cards-grid">
+
+    <!-- DONUT CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Employés</div>
+      <div class="live-pill"><div class="live-pulse"></div>EN DIRECT</div>
+    </div>
+    <div class="donut-wrap">
+      <svg class="donut-svg" width="110" height="110" viewBox="0 0 110 110" id="donut-svg">
+        <circle cx="55" cy="55" r="40" fill="none" stroke="#e4e7ec" stroke-width="14"/>
+        <circle cx="55" cy="55" r="40" fill="none" stroke="#12b76a" stroke-width="14"
+          stroke-dasharray="0 251" stroke-dashoffset="63" stroke-linecap="round"
+          style="transition:stroke-dasharray 0.6s ease;" id="donut-in"/>
+        <circle cx="55" cy="55" r="40" fill="none" stroke="#f04438" stroke-width="14"
+          stroke-dasharray="0 251" stroke-dashoffset="63" stroke-linecap="round"
+          style="transition:stroke-dasharray 0.6s ease;transition-delay:0.1s;" id="donut-out"/>
+        <circle cx="55" cy="55" r="40" fill="none" stroke="#f79009" stroke-width="14"
+          stroke-dasharray="0 251" stroke-dashoffset="63" stroke-linecap="round"
+          style="transition:stroke-dasharray 0.6s ease;transition-delay:0.2s;" id="donut-pause"/>
+        <text x="55" y="51" text-anchor="middle" font-family="Fraunces,serif" font-size="18" font-weight="700" fill="#101828" id="donut-center-val">—</text>
+        <text x="55" y="64" text-anchor="middle" font-family="Instrument Sans,sans-serif" font-size="9" fill="#667085" id="donut-center-label">présents</text>
+      </svg>
+      <div class="donut-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--green);"></div>
+          <span class="legend-label">Entrée</span>
+          <span class="legend-val" id="leg-in">0</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--red);"></div>
+          <span class="legend-label">Sortie</span>
+          <span class="legend-val" id="leg-out">0</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--amber);"></div>
+          <span class="legend-label">En pause</span>
+          <span class="legend-val" id="leg-pause">0</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:var(--text3);"></div>
+          <span class="legend-label">Absent</span>
+          <span class="legend-val" id="leg-absent">0</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:8px;">
+      <button class="card-action" onclick="window.location.href='users.html?action=add'">+ Ajouter des employés</button>
+    </div>
+  </div>
+
+  <!-- APPOINTMENTS TODAY -->
+  <div class="card" id="appt-card" style="display:none;">
+    <div class="card-header">
+      <div class="card-title">Rendez-vous du jour</div>
+      <button class="card-action" onclick="window.location.href='appointments.html'">Voir tout →</button>
+    </div>
+    <div id="appt-today-list">
+      <div class="loading"><div class="spinner"></div> Chargement…</div>
+    </div>
+  </div>
+
+  <!-- LIVE ACTIVITY -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Activité récente</div>
+      <button class="refresh-btn" onclick="loadActivity()">↻ Actualiser</button>
+    </div>
+    <!-- Sub tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px;">
+      <button class="act-tab active" id="atab-in"  onclick="setActTab('entrée',this)"
+        style="flex:1;padding:7px;border:none;background:none;font-family:inherit;font-size:0.8rem;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;">
+        Entrées
+      </button>
+      <button class="act-tab" id="atab-out" onclick="setActTab('sortie',this)"
+        style="flex:1;padding:7px;border:none;background:none;font-family:inherit;font-size:0.8rem;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;">
+        Sorties
+      </button>
+      <button class="act-tab" id="atab-all" onclick="setActTab('all',this)"
+        style="flex:1;padding:7px;border:none;background:none;font-family:inherit;font-size:0.8rem;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;">
+        Accès
+      </button>
+    </div>
+    <div id="activity-list">
+      <div class="loading"><div class="spinner"></div> Chargement…</div>
+    </div>
+  </div>
+
+  <!-- DEVICES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Périphériques</div>
+      <button class="card-action" onclick="window.location.href='admin.html'">Gérer</button>
+    </div>
+    <div id="devices-list">
+      <div class="loading"><div class="spinner"></div> Chargement…</div>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="card-action" onclick="window.location.href='admin.html'">+ Enregistrer un périphérique</button>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Congés &amp; Jours fériés</div>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-arrow" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month" id="cal-month">—</div>
+      <button class="cal-arrow" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-legend">
+      <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--blue);"></div>Aujourd'hui</div>
+      <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--green);"></div>Pointages</div>
+    </div>
+    <div style="margin-top:10px;">
+      <div class="empty" style="padding:16px;">
+        <div class="empty-icon">📅</div>
+        <div class="empty-text">Gestion des congés disponible</div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /cards-grid -->
+
+  <div style="height:20px;"></div>
+</div>
+</div><!-- /content-wrap -->
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+<script>
+// ══ CONFIG ══
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+
+async function sbGet(table, filters=''){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`,{
+    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}
+  });
+  return r.json();
+}
+async function sbPatch(table, query, data){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`,{method:'PATCH',
+    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(data)});
+  return r.json();
+}
+
+// ── Étape 3 : tableau de bord réservé aux comptes connectés ──
+try { if(window.LC && typeof LC.getSession==='function' && !LC.getSession()){ location.replace('login.html'); } }
+catch(e){ console.error('auth gate', e); }
+
+// ══ STATE ══
+let currentTab    = 'employe';
+let currentActTab = 'entrée';
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let allPointages = [];
+let allVisitors  = [];
+let allEmployees = [];
+let currentSiteId = '';
+let empLocMap   = {};
+let currentCompanyId = '';
+let allLocations = [];
+let allCompanies = [];
+let notifData    = [];
+let notifLastSeen = parseInt(localStorage.getItem('lc_notif_seen')||'0');
+let _lcRole=null, _lcName=null, _toastOn=true;
+
+// ══ CLOCK ══
+setInterval(()=>{
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+},1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+// ══ WELCOME ══
+function setWelcome(){
+  try {
+    const h = new Date().getHours();
+    const greet = h<12?'Bonjour':h<18?'Bon après-midi':'Bonsoir';
+    const wt = document.getElementById('welcome-title');
+    if(wt) wt.innerHTML = `${greet}, <em>${_lcName||'Admin'}</em> 👋`;
+    const ws = document.getElementById('welcome-sub');
+    if(ws) ws.textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  } catch(e){ console.error('setWelcome', e); }
+}
+setWelcome();
+
+// ── rôle réel depuis la session connectée (RH/Patron/Manager) ──
+async function applyStaff(st){
+  const lbl={patron:'Patron',rh:'RH',manager:'Manager'}[st.role]||'—';
+  _lcRole=st.role; _lcName=((st.full_name||'').trim().split(/\s+/)[0])||'Admin';
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v;};
+  set('pp-role',lbl); set('pp-auth-badge',lbl); set('pp-account-type','Compte '+lbl); set('drawer-user-role-val','Compte '+lbl);
+  setWelcome();
+  const tw=document.getElementById('toast-toggle-row'); if(tw) tw.style.display=(st.role==='patron')?'flex':'none';
+  document.querySelectorAll('[data-patron-only]').forEach(el=>{ el.style.display=(st.role==='patron')?'':'none'; });
+}
+async function lcLogout(){ try{ if(window.LC) await LC.logout(); }catch(e){} location.replace('login.html'); }
+function syncToastToggle(){ const c=document.getElementById('toast-toggle'); if(c) c.checked=_toastOn; }
+async function toggleToast(val){
+  _toastOn=val;
+  if(allCompanies[0] && allCompanies[0].id){
+    try{ await sbPatch('companies', `id=eq.${allCompanies[0].id}`, {toast_on_pointage:val}); allCompanies[0].toast_on_pointage=val; }catch(e){}
+  }
+}
+(async()=>{ try{ if(!window.LC) return; const s=await LC.validSession(); if(!s){ location.replace('login.html'); return; } const st=await LC.loadStaff(); if(st){ applyStaff(st); } else { LC.clearSession(); location.replace('login.html'); } }catch(e){} })();
+
+// ══ TABS ══
+function setTab(tab, el){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  applyTabView();
+}
+
+function setChips(labels){
+  ['chip-label-1','chip-label-2','chip-label-3'].forEach((id,i)=>{
+    const el=document.getElementById(id); if(el) el.textContent=labels[i];
+  });
+}
+function applyTabView(){
+  const isVis = currentTab === 'visiteur';
+  document.querySelectorAll('.act-tab').forEach(b => b.style.display = isVis ? 'none' : '');
+  const apptCard = document.getElementById('appt-card');
+  if(apptCard) apptCard.style.display = isVis ? '' : 'none';
+  if(isVis){ setChips(["Aujourd'hui",'Présents','Terminés']); updateVisitorStats(); }
+  else     { setChips(['Entrée','Sortie','En pause']); updateStats(); }
+  loadActivity();
+}
+function updateVisitorStats(){
+  const list = Array.isArray(allVisitors) ? allVisitors : [];
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = a => String(a.appointment_date||'').slice(0,10) === today || String(a.arrival_time||'').slice(0,10) === today;
+  const todays = list.filter(isToday);
+  document.getElementById('stat-present').textContent = todays.length;
+  document.getElementById('stat-absent').textContent  = todays.filter(a => a.arrival_time && !a.departure_time).length;
+  document.getElementById('stat-pause').textContent   = todays.filter(a => a.departure_time || a.status==='terminé').length;
+}
+async function loadVisitors(){
+  try{
+    const rows = await sbGet('appointments','select=*&order=appointment_date.desc&limit=100');
+    allVisitors = Array.isArray(rows) ? rows : [];
+  }catch(e){ allVisitors = []; }
+}
+function escVis(x){ return String(x).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function renderVisitorActivity(el){
+  const list = Array.isArray(allVisitors) ? allVisitors : [];
+  if(!list.length){
+    el.innerHTML = `<div class="empty" style="padding:28px 10px;text-align:center;">
+      <div class="empty-icon">🚶</div>
+      <div class="empty-text" style="font-weight:600;">Aucun visiteur pour l'instant</div>
+      <div style="font-size:0.8rem;color:var(--text3);margin-top:4px;">Le module visiteurs est actif — les visiteurs s'afficheront ici dès le premier enregistrement.</div>
+      <button class="card-action" style="margin-top:12px;" onclick="window.location.href='visit.html'">+ Enregistrer une arrivée</button>
+    </div>`;
+    return;
+  }
+  const colors = ['#1570ef','#7f56d9','#0d9f58','#f79009','#f04438'];
+  const badge = s => {
+    const map = {planifié:'#eff8ff:#2e90fa',confirmé:'#ecfdf3:#027a48','présent':'#ecfdf3:#027a48',annulé:'#fef3f2:#f04438',terminé:'#f2f4f7:#667085'};
+    const [bg,col]=(map[s]||map['planifié']).split(':');
+    return `<span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:500;background:${bg};color:${col};">${escVis(s||'planifié')}</span>`;
+  };
+  el.innerHTML = list.slice(0,30).map((a,i)=>{
+    const initials = (a.visitor_name||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+    const t = a.appointment_date ? new Date(a.appointment_date).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+    const host = (allEmployees.find(e=>e.id===a.employee_id)||{}).full_name;
+    return `<div class="activity-item">
+      <div class="act-avatar" style="background:${colors[i%colors.length]};">${initials}</div>
+      <div class="act-info">
+        <div class="act-name">${escVis(a.visitor_name||'Visiteur')}</div>
+        <div class="act-detail">${t}${host? ' · '+escVis(host):''}</div>
+      </div>
+      <div class="act-right">${badge(a.departure_time ? 'terminé' : (a.arrival_time ? 'présent' : (a.status||'planifié')))}</div>
+    </div>`;
+  }).join('');
+}
+
+function setActTab(tab, el){
+  currentActTab = tab;
+  document.querySelectorAll('.act-tab').forEach(b=>{
+    b.style.color='var(--text2)';
+    b.style.borderBottomColor='transparent';
+  });
+  el.style.color='var(--green-dark)';
+  el.style.borderBottomColor='var(--green)';
+  renderActivity();
+}
+// Set initial act tab style
+setTimeout(()=>{
+  const el = document.getElementById('atab-in');
+  if(el){ el.style.color='var(--green-dark)'; el.style.borderBottomColor='var(--green)'; }
+},50);
+
+// ══ LOAD ALL ══
+async function refreshPendingLeaves(){
+  if(!window.LC) return;
+  const banner = document.getElementById('pending-banner');
+  if(!banner) return;
+  let rows = [];
+  try { rows = await LC.sbGet('leaves','select=id&status=eq.en%20attente') || []; } catch(e){ rows = []; }
+  const n = rows.length;
+  if(n > 0){
+    document.getElementById('pending-count').textContent = n;
+    document.getElementById('pending-label').textContent = n > 1 ? 'demandes de congé en attente' : 'demande de congé en attente';
+    banner.classList.remove('collapsed');
+  } else {
+    banner.classList.add('collapsed');
+  }
+}
+
+async function loadAll(){
+  // Essentiel pour les KPI : employés + pointages
+  try { await Promise.all([loadEmployees(), loadPointages()]); } catch(e){ console.error('loadAll core', e); }
+  try { updateStats(); }    catch(e){ console.error('updateStats', e); }
+  try { loadActivity(); }   catch(e){ console.error('loadActivity', e); }
+  try { renderCalendar(); } catch(e){ console.error('renderCalendar', e); }
+  // Le reste ne doit JAMAIS bloquer l'affichage des KPI
+  try { Promise.allSettled([loadDevices(), loadNotifications(), loadAppointmentsToday(), loadVisitors(), loadSites(), refreshPendingLeaves()]); } catch(e){}
+}
+
+// ══ APPOINTMENTS TODAY ══
+async function loadAppointmentsToday(){
+  const el = document.getElementById('appt-today-list');
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  try{
+    const rows = await sbGet('appointments',
+      `appointment_date=gte.${today}T00:00:00&appointment_date=lte.${today}T23:59:59&order=appointment_date.asc`);
+
+    if(!Array.isArray(rows) || rows.length === 0){
+      el.innerHTML = `
+        <div class="appt-count"><span class="appt-count-val">0</span><span class="appt-count-label">rendez-vous aujourd'hui</span></div>
+        <div style="font-size:0.82rem;color:var(--text3);padding:4px 0;">Aucun rendez-vous prévu aujourd'hui.</div>
+        <div style="margin-top:10px;">
+          <button class="card-action" onclick="window.location.href='appointments.html'">+ Nouveau rendez-vous</button>
+        </div>`;
+      return;
+    }
+
+    const statusBadge = s => {
+      const map = {planifié:'#eff8ff:#2e90fa',confirmé:'#ecfdf3:#027a48',annulé:'#fef3f2:#f04438',terminé:'#f2f4f7:#667085'};
+      const [bg,col] = (map[s]||map['planifié']).split(':');
+      return `<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:20px;font-size:0.68rem;font-weight:500;background:${bg};color:${col};">${s}</span>`;
+    };
+
+    const items = rows.slice(0,4).map(a => {
+      const t = a.appointment_date
+        ? new Date(a.appointment_date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+        : '—';
+      return `<div class="appt-item">
+        <div class="appt-time-col">${t}</div>
+        <div class="appt-info">
+          <div class="appt-name">${a.visitor_name||'Visiteur'}</div>
+          <div class="appt-sub">${a.project||''}</div>
+        </div>
+        <div class="appt-status">${statusBadge(a.status||'planifié')}</div>
+      </div>`;
+    }).join('');
+
+    const more = rows.length > 4
+      ? `<div style="font-size:0.75rem;color:var(--text2);margin-top:8px;">+ ${rows.length - 4} autre(s) rendez-vous</div>`
+      : '';
+
+    el.innerHTML = `
+      <div class="appt-count">
+        <span class="appt-count-val">${rows.length}</span>
+        <span class="appt-count-label">rendez-vous aujourd'hui</span>
+      </div>
+      ${items}${more}`;
+  }catch(e){
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--text3);padding:4px 0;">Impossible de charger les rendez-vous.</div>`;
+  }
+}
+
+// ══ EMPLOYEES ══
+function inCurrentCompany(companyId){ return !currentCompanyId || companyId === currentCompanyId; }
+function inCurrentSite(empId){
+  if(!currentSiteId) return true;
+  const set = empLocMap[empId];
+  return !!(set && set.has(currentSiteId));
+}
+function empVisible(e){ return !!e && inCurrentCompany(e.company_id) && inCurrentSite(e.id); }
+
+async function loadSites(){
+  try {
+    const locsRaw = await sbGet('locations','order=name.asc');
+    allLocations = Array.isArray(locsRaw) ? locsRaw : [];
+    const linksRaw = await sbGet('employee_locations','select=employee_id,location_id');
+    const links = Array.isArray(linksRaw) ? linksRaw : [];
+    empLocMap = {};
+    links.forEach(r=>{
+      if(!empLocMap[r.employee_id]) empLocMap[r.employee_id] = new Set();
+      empLocMap[r.employee_id].add(r.location_id);
+    });
+  } catch(e){
+    allLocations = []; empLocMap = {};
+  }
+  populateSiteDropdown();
+}
+
+function populateSiteDropdown(){
+  const sel = document.getElementById('site-filter');
+  if(!sel) return;
+  if(!Array.isArray(allLocations)) allLocations = [];
+  const prev = currentSiteId;
+  // ne montrer que les sites de la société sélectionnée (les sites sans société restent visibles partout)
+  const sites = allLocations.filter(l => !currentCompanyId || l.company_id === currentCompanyId || !l.company_id);
+  sel.innerHTML = '<option value="">Tous les sites</option>';
+  sites.forEach(l=>{ const o=document.createElement('option'); o.value=l.id; o.textContent=l.name; sel.appendChild(o); });
+  if(sites.some(l=>l.id===prev)){ sel.value = prev; } else { sel.value=''; currentSiteId=''; }
+}
+
+function onSiteChange(){
+  currentSiteId = (document.getElementById('site-filter')||{}).value || '';
+  updateStats();
+  loadActivity();
+}
+
+function onCompanyChange(){
+  currentCompanyId = (document.getElementById('company-filter')||{}).value || '';
+  populateSiteDropdown(); // les sites se limitent à la société choisie
+  updateStats();
+  loadActivity();
+}
+
+async function loadEmployees(){
+  const empRes = await sbGet('employees','status=eq.actif&order=full_name.asc');
+  allEmployees = Array.isArray(empRes) ? empRes : [];
+  // Populate company filter
+  const companies = await sbGet('companies','');
+  const sel = document.getElementById('company-filter');
+  const prevC = currentCompanyId;
+  sel.innerHTML = '<option value="">Toutes les sociétés</option>';
+  (companies||[]).forEach(c=>{
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+  if((companies||[]).some(c=>c.id===prevC)){ sel.value = prevC; } else { sel.value=''; currentCompanyId=''; }
+  allCompanies = companies || [];
+  _toastOn = !(allCompanies[0] && allCompanies[0].toast_on_pointage===false);
+  syncToastToggle();
+  // Set drawer footer company name
+  if(allCompanies[0]){
+    document.getElementById('drawer-company-name').textContent = allCompanies[0].name;
+  }
+}
+
+// ══ GMT+1 DATE HELPER ══
+function todayGMT1(){ return new Date(Date.now()+3600000).toISOString().split('T')[0]; }
+
+// ══ POINTAGES ══
+async function loadPointages(){
+  const today = todayGMT1();
+  const res = await sbGet('pointages',`created_at=gte.${today}T00:00:00+01:00&order=created_at.desc&limit=200`);
+  allPointages = Array.isArray(res) ? res : [];
+}
+
+// ══ STATS + DONUT ══
+function updateStats(){
+  if(!Array.isArray(allPointages)) allPointages = [];
+  if(!Array.isArray(allEmployees)) allEmployees = [];
+  const empMap = {};
+  allEmployees.forEach(e=>empMap[e.id]=e);
+  const vis = allEmployees.filter(empVisible);
+
+  // For each employee, find their last pointage today
+  const statusMap = {};
+  allPointages.forEach(p=>{
+    if(!statusMap[p.employee_id]) statusMap[p.employee_id] = p.type;
+  });
+
+  let inCount=0, outCount=0, pauseCount=0, absentCount=0;
+  vis.forEach(e=>{
+    const s = statusMap[e.id];
+    if(!s)              absentCount++;
+    else if(s==='entrée'||s==='retour') inCount++;
+    else if(s==='sortie') outCount++;
+    else if(s==='pause')  pauseCount++;
+    else absentCount++;
+  });
+
+  const total = vis.length || 1;
+  document.getElementById('stat-present').textContent = inCount;
+  document.getElementById('stat-absent').textContent  = outCount;
+  document.getElementById('stat-pause').textContent   = pauseCount;
+  document.getElementById('leg-in').textContent       = inCount;
+  document.getElementById('leg-out').textContent      = outCount;
+  document.getElementById('leg-pause').textContent    = pauseCount;
+  document.getElementById('leg-absent').textContent   = absentCount;
+  const categories = [
+    { count: inCount,    label: 'entrée' },
+    { count: outCount,   label: 'sortie' },
+    { count: pauseCount, label: 'pause' },
+    { count: absentCount,label: 'absents' }
+  ];
+  const dominant = categories.reduce((a, b) => b.count > a.count ? b : a, categories[0]);
+  const dominantPct = vis.length > 0 ? Math.round(dominant.count / vis.length * 100) : 0;
+  document.getElementById('donut-center-val').textContent = dominantPct + '%';
+  document.getElementById('donut-center-label').textContent = dominant.label;
+
+  // Draw donut
+  const circ = 2 * Math.PI * 40; // 251.3
+  const inPct    = inCount    / total;
+  const outPct   = outCount   / total;
+  const pausePct = pauseCount / total;
+
+  const inDash    = circ * inPct;
+  const outDash   = circ * outPct;
+  const pauseDash = circ * pausePct;
+
+  const inOffset    = -circ * 0.25; // start at top
+  const outOffset   = inOffset    - inDash;
+  const pauseOffset = outOffset   - outDash;
+
+  const setArc = (id, dash, offset, count) => {
+    const el = document.getElementById(id);
+    if (count === 0) {
+      el.setAttribute('stroke-dasharray', `0 ${circ}`);
+      el.setAttribute('stroke', 'none');
+    } else {
+      el.setAttribute('stroke', el.id === 'donut-in' ? '#12b76a' : el.id === 'donut-out' ? '#f04438' : '#f79009');
+      el.setAttribute('stroke-dasharray', `${dash} ${circ - dash}`);
+      el.setAttribute('stroke-dashoffset', -offset);
+    }
+  };
+
+  setArc('donut-in',    inDash,    inOffset,    inCount);
+  setArc('donut-out',   outDash,   outOffset,   outCount);
+  setArc('donut-pause', pauseDash, pauseOffset, pauseCount);
+}
+
+// ══ ACTIVITY ══
+function loadActivity(){ renderActivity(); }
+
+function renderActivity(){
+  if(currentTab === 'visiteur'){ return renderVisitorActivity(document.getElementById('activity-list')); }
+  const empMap = {};
+  allEmployees.forEach(e=>empMap[e.id]=e);
+
+  let filtered = Array.isArray(allPointages) ? allPointages : [];
+  if(currentActTab !== 'all') filtered = allPointages.filter(p=>p.type===currentActTab);
+  filtered = filtered.filter(p=>{ const e=empMap[p.employee_id]; return inCurrentCompany(e?e.company_id:p.company_id) && inCurrentSite(p.employee_id); });
+  filtered = filtered.slice(0,30);
+
+  const el = document.getElementById('activity-list');
+  if(!filtered.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aucune activité</div></div>';
+    return;
+  }
+
+  const typeLabel = {'entrée':'Entrée','sortie':'Sortie','pause':'Pause','retour':'Retour','déconnexion':'Déconnexion'};
+  const badgeCls  = {'entrée':'badge-in','sortie':'badge-out','pause':'badge-pause','retour':'badge-retour','déconnexion':'badge-deconnexion'};
+  const avatarColors = ['#12b76a','#2e90fa','#7f56d9','#f79009','#f04438','#0d9f58','#1570ef'];
+
+  el.innerHTML = filtered.map((p,i)=>{
+    const emp = empMap[p.employee_id]||{full_name:'Employé inconnu',post:'—'};
+    const initials = emp.full_name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const color = avatarColors[i % avatarColors.length];
+    const t = new Date(p.created_at);
+    const timeStr = t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const conf = p.face_confidence!=null ? `Reconnaissance ${parseFloat(p.face_confidence).toFixed(0)}%` : 'Manuel';
+    return `<div class="activity-item">
+      <div class="act-avatar" style="background:${color};">${initials}</div>
+      <div class="act-info">
+        <div class="act-name">${emp.full_name}</div>
+        <div class="act-detail">${emp.post||'—'} · ${conf}</div>
+      </div>
+      <div class="act-right">
+        <div class="act-time">${timeStr}</div>
+        <div class="act-badge ${badgeCls[p.type]||''}">${typeLabel[p.type]||p.type}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ DEVICES ══
+async function loadDevices(){
+  const devices = await sbGet('devices','order=registered.desc') || [];
+  const el = document.getElementById('devices-list');
+  if(!devices.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📱</div><div class="empty-text muted">Aucun périphérique enregistré</div></div>';
+    return;
+  }
+  const icons = {Kiosk:'🖥️',Mobile:'📱',Desktop:'💻',Tablet:'📟'};
+  el.innerHTML = devices.map(d=>`
+    <div class="device-item">
+      <div class="device-icon">${icons[d.type]||'📱'}</div>
+      <div style="flex:1;">
+        <div class="device-name">${d.name}</div>
+        <div class="device-token">${d.token} · ${d.location||'—'}</div>
+      </div>
+      <div class="device-status"><div class="device-dot"></div>En ligne</div>
+    </div>`).join('');
+}
+
+// ══ CALENDAR ══
+function renderCalendar(){
+  const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('cal-month').textContent = `${months[calMonth]} ${calYear}`;
+
+  const days = ['lun','mar','mer','jeu','ven','sam','dim'];
+  const grid = document.getElementById('cal-grid');
+
+  // Days with pointages this month
+  const pointageDays = new Set(
+    allPointages
+      .filter(p=>{ const d=new Date(p.created_at); return d.getFullYear()===calYear && d.getMonth()===calMonth; })
+      .map(p=>new Date(p.created_at).getDate())
+  );
+
+  const today = new Date();
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay  = new Date(calYear, calMonth+1, 0);
+  // Monday-first: 0=Mon, 6=Sun
+  let startDow = firstDay.getDay() - 1;
+  if(startDow < 0) startDow = 6;
+
+  let html = days.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+
+  // Previous month filler
+  const prevLast = new Date(calYear, calMonth, 0).getDate();
+  for(let i=startDow-1;i>=0;i--){
+    html += `<div class="cal-day other-month">${prevLast-i}</div>`;
+  }
+
+  // Current month days
+  for(let d=1;d<=lastDay.getDate();d++){
+    const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
+    const hasPt   = pointageDays.has(d);
+    let cls = 'cal-day';
+    if(isToday) cls += ' today';
+    else if(hasPt) cls += ' has-pointage';
+    html += `<div class="${cls}">${d}</div>`;
+  }
+
+  // Next month filler
+  const totalCells = Math.ceil((startDow + lastDay.getDate()) / 7) * 7;
+  const remaining  = totalCells - startDow - lastDay.getDate();
+  for(let d=1;d<=remaining;d++){
+    html += `<div class="cal-day other-month">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function changeMonth(dir){
+  calMonth += dir;
+  if(calMonth > 11){ calMonth=0; calYear++; }
+  if(calMonth < 0) { calMonth=11; calYear--; }
+  renderCalendar();
+}
+
+// ══ NOTIFICATIONS ══
+const notifMessages = {
+  'entrée':       e=>`${e} vient d'arriver`,
+  'sortie':       e=>`${e} est parti(e)`,
+  'pause':        e=>`${e} est en pause`,
+  'retour':       e=>`${e} est de retour`,
+  'déconnexion':  e=>`${e} s'est déconnecté(e)`,
+};
+
+async function loadNotifications(){
+  const today = todayGMT1();
+  const empMap={};
+  (allEmployees||[]).forEach(e=>empMap[e.id]=e);
+  // Show all pointage types from today + past 7 days
+  const cutoff = new Date(Date.now() - 7*24*3600*1000).toISOString();
+  const pts = await sbGet('pointages',`created_at=gte.${cutoff}&order=created_at.desc&limit=50`);
+  notifData = (pts||[]).map(p=>({...p, emp:empMap[p.employee_id]||{full_name:'Employé inconnu'}}));
+  // Alertes de fraude (prioritaires, en tête)
+  let fraud=[];
+  try{ fraud = await sbGet('fraud_alerts','select=*&order=occurred_at.desc&limit=30') || []; }catch(e){ fraud=[]; }
+  const fraudItems = (Array.isArray(fraud)?fraud:[]).map(f=>({ isFraud:true, created_at:f.occurred_at, kind:f.kind, message:f.message, emp: empMap[f.employee_id]||null }));
+  notifData = fraudItems.concat(notifData);
+  renderNotifications();
+}
+
+function renderNotifications(){
+  const el    = document.getElementById('notif-list');
+  const badge = document.getElementById('notif-badge');
+
+  if(!notifData.length){
+    el.innerHTML='<div class="notif-empty">Aucune notification récente</div>';
+    badge.classList.add('hidden');
+    return;
+  }
+
+  const unread = notifData.filter(n=>new Date(n.created_at).getTime()>notifLastSeen).length;
+  badge.classList.toggle('hidden', unread === 0);
+
+  el.innerHTML = notifData.map(n=>{
+    const isUnread = new Date(n.created_at).getTime() > notifLastSeen;
+    const t = new Date(n.created_at);
+    const timeStr = t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) +
+      ' · ' + t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    if(n.isFraud){
+      return `<div class="notif-item ${isUnread?'unread':''}">
+        <div class="notif-dot" style="background:#e11d48;"></div>
+        <div class="notif-body">
+          <div class="notif-name" style="color:#e11d48;font-weight:600;">⚠ Tentative de fraude</div>
+          <div class="notif-msg">${escVis(n.message||'')}${n.emp? ' — '+escVis(n.emp.full_name||''):''}</div>
+          <div class="notif-time">${timeStr}</div>
+        </div>
+      </div>`;
+    }
+    const msgFn = notifMessages[n.type] || (e=>`${e} — ${n.type}`);
+    const typeColors = {'entrée':'var(--green)','sortie':'var(--red)','pause':'var(--amber)','retour':'var(--blue)','déconnexion':'var(--text3)'};
+    const dotColor = typeColors[n.type]||'var(--text3)';
+    return `<div class="notif-item ${isUnread?'unread':''}">
+      <div class="notif-dot ${isUnread?'':'read'}" style="${isUnread?'background:'+dotColor+';':''}"></div>
+      <div class="notif-body">
+        <div class="notif-name">${n.emp.full_name||'—'}</div>
+        <div class="notif-msg">${msgFn(n.emp.full_name||'')}</div>
+        <div class="notif-time">${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleNotifs(){
+  document.getElementById('notif-drawer').classList.toggle('open');
+}
+
+function markNotifsRead(){
+  notifLastSeen = Date.now();
+  localStorage.setItem('lc_notif_seen', notifLastSeen);
+  document.getElementById('notif-badge').classList.add('hidden');
+  renderNotifications();
+  document.getElementById('notif-drawer').classList.remove('open');
+}
+
+// ══ LIVE TOAST ══
+let _toastTimer;
+function showToast(msg){
+  let t = document.getElementById('lc-toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'lc-toast';
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:10px 20px;border-radius:8px;font-size:0.875rem;z-index:9999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>{ t.style.opacity='0'; }, 3500);
+}
+
+// ══ REAL-TIME POLLING ══
+let _lastPointageTime = 0;
+
+async function pollLive(){
+  const prevCount = allPointages ? allPointages.length : 0;
+  const prevNewest = allPointages && allPointages[0] ? new Date(allPointages[0].created_at).getTime() : 0;
+
+  await loadPointages();
+  updateStats();
+  renderActivity();
+
+  // Check for new pointages since last poll
+  if(allPointages && allPointages[0]){
+    const newest = new Date(allPointages[0].created_at).getTime();
+    if(_lastPointageTime > 0 && newest > _lastPointageTime){
+      // New pointage(s) arrived — update notifications and show toast
+      const empMap={};
+      (allEmployees||[]).forEach(e=>empMap[e.id]=e);
+      const newOnes = allPointages.filter(p=>new Date(p.created_at).getTime()>_lastPointageTime);
+      newOnes.forEach(p=>{
+        const emp = empMap[p.employee_id];
+        const name = emp ? (emp.full_name||emp.name||'Employé') : 'Employé';
+        const msgFn = notifMessages[p.type]||(n=>`${n} — ${p.type}`);
+        if(_toastOn) showToast('🔔 ' + msgFn(name));
+        notifData.unshift({...p, emp: emp||{full_name:name}});
+      });
+      renderNotifications();
+    }
+    _lastPointageTime = newest;
+  }
+}
+
+// Start polling every 8 seconds after initial load
+let _booted = false;
+async function bootstrap(){
+  if(_booted) return; _booted = true;
+  try { await loadAll(); } catch(e){ console.error('bootstrap/loadAll', e); }
+  try { if(allPointages && allPointages[0]) _lastPointageTime = new Date(allPointages[0].created_at).getTime(); } catch(e){}
+  setInterval(pollLive, 2000);
+  setInterval(refreshPendingLeaves, 30000);
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootstrap);
+else bootstrap();
+window.addEventListener('load', bootstrap); // filet de sécurité
+
+// Close notif drawer on outside click
+document.addEventListener('click', e=>{
+  const drawer = document.getElementById('notif-drawer');
+  const btn    = document.getElementById('notif-btn');
+  if(!drawer.contains(e.target) && !btn.contains(e.target)){
+    drawer.classList.remove('open');
+  }
+});
+
+// ══ DRAWER ══
+function openDrawer(){
+  document.getElementById('nav-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDrawer(){
+  document.getElementById('nav-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function goTo(url){
+  closeDrawer();
+  setTimeout(()=>window.location.href=url, 200);
+}
+function showComingSoon(name){
+  closeDrawer();
+  setTimeout(()=>alert(`"${name}" — fonctionnalité bientôt disponible.`), 200);
+}
+
+// ══ PROFILE POPUP ══
+function toggleProfilePopup(){
+  const bd = document.getElementById('pp-backdrop');
+  if(bd.classList.contains('open')) closeProfilePopup();
+  else { populateProfilePopup(); bd.classList.add('open'); }
+}
+function closeProfilePopup(){
+  document.getElementById('pp-backdrop').classList.remove('open');
+}
+function populateProfilePopup(){
+  const co = allCompanies[0];
+  document.getElementById('pp-company-name').textContent = co ? co.name : 'Light Check';
+}
+
+</script>
+</body>
+</html>

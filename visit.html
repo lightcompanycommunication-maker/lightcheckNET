@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Light Check — Accueil visiteurs</title>
+<style>
+  :root{ --bg:#f6f7f9; --surface:#fff; --line:#e7e9ee; --ink:#111827; --muted:#6b7280;
+    --blue:#1d4ed8; --green:#12b76a; --green-bg:#ecfdf3; --red:#e11d48; --amber:#f59e0b; --r:14px; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  .top{ background:var(--surface); border-bottom:1px solid var(--line); padding:16px 20px; display:flex; align-items:center; gap:10px; }
+  .top h1{ font-size:1.1rem; margin:0; } .top .sp{ flex:1; } .top .date{ color:var(--muted); font-size:.82rem; }
+  .wrap{ max-width:760px; margin:20px auto; padding:0 16px 60px; }
+  .cta{ width:100%; background:var(--blue); color:#fff; border:none; border-radius:var(--r); padding:16px; font-size:1rem; font-weight:700; font-family:inherit; cursor:pointer; margin-bottom:22px; }
+  .sec-title{ font-size:.78rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:700; margin:0 4px 10px; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; margin-bottom:24px; }
+  .vrow{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); }
+  .vrow:last-child{ border-bottom:none; }
+  .ava{ width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.95rem; }
+  .vinfo{ flex:1; min-width:0; }
+  .vname{ font-weight:700; font-size:.95rem; }
+  .vmeta{ font-size:.78rem; color:var(--muted); margin-top:2px; }
+  .btn{ border:none; border-radius:10px; padding:10px 16px; font-family:inherit; font-size:.85rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-in{ background:var(--green); color:#fff; }
+  .btn-out{ background:#fff; color:var(--red); border:1.5px solid #f3c2cd; }
+  .pill{ font-size:.7rem; padding:3px 9px; border-radius:20px; background:var(--green-bg); color:#027a48; font-weight:600; white-space:nowrap; }
+  .empty{ text-align:center; color:var(--muted); padding:26px 12px; font-size:.86rem; }
+  /* modal */
+  .bd{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); align-items:flex-end; justify-content:center; z-index:50; }
+  .bd.open{ display:flex; }
+  .modal{ background:#fff; border-radius:18px 18px 0 0; width:100%; max-width:520px; padding:22px; max-height:92vh; overflow-y:auto; }
+  @media(min-width:600px){ .bd{ align-items:center; } .modal{ border-radius:18px; } }
+  .modal h3{ margin:0 0 4px; font-size:1.1rem; } .modal .sub{ color:var(--muted); font-size:.8rem; margin-bottom:14px; }
+  label{ display:block; font-size:.8rem; color:var(--muted); margin:12px 0 5px; }
+  .req::after{ content:" *"; color:var(--red); }
+  input,select{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:.95rem; font-family:inherit; outline:none; }
+  input:focus,select:focus{ border-color:var(--blue); }
+  .foot{ display:flex; gap:8px; margin-top:18px; }
+  .foot .btn{ flex:1; padding:13px; }
+  .btn-light{ background:#f1f3f5; color:#111; }
+  .msg{ font-size:.82rem; margin-top:10px; min-height:1em; color:var(--red); }
+  .loading{ text-align:center; color:var(--muted); padding:30px; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>🚶 Accueil visiteurs</h1>
+    <span class="sp"></span>
+    <span class="date" id="today-date">—</span>
+  </div>
+
+  <div class="wrap">
+    <button class="cta" onclick="openWalkIn()">+ Enregistrer une arrivée</button>
+
+    <div class="sec-title">Présents (<span id="count-present">0</span>)</div>
+    <div class="card" id="present-card"><div class="loading">Chargement…</div></div>
+
+    <div class="sec-title">Attendus aujourd'hui (<span id="count-expected">0</span>)</div>
+    <div class="card" id="expected-card"><div class="loading">Chargement…</div></div>
+  </div>
+
+  <!-- MODALE : arrivée -->
+  <div class="bd" id="modal">
+    <div class="modal">
+      <h3>Enregistrer une arrivée</h3>
+      <div class="sub">Seuls le nom et le motif sont obligatoires.</div>
+      <label class="req">Nom du visiteur</label>
+      <input type="text" id="v-name" placeholder="Prénom Nom"/>
+      <label class="req">Motif de la visite</label>
+      <input type="text" id="v-purpose" placeholder="ex : Livraison, Entretien, Rendez-vous…"/>
+      <label>Personne visitée (optionnel)</label>
+      <select id="v-host"><option value="">— Aucun —</option></select>
+      <label>E-mail du visiteur (optionnel)</label>
+      <input type="email" id="v-email" placeholder="optionnel"/>
+      <div class="msg" id="modal-msg"></div>
+      <div class="foot">
+        <button class="btn btn-light" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-in" id="save-btn" onclick="saveArrival()">Enregistrer l'arrivée</button>
+      </div>
+    </div>
+  </div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const sbH = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+async function sbGet(t,q){ return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{headers:sbH})).json(); }
+async function sbInsert(t,d){ return (await fetch(`${SUPABASE_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify(d)})).json(); }
+async function sbPatch(t,q,d){ return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{method:'PATCH',headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify(d)})).json(); }
+
+const COLORS = ['#1570ef','#7f56d9','#0d9f58','#f79009','#e11d48','#0e9384'];
+let employees = [];
+
+function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function todayStart(){ const d=new Date(); d.setHours(0,0,0,0); return d.toISOString(); }
+function hm(ts){ return ts ? new Date(ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '—'; }
+function initials(n){ return (n||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase(); }
+function hostName(id){ const e=employees.find(x=>x.id===id); return e?e.full_name:''; }
+
+async function loadEmployees(){
+  try{ employees = await sbGet('employees','status=eq.actif&select=id,full_name&order=full_name.asc') || []; }catch(e){ employees=[]; }
+  const sel=document.getElementById('v-host');
+  employees.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=e.full_name; sel.appendChild(o); });
+}
+
+async function refresh(){
+  const t0 = todayStart();
+  // Présents : arrivés et pas encore repartis
+  let present=[], expected=[];
+  try{
+    present = await sbGet('appointments', `arrival_time=gte.${t0}&departure_time=is.null&order=arrival_time.desc`) || [];
+  }catch(e){ present=[]; }
+  try{
+    // Attendus aujourd'hui : rendez-vous du jour, pas encore arrivés, non annulés/terminés
+    const dayEnd = new Date(); dayEnd.setHours(23,59,59,999);
+    expected = await sbGet('appointments',
+      `appointment_date=gte.${t0}&appointment_date=lte.${dayEnd.toISOString()}&arrival_time=is.null&status=not.in.(annulé,terminé)&order=appointment_date.asc`) || [];
+  }catch(e){ expected=[]; }
+  if(!Array.isArray(present)) present=[];
+  if(!Array.isArray(expected)) expected=[];
+
+  document.getElementById('count-present').textContent  = present.length;
+  document.getElementById('count-expected').textContent = expected.length;
+
+  const pc = document.getElementById('present-card');
+  pc.innerHTML = present.length ? present.map((a,i)=>row(a,i,true)).join('')
+    : '<div class="empty">Aucun visiteur présent actuellement.</div>';
+
+  const ec = document.getElementById('expected-card');
+  ec.innerHTML = expected.length ? expected.map((a,i)=>row(a,i,false)).join('')
+    : '<div class="empty">Aucun visiteur attendu aujourd\'hui.</div>';
+}
+
+function row(a,i,isPresent){
+  const meta = isPresent
+    ? `Arrivé ${hm(a.arrival_time)}${a.purpose? ' · '+esc(a.purpose):''}${a.employee_id? ' · voit '+esc(hostName(a.employee_id)):''}`
+    : `Prévu ${hm(a.appointment_date)}${a.purpose? ' · '+esc(a.purpose):''}${a.employee_id? ' · voit '+esc(hostName(a.employee_id)):''}`;
+  const action = isPresent
+    ? `<button class="btn btn-out" onclick="markDeparture('${a.id}')">Départ</button>`
+    : `<button class="btn btn-in" onclick="markArrival('${a.id}')">Arrivée</button>`;
+  return `<div class="vrow">
+    <div class="ava" style="background:${COLORS[i%COLORS.length]};">${initials(a.visitor_name)}</div>
+    <div class="vinfo"><div class="vname">${esc(a.visitor_name||'Visiteur')}</div><div class="vmeta">${meta}</div></div>
+    ${isPresent? '<span class="pill">Présent</span>':''}
+    ${action}
+  </div>`;
+}
+
+async function markArrival(id){
+  await sbPatch('appointments', `id=eq.${id}`, { arrival_time:new Date().toISOString(), status:'confirmé' });
+  await refresh();
+}
+async function markDeparture(id){
+  await sbPatch('appointments', `id=eq.${id}`, { departure_time:new Date().toISOString(), status:'terminé' });
+  await refresh();
+}
+
+function openWalkIn(){
+  document.getElementById('v-name').value='';
+  document.getElementById('v-purpose').value='';
+  document.getElementById('v-host').value='';
+  document.getElementById('v-email').value='';
+  document.getElementById('modal-msg').textContent='';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+async function saveArrival(){
+  const name = document.getElementById('v-name').value.trim();
+  const purpose = document.getElementById('v-purpose').value.trim();
+  const host = document.getElementById('v-host').value || null;
+  const email = document.getElementById('v-email').value.trim() || null;
+  const msg = document.getElementById('modal-msg'); msg.textContent='';
+  if(!name || !purpose){ msg.textContent = 'Le nom et le motif sont obligatoires.'; return; }
+  const btn = document.getElementById('save-btn'); btn.disabled=true; const old=btn.textContent; btn.textContent='…';
+  const now = new Date().toISOString();
+  const res = await sbInsert('appointments', {
+    visitor_name:name, purpose, employee_id:host, visitor_email:email,
+    appointment_date:now, arrival_time:now, status:'confirmé'
+  });
+  btn.disabled=false; btn.textContent=old;
+  if(Array.isArray(res) && res[0]){ closeModal(); await refresh(); }
+  else { msg.textContent = 'Erreur : ' + (res.message || res.code || "enregistrement impossible (colonnes manquantes ? lance visitor_checkin.sql)"); }
+}
+
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+loadEmployees().then(refresh);
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Light Check — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{ --yellow:#FFCF00; --ink:#0e0e0e; --muted:#667085; --line:#e4e7ec; --err:#d92d20; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:#f2f4f7; color:#101828; font-family:'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; padding:20px; }
+  .card{ width:100%; max-width:380px; background:#ffffff; border:1px solid var(--line);
+    border-radius:18px; padding:30px 26px; box-shadow:0 4px 20px rgba(16,24,40,.08); }
+  .logo{ display:flex; align-items:center; gap:9px; font-family:'Fraunces',serif; font-size:1.4rem; font-weight:700; }
+  .logo em{ font-style:italic; color:var(--yellow); }
+  .bulb{ width:30px; height:30px; border-radius:50%; background:var(--yellow); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; font-size:1rem; }
+  .sub{ color:var(--muted); font-size:.85rem; margin:4px 0 24px 2px; }
+  label{ display:block; font-size:.78rem; color:var(--muted); margin:0 0 6px 2px; }
+  input{ width:100%; background:#ffffff; border:1.5px solid var(--line); border-radius:10px;
+    padding:12px 14px; color:#101828; font-size:.95rem; font-family:inherit; outline:none; margin-bottom:14px; }
+  input:focus{ border-color:var(--yellow); }
+  button{ width:100%; background:var(--yellow); color:var(--ink); border:none; border-radius:10px;
+    padding:13px; font-size:.98rem; font-weight:700; font-family:inherit; cursor:pointer; margin-top:4px; }
+  button:disabled{ opacity:.6; cursor:not-allowed; }
+  .err{ color:var(--err); font-size:.82rem; margin-top:12px; min-height:1.1em; text-align:center; }
+  .hint{ color:var(--muted); font-size:.72rem; text-align:center; margin-top:18px; line-height:1.5; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><span class="bulb">💡</span> Light <em>Check</em></div>
+    <div class="sub">Espace administration</div>
+
+    <div id="logged-in" style="display:none; text-align:center;">
+      <div id="li-msg" style="font-size:.9rem; margin:6px 0 18px; line-height:1.5;"></div>
+      <button onclick="location.href='index.html'">Aller au tableau de bord</button>
+      <button onclick="lcLogout()" style="background:#eef0f3; color:#344054; margin-top:10px;">Se déconnecter</button>
+    </div>
+
+    <div id="login-form">
+    <label for="email">E-mail</label>
+    <input id="email" type="email" autocomplete="username" placeholder="vous@exemple.com"/>
+
+    <label for="password">Mot de passe</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="••••••••"/>
+
+    <button id="btn" onclick="doLogin()">Se connecter</button>
+    <div id="err" class="err"></div>
+
+    <div class="hint">Accès réservé au patron, aux RH et aux managers.<br>Le pointage des employés se fait sur l'application dédiée.</div>
+    </div><!-- /login-form -->
+  </div>
+
+  <script src="config.js"></script>
+  <script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+  <script>
+    // Page d'accueil après connexion selon le rôle (ajustez si besoin)
+    const HOME = { patron:'index.html', rh:'index.html', manager:'index.html' };
+
+    async function doLogin(){
+      const email = document.getElementById('email').value.trim();
+      const pass  = document.getElementById('password').value;
+      const err   = document.getElementById('err');
+      const btn   = document.getElementById('btn');
+      err.textContent = '';
+      if(!email || !pass){ err.textContent = 'Veuillez saisir votre e-mail et votre mot de passe.'; return; }
+      btn.disabled = true; btn.textContent = 'Connexion…';
+      try{
+        await LC.login(email, pass);
+        const st = await LC.loadStaff(true);
+        if(!st){ throw new Error("Ce compte n'est pas un membre du personnel autorisé."); }
+        if(st.active === false){ throw new Error('Ce compte a été désactivé.'); }
+        location.href = HOME[st.role] || 'index.html';
+      }catch(e){
+        err.textContent = e.message;
+        btn.disabled = false; btn.textContent = 'Se connecter';
+      }
+    }
+
+    document.getElementById('password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+    // Déjà connecté ? On affiche un choix explicite au lieu de rediriger en silence.
+    LC.validSession().then(s=>{
+      if(!s) return;
+      LC.loadStaff().then(st=>{
+        if(!st) return;
+        const lbl={patron:'Patron',rh:'RH',manager:'Manager'}[st.role]||st.role;
+        document.getElementById('li-msg').innerHTML =
+          `Vous êtes déjà connecté en tant que <b>${(st.full_name||'')}</b> (${lbl}).`;
+        document.getElementById('login-form').style.display='none';
+        document.getElementById('logged-in').style.display='block';
+      });
+    });
+    async function lcLogout(){
+      try{ await LC.logout(); }catch(e){}
+      document.getElementById('logged-in').style.display='none';
+      document.getElementById('login-form').style.display='block';
+      document.getElementById('email').value=''; document.getElementById('password').value='';
+    }
+  </script>
+</body>
+</html>

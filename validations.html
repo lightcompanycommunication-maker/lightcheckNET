@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Demandes à valider</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,Helvetica,sans-serif;background:#f4f5f7;color:#1a1a1a;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  /* Header */
+  .top{background:#111;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;}
+  .logo{width:34px;height:34px;border-radius:50%;background:#111;border:2px solid #FFCF00;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+  .top h1{font-size:1.05rem;font-weight:700;}
+  .top h1 b{color:#FFCF00;}
+  .top .spacer{flex:1;}
+  .who{font-size:0.8rem;color:#cfcfcf;text-align:right;line-height:1.3;}
+  .who b{color:#fff;display:block;}
+  .back{font-size:0.8rem;color:#FFCF00;border:1px solid rgba(255,207,0,.4);padding:6px 12px;border-radius:8px;white-space:nowrap;}
+  .back:hover{background:rgba(255,207,0,.12);}
+  /* Layout */
+  .wrap{max-width:860px;margin:0 auto;padding:22px 16px 60px;}
+  .section-title{font-size:0.78rem;text-transform:uppercase;letter-spacing:.6px;color:#777;margin:26px 4px 12px;display:flex;align-items:center;gap:8px;}
+  .count{background:#FFCF00;color:#111;font-weight:700;border-radius:20px;padding:1px 9px;font-size:0.74rem;}
+  /* Card */
+  .card{background:#fff;border:1px solid #ececed;border-radius:14px;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .card .head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  .av{width:40px;height:40px;border-radius:50%;background:#111;color:#FFCF00;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:0.92rem;flex-shrink:0;}
+  .nm{font-weight:700;font-size:0.98rem;}
+  .pst{font-size:0.8rem;color:#888;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:0.86rem;color:#333;margin:6px 0 4px;}
+  .meta .k{color:#999;margin-right:5px;}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:0.74rem;padding:3px 10px;border-radius:20px;font-weight:600;}
+  .pill-type{background:#eef4ff;color:#2257c9;border:1px solid #d6e4ff;}
+  .pill-pending{background:#fff7e6;color:#b77600;border:1px solid #ffe2ab;}
+  .pill-approved{background:#e9f9ef;color:#16794a;border:1px solid #b9ecca;}
+  .pill-refused{background:#fdeceb;color:#c0392b;border:1px solid #f6c9c5;}
+  .notes{font-size:0.84rem;color:#555;background:#fafafa;border:1px solid #f0f0f0;border-radius:8px;padding:8px 10px;margin-top:8px;}
+  .actions{display:flex;gap:10px;margin-top:14px;}
+  .btn{flex:1;border:none;border-radius:10px;padding:11px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .15s;}
+  .btn:hover{filter:brightness(.95);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn-ok{background:#16a34a;color:#fff;}
+  .btn-no{background:#fff;color:#c0392b;border:1.5px solid #f1b5af;}
+  .by{font-size:0.8rem;color:#777;margin-top:10px;display:flex;align-items:center;gap:6px;}
+  .by b{color:#444;}
+  .empty{text-align:center;color:#9a9a9a;font-size:0.9rem;padding:34px 10px;background:#fff;border:1px dashed #e2e2e2;border-radius:14px;}
+  /* Toast */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:11px 20px;border-radius:30px;font-size:0.88rem;opacity:0;pointer-events:none;transition:all .25s;z-index:50;border:1px solid #FFCF00;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .loading{text-align:center;color:#999;padding:50px;font-size:0.9rem;}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="logo">💡</div>
+    <h1>LIGHT <b>CHECK</b> · Demandes à valider</h1>
+    <div class="spacer"></div>
+    <div class="who" id="who-box"><b id="who-name">—</b><span id="who-role"></span></div>
+    <a class="back" href="index.html">← Tableau de bord</a>
+  </div>
+
+  <div class="wrap">
+    <div id="content"><div class="loading">Chargement…</div></div>
+  </div>
+
+  <div id="toast"></div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+<script>
+const FALLBACK = 'index.html';
+let me = null;
+let employees = {};
+let leaves = [];
+
+const ROLE_LABEL = { patron:'Patron', rh:'RH', manager:'Manager' };
+
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function initials(n){ return (n||'?').trim().split(/\s+/).map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
+function fmtDate(d){ if(!d) return '—'; const x=new Date(d+'T00:00:00'); if(isNaN(x)) return d; return x.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDT(d){ if(!d) return ''; const x=new Date(d); if(isNaN(x)) return ''; return x.toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function nbDays(s,e){ if(!s||!e) return '—'; const n=Math.round((new Date(e)-new Date(s))/86400000)+1; return n>0?n:1; }
+
+let _toastT;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+async function load(){
+  const emps = await LC.sbGet('employees','select=id,full_name,post') || [];
+  employees = {}; emps.forEach(e=>{ employees[e.id]=e; });
+  leaves = await LC.sbGet('leaves','order=created_at.desc') || [];
+  render();
+}
+
+function empName(id){ const e=employees[id]; return e ? e.full_name : 'Employé inconnu'; }
+function empPost(id){ const e=employees[id]; return e && e.post ? e.post : ''; }
+
+function pendingCard(l){
+  const name=empName(l.employee_id), post=empPost(l.employee_id);
+  const range=(l.start_date===l.end_date)?fmtDate(l.start_date):`${fmtDate(l.start_date)} → ${fmtDate(l.end_date)}`;
+  return `<div class="card" id="card-${l.id}">
+    <div class="head">
+      <div class="av">${esc(initials(name))}</div>
+      <div><div class="nm">${esc(name)}</div>${post?`<div class="pst">${esc(post)}</div>`:''}</div>
+      <div class="spacer" style="flex:1"></div>
+      <span class="pill pill-type">${esc(l.leave_type||'Congé')}</span>
+    </div>
+    <div class="meta">
+      <span><span class="k">Période</span>${range}</span>
+      <span><span class="k">Durée</span>${nbDays(l.start_date,l.end_date)} j</span>
+      <span><span class="k">Demandé le</span>${fmtDT(l.created_at)||'—'}</span>
+    </div>
+    ${l.notes?`<div class="notes">${esc(l.notes)}</div>`:''}
+    <div class="actions">
+      <button class="btn btn-ok" onclick="decide('${l.id}','approuvé')">✓ Approuver</button>
+      <button class="btn btn-no" onclick="decide('${l.id}','refusé')">✗ Refuser</button>
+    </div>
+  </div>`;
+}
+
+function processedCard(l){
+  const name=empName(l.employee_id);
+  const range=(l.start_date===l.end_date)?fmtDate(l.start_date):`${fmtDate(l.start_date)} → ${fmtDate(l.end_date)}`;
+  const pill = l.status==='approuvé'
+    ? '<span class="pill pill-approved">Approuvé</span>'
+    : '<span class="pill pill-refused">Refusé</span>';
+  const by = l.approver_name
+    ? `<div class="by">${l.status==='approuvé'?'Validé':'Refusé'} par <b>${esc(l.approver_name)}</b>${l.approver_role?` (${esc(ROLE_LABEL[l.approver_role]||l.approver_role)})`:''}${l.approved_at?` · ${fmtDT(l.approved_at)}`:''}</div>`
+    : '';
+  return `<div class="card">
+    <div class="head">
+      <div class="av" style="background:#f0f0f0;color:#999">${esc(initials(name))}</div>
+      <div><div class="nm">${esc(name)}</div><div class="pst">${esc(l.leave_type||'Congé')} · ${range}</div></div>
+      <div class="spacer" style="flex:1"></div>
+      ${pill}
+    </div>
+    ${by}
+  </div>`;
+}
+
+function render(){
+  const pending   = leaves.filter(l=>!l.status || l.status==='en attente');
+  const processed = leaves.filter(l=>l.status==='approuvé'||l.status==='refusé').slice(0,30);
+
+  let html = `<div class="section-title">À valider <span class="count">${pending.length}</span></div>`;
+  html += pending.length
+    ? pending.map(pendingCard).join('')
+    : `<div class="empty">Aucune demande en attente. 🎉</div>`;
+
+  html += `<div class="section-title">Traitées récemment</div>`;
+  html += processed.length
+    ? processed.map(processedCard).join('')
+    : `<div class="empty">Aucune demande traitée pour le moment.</div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+async function decide(id, status){
+  const l = leaves.find(x=>x.id===id);
+  let reason = null;
+  if(status==='approuvé'){
+    if(!confirm('Approuver cette demande de congé ?')) return;
+  } else {
+    reason = prompt('Motif du refus (optionnel). Annuler pour ne rien faire.', '');
+    if(reason===null) return; // annulé
+  }
+  const card = document.getElementById('card-'+id);
+  if(card) card.querySelectorAll('button').forEach(b=>b.disabled=true);
+
+  const payload = {
+    status,
+    approver_id:   (me && me.user_id)   || null,
+    approver_name: (me && me.full_name) || null,
+    approver_role: (me && me.role)      || null,
+    approved_at:   new Date().toISOString()
+  };
+  if(status==='refusé' && reason && reason.trim()){
+    payload.notes = ((l && l.notes) ? l.notes+' · ' : '') + 'Refus : ' + reason.trim();
+  }
+
+  const res = await LC.sbPatch('leaves', `id=eq.${id}`, payload);
+  if(Array.isArray(res) || (res && !res.code)){
+    toast(status==='approuvé' ? 'Demande approuvée.' : 'Demande refusée.');
+    await load();
+  } else {
+    toast('Erreur : action impossible.');
+    if(card) card.querySelectorAll('button').forEach(b=>b.disabled=false);
+  }
+}
+
+// ══ INIT ══
+(async()=>{
+  me = await LC.requireAuth({ roles:['patron','rh','manager'], fallback:FALLBACK });
+  if(!me) return;
+  document.getElementById('who-name').textContent = me.full_name || '—';
+  document.getElementById('who-role').textContent = ROLE_LABEL[me.role] || me.role || '';
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Admin</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="/manifest.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f6f7f9;--surface:#ffffff;--surface2:#f1f3f5;--border:#e5e8ec;
+  --accent:#8a6d00;--accent-bg:#FFCF00;--accent-dim:rgba(255,207,0,0.18);
+  --blue:#1b6ef3;--blue-dim:rgba(27,110,243,0.10);
+  --orange:#d9480f;--orange-dim:rgba(217,72,15,0.10);
+  --yellow:#8a6d00;--yellow-dim:rgba(255,207,0,0.18);
+  --purple:#7c3aed;--purple-dim:rgba(124,58,237,0.10);
+  --text:#1a2230;--text2:#5b6472;--text3:#9aa3b0;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+.sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border);}
+.brand-name{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;}
+.brand-name em{font-style:italic;color:#FFCF00;}
+.brand-tag{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+.sidebar-nav{padding:12px 0;flex:1;overflow-y:auto;}
+.nav-section{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--text3);padding:12px 20px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:0.875rem;color:var(--text2);transition:all 0.15s;border:none;background:transparent;width:100%;text-align:left;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);font-weight:500;}
+.nav-item .icon{font-size:1rem;width:18px;text-align:center;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+.admin-chip{display:flex;align-items:center;gap:8px;}
+.admin-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--accent));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;color:#fff;}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--bg);position:sticky;top:0;z-index:40;}
+.topbar-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.clock{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text2);}
+.live-badge{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--accent);background:var(--accent-dim);padding:3px 8px;border-radius:20px;border:1px solid rgba(245,197,66,0.2);}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.content{padding:24px;flex:1;}
+.page{display:none;}
+.page.active{display:block;animation:fadeUp 0.25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* PAGE HEADER */
+.ph{margin-bottom:20px;}
+.ph-title{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;letter-spacing:-0.5px;}
+.ph-sub{color:var(--text2);font-size:0.85rem;margin-top:2px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.card-title{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:12px;}
+
+/* STATS */
+.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat.g::after{background:var(--accent-bg);}
+.stat.b::after{background:var(--blue);}
+.stat.o::after{background:var(--orange);}
+.stat.y::after{background:var(--accent-bg);}
+.stat.r::after{background:var(--accent-bg);}
+.stat.p::after{background:var(--purple);}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);}
+.stat-val{font-family:'Fraunces',serif;font-size:2rem;font-weight:600;line-height:1.1;margin:4px 0 2px;}
+.stat-val.g{color:var(--accent);}
+.stat-val.b{color:var(--blue);}
+.stat-val.o{color:var(--orange);}
+.stat-val.y{color:var(--yellow);}
+.stat-val.r{color:var(--accent);}
+.stat-desc{font-size:0.75rem;color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--surface2);}
+th{padding:10px 14px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);font-weight:500;white-space:nowrap;}
+td{padding:10px 14px;border-top:1px solid var(--border);font-size:0.855rem;vertical-align:middle;}
+tr:hover td{background:rgba(0,0,0,0.03);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-family:'IBM Plex Mono',monospace;font-weight:500;white-space:nowrap;}
+.bg{background:var(--accent-dim);color:var(--accent);}
+.bb{background:var(--blue-dim);color:var(--blue);}
+.bo{background:var(--orange-dim);color:var(--orange);}
+.by{background:var(--yellow-dim);color:var(--yellow);}
+.bp{background:var(--purple-dim);color:var(--purple);}
+
+/* TOKEN DISPLAY */
+.token-display{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;margin:16px 0;}
+.token-value{font-family:'IBM Plex Mono',monospace;font-size:1.6rem;font-weight:500;color:var(--accent);letter-spacing:4px;margin-bottom:8px;}
+.token-hint{font-size:0.78rem;color:var(--text2);}
+
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{margin-bottom:12px;}
+.fl{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-bottom:5px;}
+.fi{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.15s;}
+.fi:focus{border-color:var(--blue);}
+.fsel{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.875rem;outline:none;appearance:none;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:6px;border:none;font-family:'Instrument Sans',sans-serif;font-size:0.855rem;font-weight:500;cursor:pointer;transition:all 0.15s;}
+.btn-green{background:var(--accent-bg);color:#1a1a1a;font-weight:600;}
+.btn-green:hover{filter:brightness(1.1);}
+.btn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(88,166,255,0.2);}
+.btn-blue:hover{background:rgba(88,166,255,0.2);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-danger{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(247,129,102,0.2);}
+.btn-danger:hover{background:rgba(247,129,102,0.25);}
+.btn-sm{padding:5px 10px;font-size:0.78rem;}
+.btn-full{width:100%;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* CONF BAR */
+.conf-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:4px;}
+.conf-fill{height:100%;border-radius:2px;}
+.conf-high{background:var(--accent);}
+.conf-low{background:var(--orange);}
+
+/* MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
+.modal-bd.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:100%;max-width:500px;animation:mIn 0.2s ease;max-height:90vh;overflow-y:auto;}
+@keyframes mIn{from{opacity:0;transform:scale(0.96);}to{opacity:1;transform:scale(1);}}
+.modal-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600;margin-bottom:4px;}
+.modal-sub{color:var(--text2);font-size:0.82rem;margin-bottom:20px;}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{width:360px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;}
+.login-logo{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;margin-bottom:4px;}
+.login-logo em{font-style:italic;color:#FFCF00;}
+.login-role{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:24px;}
+
+/* ALERTS */
+.alert{padding:10px 14px;border-radius:6px;font-size:0.82rem;border:1px solid;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;}
+.alert-warn{background:var(--yellow-dim);border-color:rgba(227,179,65,0.3);color:var(--yellow);}
+.alert-info{background:var(--blue-dim);border-color:rgba(88,166,255,0.2);color:var(--blue);}
+.alert-success{background:var(--accent-dim);border-color:rgba(245,197,66,0.3);color:var(--accent);}
+
+/* SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#0d1117;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* UTILS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.flex{display:flex;}.gap-8{gap:8px;}.gap-12{gap:12px;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
+.mt-8{margin-top:8px;}.mt-12{margin-top:12px;}.mt-16{margin-top:16px;}.mt-20{margin-top:20px;}
+.mb-12{margin-bottom:12px;}.mb-16{margin-bottom:16px;}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;}.muted{color:var(--text2);}
+.text-sm{font-size:0.82rem;}.divider{height:1px;background:var(--border);margin:16px 0;}
+.text-center{text-align:center;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* NOTIFICATIONS */
+.notif-btn{position:relative;background:transparent;border:1px solid var(--border);border-radius:6px;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--text2);font-size:1rem;transition:all 0.15s;}
+.notif-btn:hover{background:var(--surface2);color:var(--text);}
+.notif-badge{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;
+  background:var(--orange);color:#fff;font-size:0.6rem;font-weight:700;display:flex;
+  align-items:center;justify-content:center;border:2px solid var(--bg);}
+.notif-dropdown{display:none;position:absolute;top:44px;right:0;width:320px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 28px rgba(16,24,40,0.12);z-index:200;overflow:hidden;}
+.notif-dropdown.open{display:block;}
+.notif-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.notif-header-title{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--text2);}
+.notif-clear{background:transparent;border:none;color:var(--text3);font-size:0.72rem;cursor:pointer;font-family:'Instrument Sans',sans-serif;}
+.notif-clear:hover{color:var(--text2);}
+.notif-list{max-height:280px;overflow-y:auto;}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item.unread{background:rgba(247,129,102,0.05);}
+.notif-icon{width:32px;height:32px;border-radius:50%;background:var(--orange-dim);display:flex;
+  align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;}
+.notif-info{flex:1;}
+.notif-name{font-size:0.85rem;font-weight:500;margin-bottom:2px;}
+.notif-msg{font-size:0.75rem;color:var(--text2);}
+.notif-time{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--text3);margin-top:3px;}
+.notif-empty{padding:32px 16px;text-align:center;color:var(--text3);font-size:0.82rem;}
+.notif-wrap{position:relative;}
+
+/* HAMBURGER */
+.hamburger{display:none;background:transparent;border:1px solid var(--border);border-radius:6px;
+  width:34px;height:34px;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--text2);font-size:1.1rem;flex-shrink:0;}
+
+/* SIDEBAR OVERLAY */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;backdrop-filter:blur(2px);}
+.sidebar-overlay.open{display:block;}
+
+/* ── MOBILE RESPONSIVE ── */
+
+/* Prevent horizontal overflow globally */
+html, body { overflow-x: hidden; max-width: 100vw; }
+
+@media (max-width: 900px) {
+  .stat-row{grid-template-columns:repeat(3,1fr);}
+}
+
+@media (max-width: 768px) {
+  /* Sidebar becomes a slide-over overlay */
+  .sidebar{transform:translateX(-240px);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);width:240px;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;width:100%;max-width:100vw;}
+  .hamburger{display:flex;}
+
+  /* Topbar */
+  .topbar{padding:0 12px;gap:8px;}
+  .topbar-title{font-size:0.88rem;}
+  .clock{display:none;}
+
+  /* Content */
+  .content{padding:14px;width:100%;max-width:100vw;overflow-x:hidden;}
+
+  /* Stats 2 columns */
+  .stat-row{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stat{padding:12px 14px;}
+  .stat-val{font-size:1.7rem;}
+
+  /* Grids to single column */
+  .grid-2{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+
+  /* Tables: scroll horizontally inside their wrapper */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;}
+  table{min-width:520px;}
+  td,th{padding:8px 10px;font-size:0.78rem;}
+
+  /* Employees search bar — wrap on small screens */
+  .card .flex.gap-8{flex-wrap:wrap;}
+  .card .flex.gap-8 .fi{min-width:0;flex:1 1 120px;}
+  .card .flex.gap-8 .fsel{width:100%;flex:1 1 120px;}
+
+  /* Login box */
+  .login-box{width:calc(100% - 32px);max-width:360px;padding:24px 20px;}
+
+  /* Modal — slide up from bottom on mobile */
+  .modal{width:calc(100vw - 32px);max-width:calc(100vw - 32px);padding:20px;}
+  .modal-bd{padding:16px;align-items:flex-end;}
+
+  /* Notification dropdown — keep it on screen */
+  .notif-dropdown{right:0;left:auto;width:min(290px, calc(100vw - 24px));}
+
+  /* Page header rows */
+  .flex.justify-between.items-center.mb-16{flex-wrap:wrap;gap:10px;}
+  .ph{margin:0;}
+  .ph-title{font-size:1.15rem;}
+
+  /* Token display */
+  .token-value{font-size:1.3rem;letter-spacing:3px;}
+}
+
+@media (max-width: 480px) {
+  .stat-row{grid-template-columns:1fr 1fr;gap:8px;}
+  .stat-val{font-size:1.5rem;}
+  .stat-label{font-size:0.58rem;}
+  .stat-desc{font-size:0.7rem;}
+  .topbar-right .live-badge{display:none;}
+  .content{padding:10px;}
+  .ph-title{font-size:1.05rem;}
+  .card{padding:12px;}
+
+  /* Stack page header buttons below title on very small screens */
+  .flex.justify-between.items-center.mb-16{flex-direction:column;align-items:flex-start;}
+
+  /* Slightly smaller table text */
+  td,th{padding:7px 8px;font-size:0.75rem;}
+
+  /* Notification dropdown full-width on tiny screens */
+  .notif-dropdown{left:50%;right:auto;transform:translateX(-50%);width:calc(100vw - 16px);}
+  .notif-wrap{position:static;}
+  .topbar-right{position:relative;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Light <em>Check</em></div>
+    <div class="login-role">Console Administrateur</div>
+    <div class="fg">
+      <label class="fl">Identifiant</label>
+      <input class="fi" id="login-user" type="text" placeholder="admin" value="admin"/>
+    </div>
+    <div class="fg">
+      <label class="fl">Mot de passe</label>
+      <input class="fi" id="login-pass" type="password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <div id="login-err" class="alert alert-warn" style="display:none;margin-top:8px;">
+      <span>⚠</span><span>Identifiants incorrects.</span>
+    </div>
+    <div class="alert alert-info" style="margin-top:12px;">
+      <span>ℹ</span><span>Démo : <strong>admin / admin123</strong></span>
+    </div>
+    <button class="btn btn-green btn-full" onclick="doLogin()" style="margin-top:12px;padding:10px;">Se connecter</button>
+    <div class="muted text-sm text-center" style="margin-top:14px;">
+      Employé ? <a href="attend.html" style="color:var(--blue);text-decoration:none;">Aller au pointage →</a>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name">Light <em>Check</em></div>
+    <div class="brand-tag">Console Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Vue d'ensemble</div>
+    <button class="nav-item active" onclick="showPage('dashboard',this);closeSidebar()"><span class="icon">▦</span> Tableau de bord</button>
+    <button class="nav-item" onclick="showPage('board-rh',this);closeSidebar()"><span class="icon">📋</span> Tableau RH</button>
+    <button class="nav-item" onclick="showPage('live',this);closeSidebar()"><span class="icon">◉</span> Flux en direct</button>
+    <div class="nav-section">Personnes</div>
+    <button class="nav-item" onclick="showPage('employees',this);closeSidebar()"><span class="icon">◈</span> Employés</button>
+    <div class="nav-section">Rapports</div>
+    <button class="nav-item" onclick="showPage('pointages',this);closeSidebar()"><span class="icon">◧</span> Pointages</button>
+    <div class="nav-section">Configuration</div>
+    <button class="nav-item" onclick="showPage('settings',this);closeSidebar()"><span class="icon">◌</span> Paramètres</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-chip" style="margin-bottom:10px;">
+      <div class="admin-avatar">A</div>
+      <div>
+        <div style="font-size:0.82rem;font-weight:500;">Administrateur</div>
+        <div class="muted" style="font-size:0.72rem;">Super utilisateur</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-full" style="font-size:0.78rem;" onclick="adminLogout()">↩ Déconnexion</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="flex items-center gap-8">
+      <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-label">Tableau de bord</div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-badge"><div class="live-dot"></div>LIVE · Supabase</div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="notif-wrap">
+        <button class="notif-btn" id="notif-btn" onclick="toggleNotifications()" title="Notifications">
+          🔔
+          <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header">
+            <div class="notif-header-title">Notifications</div>
+            <button class="notif-clear" onclick="clearNotifications()">Tout marquer lu</button>
+          </div>
+          <div class="notif-list" id="notif-list">
+            <div class="notif-empty">Aucune notification</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ TABLEAU DE BORD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph">
+        <div class="ph-title">Bonjour, Admin</div>
+        <div class="ph-sub" id="dash-date">—</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat g"><div class="stat-label">Présents</div><div class="stat-val g" id="s-present">—</div><div class="stat-desc">Entrée aujourd'hui</div></div>
+        <div class="stat o"><div class="stat-label">Absents</div><div class="stat-val o" id="s-absent">—</div><div class="stat-desc">Pas encore pointés</div></div>
+        <div class="stat b"><div class="stat-label">Pointages</div><div class="stat-val b" id="s-total">—</div><div class="stat-desc">Total du jour</div></div>
+        <div class="stat y"><div class="stat-label">Confiance moy.</div><div class="stat-val y" id="s-conf">—</div><div class="stat-desc">Score de reconnaissance moyen</div></div>
+        <div class="stat r"><div class="stat-label">Retards</div><div class="stat-val r" id="s-retards">—</div><div class="stat-desc">Retards aujourd'hui</div></div>
+        <div class="stat p"><div class="stat-label">Heures Sup. cumulées</div><div class="stat-val p" id="s-overtime" style="color:var(--purple);">—</div><div class="stat-desc">Heures supp. aujourd'hui</div></div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-center mb-12">
+          <div class="card-title" style="margin:0;">Activité du jour</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Actualiser</button>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Type</th><th>Heure</th><th>Confiance</th><th>GPS</th><th>Statut</th></tr></thead>
+          <tbody id="dash-log"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ TABLEAU RH COMPLET (NCHECK) ══ -->
+    <div class="page" id="page-board-rh">
+      <div class="ph flex justify-between items-center" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <div class="ph-title">Tableau RH Équipe</div>
+          <div class="ph-sub" id="board-rh-date">—</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a class="btn btn-blue btn-sm" href="/conges" style="text-decoration:none; padding:7px 12px; font-size:0.8rem; display:inline-flex; align-items:center; gap:5px;">📅 Gérer les congés</a>
+          <button class="btn btn-ghost btn-sm" onclick="loadBoardRH()">↻ Rafraîchir</button>
+        </div>
+      </div>
+
+      <!-- Stats RH Row -->
+      <div class="stat-row">
+        <div class="stat g"><div class="stat-label">Présents</div><div class="stat-val g" id="rh-present">—</div><div class="stat-desc">Présents aujourd'hui</div></div>
+        <div class="stat o"><div class="stat-label">Absents</div><div class="stat-val o" id="rh-absent">—</div><div class="stat-desc">Non pointés aujourd'hui</div></div>
+        <div class="stat y"><div class="stat-label">Retards</div><div class="stat-val y" id="rh-retards">—</div><div class="stat-desc">Arrivés en retard today</div></div>
+        <div class="stat b"><div class="stat-label">Congés</div><div class="stat-val b" id="rh-conges">—</div><div class="stat-desc">En congés autorisés</div></div>
+        <div class="stat r"><div class="stat-label">Maladies</div><div class="stat-val o" id="rh-maladies" style="color:var(--orange);">—</div><div class="stat-desc">En arrêt maladie</div></div>
+        <div class="stat p"><div class="stat-label">Missions</div><div class="stat-val p" id="rh-missions" style="color:var(--purple);">—</div><div class="stat-desc">En mission externe</div></div>
+      </div>
+
+      <!-- Live Search / Filter bar for Board RH -->
+      <div class="card mb-12" style="margin-bottom:16px;">
+        <div class="flex gap-8 items-center justify-between" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <input class="fi" style="flex:1; min-width: 250px; max-width: 380px;" type="text" id="board-rh-search" placeholder="Rechercher par collaborateur ou poste..." oninput="filterBoardRH(this.value)"/>
+          <div class="flex gap-8" id="rh-filter-buttons" style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm active-rh-filter" onclick="filterBoardRHStatus('', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem;">Tous</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterBoardRHStatus('Présent', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem; color:var(--accent);">Présents</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterBoardRHStatus('Absent', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem; color:var(--orange);">Absents</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterBoardRHStatus('Retard', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem; color:var(--yellow);">Retards</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterBoardRHStatus('Congé', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem; color:var(--blue);">Congés</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterBoardRHStatus('Maladie', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem; color:var(--orange);">Maladies</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterBoardRHStatus('Mission', this)" style="border:1px solid var(--border); padding:6px 12px; font-size:0.75rem; color:var(--purple);">Missions</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Complete RH Attendance Table -->
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Collaborateur</th>
+                <th>Poste</th>
+                <th>Statut d'Aujourd'hui</th>
+                <th>Heure d'Entrée</th>
+                <th>Heure de Sortie</th>
+                <th>Détails & Absences</th>
+                <th>Confiance Match</th>
+                <th>Dispo / GPS</th>
+              </tr>
+            </thead>
+            <tbody id="board-rh-table-body">
+              <tr>
+                <td colspan="8" class="muted text-center" style="padding:28px;">Chargement du tableau RH en cours...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FLUX EN DIRECT ══ -->
+    <div class="page" id="page-live">
+      <div class="flex justify-between items-center mb-16">
+        <div class="ph" style="margin:0;"><div class="ph-title">Flux en direct</div><div class="ph-sub">Tous les pointages en temps réel</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadLive()">↻ Actualiser</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Poste</th><th>Type</th><th>Date</th><th>Heure</th><th>Confiance</th><th>GPS</th><th>Statut</th></tr></thead>
+          <tbody id="live-log"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ EMPLOYÉS ══ -->
+    <div class="page" id="page-employees">
+      <div class="flex justify-between items-center mb-16">
+        <div class="ph" style="margin:0;"><div class="ph-title">Employés</div><div class="ph-sub">Gestion de l'équipe</div></div>
+        <button class="btn btn-green" onclick="openAddEmployee()">+ Nouvel employé</button>
+      </div>
+
+      <!-- Search bar -->
+      <div class="card mb-12" style="margin-bottom:12px;">
+        <div class="flex gap-8">
+          <input class="fi" style="flex:1;" type="text" placeholder="Rechercher par nom, poste…" oninput="filterEmp(this.value)"/>
+          <select class="fsel" style="width:180px;" onchange="filterEmpStatus(this.value)">
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nom complet</th><th>Poste</th><th>Conf. Horaires / Fin</th><th>Email</th><th>Token d'accès</th><th>Visage</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="emp-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ POINTAGES ══ -->
+    <div class="page" id="page-pointages">
+      <div class="ph"><div class="ph-title">Rapport de pointages</div><div class="ph-sub">Historique complet depuis Supabase</div></div>
+      <div class="grid-2 mb-16" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-title">Filtrer</div>
+          <div class="fg mt-8"><label class="fl">Du</label><input class="fi" type="date" id="rep-from"/></div>
+          <div class="fg"><label class="fl">Au</label><input class="fi" type="date" id="rep-to"/></div>
+          <button class="btn btn-green btn-full" onclick="loadPointages()">Générer</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Exporter</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <button class="btn btn-ghost btn-full" onclick="exportCSV()">Exporter en CSV</button>
+            <button class="btn btn-ghost btn-full" onclick="exportJSON()">Exporter en JSON</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Employé</th><th>Type</th><th>Date</th><th>Heure</th><th>Fin prévue</th><th>Heures Sup.</th><th>Confiance</th><th>Latitude</th><th>Longitude</th><th>Statut</th></tr></thead>
+          <tbody id="rep-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ PARAMÈTRES ══ -->
+    <div class="page" id="page-settings">
+      <div class="ph"><div class="ph-title">Paramètres</div><div class="ph-sub">Configuration de Light Check</div></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Face++ API</div>
+          <div class="alert alert-success mt-8"><span>☁️</span> Clés sauvegardées dans Supabase — disponibles sur tous les appareils h24.</div>
+          <div class="fg mt-8"><label class="fl">API Key</label><input class="fi" type="text" id="set-facepp-key" placeholder="Votre Face++ API Key"/></div>
+          <div class="fg"><label class="fl">API Secret</label><input class="fi" type="password" id="set-facepp-secret" placeholder="Votre Face++ API Secret"/></div>
+          <div class="fg"><label class="fl">Seuil de confiance (%)</label><input class="fi" type="number" id="set-threshold" value="80" min="50" max="99"/></div>
+          <button class="btn btn-green" onclick="saveFaceppKeys()">Enregistrer</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Connexion Supabase</div>
+          <div class="alert alert-info mt-8">URL et clé anon centralisées dans config.js.</div>
+          <div class="fg mt-8">
+            <label class="fl">URL Supabase</label>
+            <input class="fi" id="cfg-supabase-url" type="text" value="" readonly style="opacity:0.5;cursor:not-allowed;"/>
+          </div>
+          <div class="fg">
+            <label class="fl">Statut</label>
+            <div id="sb-status" class="badge bg" style="display:inline-flex;margin-top:4px;">◉ Connecté</div>
+          </div>
+          <button class="btn btn-blue btn-full mt-8" onclick="testSupabase()">Tester la connexion</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Heures Supplémentaires</div>
+          <div class="alert alert-success mt-8"><span>🕐</span> Configurez l'heure de départ standard de fin de journée pour le calcul automatique.</div>
+          <div class="fg mt-8">
+            <label class="fl">Heure de fin prévue globale (ex: 17:00)</label>
+            <input class="fi" type="text" id="set-overtime-end" value="17:00" placeholder="17:00"/>
+          </div>
+          <button class="btn btn-green btn-full mt-8" onclick="saveOvertimeSettings()">Enregistrer l'heure</button>
+        </div>
+      </div>
+      <div class="card mt-16">
+        <div class="card-title">Mot de passe administrateur</div>
+        <div class="form-row mt-8">
+          <div class="fg" style="margin:0;"><label class="fl">Nouveau mot de passe</label><input class="fi" type="password" id="new-pass" placeholder="••••••••"/></div>
+          <div class="fg" style="margin:0;"><label class="fl">Confirmer</label><input class="fi" type="password" id="conf-pass" placeholder="••••••••"/></div>
+        </div>
+        <button class="btn btn-ghost mt-8" onclick="changePassword()">Mettre à jour</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODAL : NOUVEL EMPLOYÉ ══ -->
+<div class="modal-bd" id="modal-employee">
+  <div class="modal">
+    <div class="modal-title">Nouvel employé</div>
+    <div class="modal-sub">Remplissez le profil. Un code d'accès unique sera généré automatiquement.</div>
+
+    <div class="form-row">
+      <div class="fg" style="margin:0 0 12px;"><label class="fl">Nom complet *</label><input class="fi" id="ne-name" placeholder="ex : Koffi Mensah"/></div>
+      <div class="fg" style="margin:0 0 12px;"><label class="fl">Poste *</label><input class="fi" id="ne-post" placeholder="ex : Comptable"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg" style="margin:0 0 12px;"><label class="fl">Email</label><input class="fi" id="ne-email" type="email" placeholder="koffi@societe.com"/></div>
+      <div class="fg" style="margin:0 0 12px;"><label class="fl">Téléphone</label><input class="fi" id="ne-phone" type="tel" placeholder="+229 00 00 00 00"/></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Statut</label>
+      <select class="fsel" id="ne-status">
+        <option value="actif">Actif</option>
+        <option value="inactif">Inactif</option>
+      </select>
+    </div>
+
+    <div id="ne-result" style="display:none;">
+      <div class="divider"></div>
+      <div class="alert alert-success"><span>✓</span><span>Employé créé avec succès ! Partagez ce code d'accès avec l'employé.</span></div>
+      <div class="token-display">
+        <div class="card-title" style="margin-bottom:8px;">Code d'accès généré</div>
+        <div class="token-value" id="ne-token-display">—</div>
+        <div class="token-hint">L'employé utilise ce code pour se connecter à l'application de pointage.<br/>Il sera invité à prendre un selfie lors de sa première connexion.</div>
+      </div>
+      <button class="btn btn-ghost btn-full" onclick="copyToken()">📋 Copier le code</button>
+    </div>
+
+    <div id="ne-error" class="alert alert-warn" style="display:none;margin-top:12px;">
+      <span>⚠</span><span id="ne-error-msg">Erreur.</span>
+    </div>
+
+    <div class="flex gap-8 mt-16" id="ne-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-employee')">Annuler</button>
+      <button class="btn btn-green" style="flex:1" id="btn-create-emp" onclick="createEmployee()">
+        <span id="btn-create-label">Créer l'employé</span>
+      </button>
+    </div>
+    <div id="ne-close-btn" style="display:none;margin-top:12px;">
+      <button class="btn btn-ghost btn-full" onclick="closeModal('modal-employee');loadEmployees();">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL : TOKEN ══ -->
+<div class="modal-bd" id="modal-token">
+  <div class="modal" style="max-width:400px;text-align:center;">
+    <div class="modal-title">Code d'accès</div>
+    <div class="modal-sub" id="mt-emp-name">—</div>
+    <div class="token-display">
+      <div class="token-value" id="mt-token">—</div>
+      <div class="token-hint">Partagez ce code avec l'employé pour lui permettre de se connecter.</div>
+    </div>
+    <button class="btn btn-ghost btn-full" onclick="copyTokenFromModal()" style="margin-bottom:8px;">📋 Copier</button>
+    <button class="btn btn-ghost btn-full" onclick="closeModal('modal-token')">Fermer</button>
+  </div>
+</div>
+
+<!-- ══ MODAL : PLAN END TIME ══ -->
+<div class="modal-bd" id="modal-planned-end">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title">Heure de fin prévue</div>
+    <div class="modal-sub font-semibold text-lg text-primary" id="mpe-emp-name">Employé</div>
+    <div class="divider"></div>
+    <div class="fg" style="margin-top:12px;">
+      <label class="fl">Saisir l'heure de fin pour cet employé</label>
+      <input class="fi" id="mpe-time" type="text" placeholder="ex : 17:00" value="17:00"/>
+    </div>
+    <div class="alert alert-info" style="margin-top:12px;">
+      <span>ℹ</span><span>Laissez vide pour utiliser l'heure standard globale de l'entreprise (17:00).</span>
+    </div>
+    <input type="hidden" id="mpe-emp-id"/>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-planned-end')">Annuler</button>
+      <button class="btn btn-green" style="flex:1" onclick="savePlannedEnd()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+// ══ CONFIG ══
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+let adminPass = localStorage.getItem('lc_admin_pass') || 'admin123';
+let allEmployees = [];
+let empSearchVal = '', empStatusVal = '';
+let cachedPointages = [];
+let generatedToken = '';
+let boardRHSearchVal = '';
+let boardRHStatusVal = '';
+let boardRHEmployees = [];
+let boardRHPointages = [];
+let boardRHLeaves = [];
+
+// ══ OVERTIME LOGIC ══
+function calculateOvertime(p, empPlannedEnds, defaultEnd) {
+  if (p.type !== 'sortie' && p.type !== 'déconnexion' && p.type !== 'Sortie') return null;
+  const plEnd = empPlannedEnds[p.employee_id] || defaultEnd || '17:00';
+  const parts = plEnd.split(':');
+  if (parts.length < 2) return null;
+  const plannedH = parseInt(parts[0], 10);
+  const plannedM = parseInt(parts[1], 10);
+  if (isNaN(plannedH) || isNaN(plannedM)) return null;
+
+  const t = new Date(p.created_at);
+  const depH = t.getHours();
+  const depM = t.getMinutes();
+
+  const depTotal = depH * 60 + depM;
+  const plannedTotal = plannedH * 60 + plannedM;
+
+  const diff = depTotal - plannedTotal;
+  if (diff > 0) {
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
+    return {
+      minutes: diff,
+      text: `${h}h${String(m).padStart(2, '0')}`,
+      plannedEnd: plEnd
+    };
+  }
+  return null;
+}
+
+function configurePlannedEnd(empId, empName) {
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+  document.getElementById('mpe-emp-id').value = empId;
+  document.getElementById('mpe-emp-name').textContent = empName;
+  document.getElementById('mpe-time').value = empPlannedEnds[empId] || defaultEnd;
+  document.getElementById('modal-planned-end').classList.add('open');
+}
+
+function savePlannedEnd() {
+  const empId = document.getElementById('mpe-emp-id').value;
+  const timeVal = document.getElementById('mpe-time').value.trim();
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  if (timeVal) {
+    empPlannedEnds[empId] = timeVal;
+  } else {
+    delete empPlannedEnds[empId];
+  }
+  localStorage.setItem('lc_emp_planned_ends', JSON.stringify(empPlannedEnds));
+  closeModal('modal-planned-end');
+  loadEmployees();
+  loadDashboard();
+}
+
+// ══ SUPABASE ══
+async function sbGet(table, filters='') {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+    headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY }
+  });
+  return r.json();
+}
+async function sbInsert(table, data) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY,
+              'Content-Type':'application/json', Prefer:'return=representation' },
+    body: JSON.stringify(data)
+  });
+  return r.json();
+}
+async function sbPatch(table, filter, data) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method:'PATCH',
+    headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY,
+              'Content-Type':'application/json', Prefer:'return=representation' },
+    body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+// ══ TOKEN GENERATOR ══
+function generateToken() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let t = 'LC-';
+  for (let i=0;i<6;i++) t += chars[Math.floor(Math.random()*chars.length)];
+  return t;
+}
+
+// ══ CLOCK ══
+setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString('fr-FR'); },1000);
+
+// ══ LOGIN ══
+function enterAdmin(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  loadDashboard();
+  loadSettings();
+  const t = new Date().toISOString().split('T')[0];
+  document.getElementById('rep-from').value = t;
+  document.getElementById('rep-to').value   = t;
+  startNotifPolling();
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  if (u==='admin' && p===adminPass) {
+    localStorage.setItem('lc_admin_session','1');
+    enterAdmin();
+  } else {
+    document.getElementById('login-err').style.display='flex';
+  }
+}
+
+// Auto-login if admin session exists
+window.addEventListener('load', ()=>{
+  try { const _u=document.getElementById('cfg-supabase-url'); if(_u && window.LC_CONFIG) _u.value = window.LC_CONFIG.SUPABASE_URL; } catch(e){}
+  if(localStorage.getItem('lc_admin_session')==='1'){
+    enterAdmin();
+  }
+});
+
+// ══ NAV ══
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('topbar-label').textContent = el.textContent.trim();
+  if (id==='dashboard') loadDashboard();
+  if (id==='board-rh')  loadBoardRH();
+  if (id==='live')      loadLive();
+  if (id==='employees') loadEmployees();
+  if (id==='pointages') loadPointages();
+}
+
+// ══ DASHBOARD ══
+async function loadDashboard() {
+  const today = new Date().toISOString().split('T')[0];
+  const [employees, pointages] = await Promise.all([
+    sbGet('employees','status=eq.actif'),
+    sbGet('pointages',`created_at=gte.${today}T00:00:00&order=created_at.desc`)
+  ]);
+  const empMap = {};
+  employees.forEach(e=>empMap[e.id]=e);
+  const presentIds = new Set(pointages.filter(p=>p.type==='entrée').map(p=>p.employee_id));
+  document.getElementById('s-present').textContent = presentIds.size;
+  document.getElementById('s-absent').textContent  = Math.max(0, employees.length - presentIds.size);
+  document.getElementById('s-total').textContent   = pointages.length;
+  const withConf = pointages.filter(p=>p.face_confidence!=null);
+  document.getElementById('s-conf').textContent = withConf.length
+    ? (withConf.reduce((a,p)=>a+parseFloat(p.face_confidence),0)/withConf.length).toFixed(1)+'%' : '—';
+  const retards = pointages.filter(p=>p.est_en_retard===true).length;
+  document.getElementById('s-retards').textContent = retards;
+
+  // Calculer les heures supplémentaires d'aujourd'hui
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+  let totalOvertimeMins = 0;
+  pointages.forEach(p => {
+    const ov = calculateOvertime(p, empPlannedEnds, defaultEnd);
+    if (ov) {
+      totalOvertimeMins += ov.minutes;
+    }
+  });
+  const hOver = Math.floor(totalOvertimeMins / 60);
+  const mOver = totalOvertimeMins % 60;
+  document.getElementById('s-overtime').textContent = totalOvertimeMins > 0 
+    ? `${hOver}h${String(mOver).padStart(2, '0')}`
+    : '0h00';
+
+  renderPtTable('dash-log', pointages, empMap, false);
+}
+
+// ══ TABLEAU RH COMPLET ══
+async function loadBoardRH() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('board-rh-date').textContent = 
+    new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  // Fetch employees, today's pointages, and approved/all leaves
+  const [employees, pointages, leaves] = await Promise.all([
+    sbGet('employees', 'status=eq.actif&order=full_name.asc'),
+    sbGet('pointages', `created_at=gte.${today}T00:00:00&order=created_at.asc`),
+    sbGet('leaves')
+  ]);
+
+  boardRHEmployees = Array.isArray(employees) ? employees : [];
+  boardRHPointages = Array.isArray(pointages) ? pointages : [];
+  boardRHLeaves    = Array.isArray(leaves) ? leaves : [];
+
+  // Calculate high-level metrics for today
+  let countPresent = 0;
+  let countAbsent = 0;
+  let countRetards = 0;
+  let countConges = 0;
+  let countMaladies = 0;
+  let countMissions = 0;
+
+  boardRHEmployees.forEach(e => {
+    const statusObj = getEmployeeStatusToday(e, today);
+    if (statusObj.status === 'Présent') {
+      countPresent++;
+    } else if (statusObj.status === 'Retard') {
+      countPresent++;
+      countRetards++;
+    } else if (statusObj.status === 'Congé') {
+      countConges++;
+    } else if (statusObj.status === 'Maladie') {
+      countMaladies++;
+    } else if (statusObj.status === 'Mission') {
+      countMissions++;
+    } else {
+      countAbsent++;
+    }
+  });
+
+  // Render KPI values
+  document.getElementById('rh-present').textContent = countPresent;
+  document.getElementById('rh-absent').textContent  = countAbsent;
+  document.getElementById('rh-retards').textContent = countRetards;
+  document.getElementById('rh-conges').textContent  = countConges;
+  document.getElementById('rh-maladies').textContent = countMaladies;
+  document.getElementById('rh-missions').textContent = countMissions;
+
+  renderBoardRHTable();
+}
+
+function getEmployeeStatusToday(e, todayDate) {
+  // 1. Get all of today's pointages for this employee
+  const pts = boardRHPointages.filter(p => p.employee_id === e.id);
+  const entreePt = pts.find(p => p.type === 'entrée' || p.type === 'Entrée');
+  const sortiePt = pts.find(p => p.type === 'sortie' || p.type === 'Sortie' || p.type === 'déconnexion');
+
+  // 2. Check active leaves for today
+  const activeLeave = boardRHLeaves.find(l => {
+    return l.employee_id === e.id && 
+           l.status !== 'refusé' &&
+           l.start_date <= todayDate && 
+           l.end_date >= todayDate;
+  });
+
+  if (entreePt) {
+    if (entreePt.est_en_retard === true) {
+      return {
+        status: 'Retard',
+        entree: entreePt,
+        sortie: sortiePt,
+        details: 'En retard de pointage'
+      };
+    }
+    return {
+      status: 'Présent',
+      entree: entreePt,
+      sortie: sortiePt,
+      details: 'En poste'
+    };
+  }
+
+  if (activeLeave) {
+    const type = activeLeave.leave_type || '';
+    if (type === 'Maladie') {
+      return {
+        status: 'Maladie',
+        leave: activeLeave,
+        details: 'Arrêt de travail (Maladie)'
+      };
+    } else if (type === 'Mission') {
+      return {
+        status: 'Mission',
+        leave: activeLeave,
+        details: activeLeave.notes || 'Mission professionnelle'
+      };
+    } else {
+      return {
+        status: 'Congé',
+        leave: activeLeave,
+        details: `${type} (${activeLeave.notes || 'Autorisé'})`
+      };
+    }
+  }
+
+  return {
+    status: 'Absent',
+    details: 'Aucun pointage aujourd\'hui'
+  };
+}
+
+function filterBoardRH(v) {
+  boardRHSearchVal = v.toLowerCase();
+  renderBoardRHTable();
+}
+
+function filterBoardRHStatus(status, btnEl) {
+  boardRHStatusVal = status;
+
+  // Manage button styling
+  if (btnEl) {
+    const parentContainer = document.getElementById('rh-filter-buttons');
+    if (parentContainer) {
+      parentContainer.querySelectorAll('button').forEach(btn => {
+        btn.classList.remove('active-rh-filter');
+        btn.style.backgroundColor = '';
+        btn.style.color = '';
+        btn.style.borderColor = 'var(--border)';
+      });
+      btnEl.classList.add('active-rh-filter');
+      btnEl.style.backgroundColor = 'var(--accent-dim)';
+      btnEl.style.color = 'var(--accent)';
+      btnEl.style.borderColor = 'var(--accent)';
+    }
+  }
+
+  renderBoardRHTable();
+}
+
+function renderBoardRHTable() {
+  const tbody = document.getElementById('board-rh-table-body');
+  if (!tbody) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const filteredList = boardRHEmployees.filter(e => {
+    // Search filter
+    const matchesSearch = !boardRHSearchVal || 
+                         e.full_name.toLowerCase().includes(boardRHSearchVal) || 
+                         (e.post || '').toLowerCase().includes(boardRHSearchVal);
+
+    if (!matchesSearch) return false;
+
+    // Status filter
+    if (boardRHStatusVal) {
+      const sObj = getEmployeeStatusToday(e, today);
+      if (boardRHStatusVal === 'Présent') {
+        return sObj.status === 'Présent' || sObj.status === 'Retard';
+      }
+      return sObj.status === boardRHStatusVal;
+    }
+
+    return true;
+  });
+
+  if (!filteredList.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="muted text-center" style="padding:28px;">Aucun collaborateur ne correspond à ces critères.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filteredList.map(e => {
+    const sObj = getEmployeeStatusToday(e, today);
+    let statusBadge = '';
+    let detailText = sObj.details || '—';
+    let checkInTime = '—';
+    let checkOutTime = '—';
+    let gpsLocation = '—';
+    let confidenceText = '—';
+
+    // Build values based on calculated status
+    if (sObj.status === 'Présent') {
+      statusBadge = '<span class="badge bg" style="font-weight:600; padding:4px 10px;">◉ PRÉSENT</span>';
+      checkInTime = sObj.entree ? new Date(sObj.entree.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '—';
+      checkOutTime = sObj.sortie ? new Date(sObj.sortie.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '—';
+      gpsLocation = (sObj.entree && sObj.entree.latitude) ? `${parseFloat(sObj.entree.latitude).toFixed(4)}, ${parseFloat(sObj.entree.longitude).toFixed(4)}` : '—';
+      confidenceText = sObj.entree && sObj.entree.face_confidence ? parseFloat(sObj.entree.face_confidence).toFixed(1) + '%' : 'Manuel';
+      detailText = 'En service';
+    } 
+    else if (sObj.status === 'Retard') {
+      statusBadge = '<span class="badge by" style="font-weight:600; padding:4px 10px; color:var(--yellow); background:var(--yellow-dim);">⚠ EN RETARD</span>';
+      checkInTime = sObj.entree ? new Date(sObj.entree.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '—';
+      checkOutTime = sObj.sortie ? new Date(sObj.sortie.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '—';
+      gpsLocation = (sObj.entree && sObj.entree.latitude) ? `${parseFloat(sObj.entree.latitude).toFixed(4)}, ${parseFloat(sObj.entree.longitude).toFixed(4)}` : '—';
+      confidenceText = sObj.entree && sObj.entree.face_confidence ? parseFloat(sObj.entree.face_confidence).toFixed(1) + '%' : 'Manuel';
+
+      let lateMin = '';
+      if (sObj.entree) {
+        const entTime = new Date(sObj.entree.created_at);
+        const expTime = new Date(sObj.entree.created_at);
+        expTime.setHours(8, 0, 0, 0);
+        const diffMs = entTime - expTime;
+        if (diffMs > 0) {
+          const lMins = Math.floor(diffMs / 60000);
+          lateMin = ` (+${lMins} min)`;
+        }
+      }
+      detailText = `Arrivée en retard${lateMin}`;
+    } 
+    else if (sObj.status === 'Absent') {
+      statusBadge = '<span class="badge bo" style="font-weight:600; padding:4px 10px;">◉ ABSENT</span>';
+      detailText = 'Pas de pointage enregistré';
+    } 
+    else if (sObj.status === 'Congé') {
+      statusBadge = '<span class="badge bb" style="font-weight:600; padding:4px 10px;">🌴 EN CONGÉ</span>';
+      if (sObj.leave) {
+        detailText = `Congé du ${new Date(sObj.leave.start_date).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})} au ${new Date(sObj.leave.end_date).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}`;
+      }
+    } 
+    else if (sObj.status === 'Maladie') {
+      statusBadge = '<span class="badge bo" style="font-weight:600; padding:4px 10px; background:rgba(247,129,102,0.15); color:var(--orange);">🤒 MALADIE</span>';
+      if (sObj.leave) {
+        detailText = `Arrêt du ${new Date(sObj.leave.start_date).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})} au ${new Date(sObj.leave.end_date).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}`;
+      }
+    } 
+    else if (sObj.status === 'Mission') {
+      statusBadge = '<span class="badge bp" style="font-weight:600; padding:4px 10px;">💼 EN MISSION</span>';
+      if (sObj.leave) {
+        detailText = sObj.leave.notes || 'Mission professionnelle autorisée';
+      }
+    }
+
+    const mapUrl = gpsLocation !== '—' 
+      ? `https://www.google.com/maps?q=${gpsLocation}`
+      : '#';
+
+    const gpsHtml = gpsLocation !== '—'
+      ? `<a href="${mapUrl}" target="_blank" style="color:var(--blue); text-decoration:none;" class="mono text-sm">📍 ${gpsLocation}</a>`
+      : '<span class="muted">—</span>';
+
+    return `<tr>
+      <td><strong>${e.full_name}</strong></td>
+      <td class="muted text-sm">${e.post || '—'}</td>
+      <td>${statusBadge}</td>
+      <td class="mono font-semibold" style="font-size:0.8rem; color:${checkInTime !== '—' ? 'var(--blue)' : 'var(--text3)'};">${checkInTime}</td>
+      <td class="mono font-semibold" style="font-size:0.8rem; color:${checkOutTime !== '—' ? 'var(--purple)' : 'var(--text3)'};">${checkOutTime}</td>
+      <td class="muted" style="font-size:0.82rem;">${detailText}</td>
+      <td class="mono" style="font-size:0.75rem;">${confidenceText}</td>
+      <td>${gpsHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ LIVE ══
+async function loadLive() {
+  const [employees, pointages] = await Promise.all([
+    sbGet('employees',''),
+    sbGet('pointages','order=created_at.desc&limit=150')
+  ]);
+  const empMap={};
+  employees.forEach(e=>empMap[e.id]=e);
+  renderPtTable('live-log', pointages, empMap, true);
+}
+
+// ══ TABLE RENDERER ══
+function renderPtTable(tbodyId, pointages, empMap, showDate) {
+  const tbody = document.getElementById(tbodyId);
+  if (!pointages.length) {
+    tbody.innerHTML=`<tr><td colspan="8" class="muted text-center" style="padding:28px;">Aucun pointage.</td></tr>`;
+    return;
+  }
+
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+
+  const badge = (t, pID, pObj) => {
+    let base = {
+      'entrée':'<span class="badge bg">↑ Entrée</span>',
+      'sortie':'<span class="badge bo">↓ Sortie</span>',
+      'pause': '<span class="badge by">⏸ Pause</span>',
+      'retour':'<span class="badge bb">▶ Retour</span>',
+    }[t] || `<span class="badge">${t}</span>`;
+
+    if (t === 'sortie' || t === 'déconnexion' || t === 'Sortie') {
+      const ov = calculateOvertime(pObj, empPlannedEnds, defaultEnd);
+      if (ov) {
+        base += ` <span class="badge bp" style="font-size:0.7rem;margin-left:4px;font-weight:600;" title="Heures supplémentaires">+${ov.text} Sup.</span>`;
+      }
+    }
+    return base;
+  };
+
+  tbody.innerHTML = pointages.map(p=>{
+    const emp = empMap[p.employee_id]||{full_name:p.employee_id,post:'—'};
+    const t   = new Date(p.created_at);
+    const conf = p.face_confidence!=null ? parseFloat(p.face_confidence) : null;
+    const confHtml = conf!=null
+      ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;">${conf.toFixed(1)}%</div>
+         <div class="conf-bar"><div class="conf-fill ${conf>=80?'conf-high':'conf-low'}" style="width:${Math.min(conf,100)}%"></div></div>`
+      : '<span class="muted" style="font-size:0.78rem;">Manuel</span>';
+    const gps = (p.latitude&&p.longitude)
+      ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;">${parseFloat(p.latitude).toFixed(3)}, ${parseFloat(p.longitude).toFixed(3)}</span>`
+      : '<span class="muted" style="font-size:0.78rem;">—</span>';
+    return `<tr>
+      <td><strong>${emp.full_name}</strong></td>
+      ${showDate?`<td class="muted text-sm">${emp.post||'—'}</td>`:''}
+      <td>${badge(p.type, p.employee_id, p)}</td>
+      ${showDate?`<td class="mono muted" style="font-size:0.75rem;">${t.toLocaleDateString('fr-FR')}</td>`:''}
+      <td class="mono" style="font-size:0.78rem;">${t.toLocaleTimeString('fr-FR')}</td>
+      <td>${confHtml}</td>
+      <td>${gps}</td>
+      <td><span class="badge bg">${p.statut}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ EMPLOYEES ══
+async function loadEmployees() {
+  allEmployees = await sbGet('employees','order=full_name.asc');
+  renderEmpTable();
+}
+
+function filterEmp(v)       { empSearchVal = v.toLowerCase(); renderEmpTable(); }
+function filterEmpStatus(v) { empStatusVal = v;               renderEmpTable(); }
+
+function renderEmpTable() {
+  const list = allEmployees.filter(e=>{
+    const ms = !empSearchVal || e.full_name.toLowerCase().includes(empSearchVal) || (e.post||'').toLowerCase().includes(empSearchVal);
+    const mv = !empStatusVal || e.status === empStatusVal;
+    return ms && mv;
+  });
+  const tbody = document.getElementById('emp-table');
+  if (!list.length) {
+    tbody.innerHTML=`<tr><td colspan="8" class="muted text-center" style="padding:28px;">Aucun employé trouvé.</td></tr>`;
+    return;
+  }
+
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+
+  tbody.innerHTML = list.map(e=>{
+    const plEnd = empPlannedEnds[e.id] || defaultEnd;
+    return `<tr>
+      <td><strong>${e.full_name}</strong></td>
+      <td class="muted text-sm">${e.post||'—'}</td>
+      <td>
+        <span class="badge bp" style="cursor:pointer;font-weight:600;" title="Modifier les horaires pour cet employé" onclick="configurePlannedEnd('${e.id}', '${e.full_name.replace(/'/g, "\\'")}')">
+          🕒 ${plEnd}
+        </span>
+      </td>
+      <td class="mono muted" style="font-size:0.75rem;">${e.email||'—'}</td>
+      <td>
+        ${e.login_token
+          ? `<span class="badge bp" style="cursor:pointer;" onclick="showToken('${e.id}','${e.full_name}','${e.login_token}')">${e.login_token}</span>`
+          : '<span class="muted text-sm">—</span>'}
+      </td>
+      <td>${(e.face_token || e.face_ref)
+        ? '<span class="badge bg">✓ Enregistré</span>'
+        : '<span class="badge bo">Non enregistré</span>'}</td>
+      <td><span class="badge ${e.status==='actif'?'bg':'bo'}">${e.status}</span></td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost btn-sm" onclick="configurePlannedEnd('${e.id}', '${e.full_name.replace(/'/g, "\\'")}')">🕒 Fin</button>
+          <button class="btn btn-ghost btn-sm" onclick="regenerateToken('${e.id}','${e.full_name}')">↻ Token</button>
+          <button class="btn btn-danger btn-sm" onclick="toggleStatus('${e.id}','${e.status}')">
+            ${e.status==='actif'?'Désactiver':'Activer'}
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ CREATE EMPLOYEE ══
+function openAddEmployee() {
+  // Reset form
+  ['ne-name','ne-post','ne-email','ne-phone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ne-status').value = 'actif';
+  document.getElementById('ne-result').style.display   = 'none';
+  document.getElementById('ne-error').style.display    = 'none';
+  document.getElementById('ne-actions').style.display  = 'flex';
+  document.getElementById('ne-close-btn').style.display = 'none';
+  document.getElementById('btn-create-label').textContent = 'Créer l\'employé';
+  document.getElementById('btn-create-emp').disabled = false;
+  document.getElementById('modal-employee').classList.add('open');
+}
+
+async function createEmployee() {
+  const name   = document.getElementById('ne-name').value.trim();
+  const post   = document.getElementById('ne-post').value.trim();
+  const email  = document.getElementById('ne-email').value.trim();
+  const phone  = document.getElementById('ne-phone').value.trim();
+  const status = document.getElementById('ne-status').value;
+
+  if (!name || !post) {
+    document.getElementById('ne-error-msg').textContent = 'Le nom et le poste sont obligatoires.';
+    document.getElementById('ne-error').style.display = 'flex';
+    return;
+  }
+
+  document.getElementById('btn-create-label').innerHTML = '<span class="spinner"></span> Création…';
+  document.getElementById('btn-create-emp').disabled = true;
+  document.getElementById('ne-error').style.display = 'none';
+
+  // Get company_id from first company (single-company app for now)
+  const companies = await sbGet('companies','limit=1');
+  const companyId = companies[0]?.id || null;
+
+  const token = generateToken();
+  generatedToken = token;
+
+  const payload = {
+    full_name:   name,
+    post:        post,
+    email:       email || null,
+    phone:       phone || null,
+    status:      status,
+    login_token: token,
+    company_id:  companyId,
+    face_token:  null,
+    photo_url:   null,
+  };
+
+  const result = await sbInsert('employees', payload);
+
+  if (result && result[0] && result[0].id) {
+    document.getElementById('ne-token-display').textContent = token;
+    document.getElementById('ne-result').style.display   = 'block';
+    document.getElementById('ne-actions').style.display  = 'none';
+    document.getElementById('ne-close-btn').style.display = 'block';
+  } else {
+    document.getElementById('ne-error-msg').textContent =
+      'Erreur lors de la création : ' + JSON.stringify(result);
+    document.getElementById('ne-error').style.display = 'flex';
+    document.getElementById('btn-create-label').textContent = 'Créer l\'employé';
+    document.getElementById('btn-create-emp').disabled = false;
+  }
+}
+
+function copyToken() {
+  navigator.clipboard.writeText(generatedToken)
+    .then(()=>alert('Code copié : '+generatedToken))
+    .catch(()=>alert('Code : '+generatedToken));
+}
+
+// ══ SHOW TOKEN MODAL ══
+function showToken(id, name, token) {
+  document.getElementById('mt-emp-name').textContent = name;
+  document.getElementById('mt-token').textContent    = token;
+  document.getElementById('modal-token').classList.add('open');
+}
+function copyTokenFromModal() {
+  const t = document.getElementById('mt-token').textContent;
+  navigator.clipboard.writeText(t)
+    .then(()=>alert('Code copié : '+t))
+    .catch(()=>alert('Code : '+t));
+}
+
+// ══ REGENERATE TOKEN ══
+async function regenerateToken(id, name) {
+  if (!confirm(`Régénérer le code d'accès de ${name} ? L'ancien code ne fonctionnera plus.`)) return;
+  const token = generateToken();
+  await sbPatch('employees',`id=eq.${id}`,{login_token:token});
+  await loadEmployees();
+  showToken(id, name, token);
+}
+
+// ══ TOGGLE STATUS ══
+async function toggleStatus(id, currentStatus) {
+  const next = currentStatus==='actif' ? 'inactif' : 'actif';
+  await sbPatch('employees',`id=eq.${id}`,{status:next});
+  await loadEmployees();
+}
+
+// ══ POINTAGES REPORT ══
+async function loadPointages() {
+  const from = document.getElementById('rep-from').value;
+  const to   = document.getElementById('rep-to').value;
+  let filter = 'order=created_at.desc';
+  if (from) filter += `&created_at=gte.${from}T00:00:00`;
+  if (to)   filter += `&created_at=lte.${to}T23:59:59`;
+  const [pointages, employees] = await Promise.all([
+    sbGet('pointages', filter),
+    sbGet('employees','')
+  ]);
+  cachedPointages = pointages;
+  const empMap={};
+  employees.forEach(e=>empMap[e.id]=e);
+  const tbody = document.getElementById('rep-table');
+  if (!pointages.length) {
+    tbody.innerHTML=`<tr><td colspan="10" class="muted text-center" style="padding:28px;">Aucun pointage pour cette période.</td></tr>`;
+    return;
+  }
+
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+
+  tbody.innerHTML = pointages.map(p=>{
+    const emp = empMap[p.employee_id]||{full_name:p.employee_id};
+    const t   = new Date(p.created_at);
+    const ov = calculateOvertime(p, empPlannedEnds, defaultEnd);
+    const plEnd = empPlannedEnds[p.employee_id] || defaultEnd;
+    const plEndHtml = (p.type === 'sortie' || p.type === 'déconnexion' || p.type === 'Sortie') 
+      ? `<span class="badge by" style="font-size:0.75rem;">🕒 ${plEnd}</span>` 
+      : '<span class="muted" style="font-size:0.75rem;">—</span>';
+    const ovHtml = ov 
+      ? `<span class="badge bp" style="font-weight:600;">+${ov.text}</span>` 
+      : '<span class="muted" style="font-size:0.75rem;">—</span>';
+
+    return `<tr>
+      <td>${emp.full_name}</td>
+      <td>${p.type}</td>
+      <td class="mono" style="font-size:0.78rem;">${t.toLocaleDateString('fr-FR')}</td>
+      <td class="mono" style="font-size:0.78rem;">${t.toLocaleTimeString('fr-FR')}</td>
+      <td>${plEndHtml}</td>
+      <td>${ovHtml}</td>
+      <td class="mono" style="font-size:0.78rem;">${p.face_confidence!=null?parseFloat(p.face_confidence).toFixed(1)+'%':'—'}</td>
+      <td class="mono muted" style="font-size:0.75rem;">${p.latitude||'—'}</td>
+      <td class="mono muted" style="font-size:0.75rem;">${p.longitude||'—'}</td>
+      <td><span class="badge bg">${p.statut}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function exportCSV() {
+  if (!cachedPointages.length) { alert('Générez d\'abord un rapport.'); return; }
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+
+  const h = ['ID_Pointage','Employe','Type','Date','Heure','Fin Prevue','Heures Sup.','Confiance','Latitude','Longitude','Statut'];
+  const csvRows = [h.join(',')];
+
+  cachedPointages.forEach(p => {
+    const t = new Date(p.created_at);
+    const ov = calculateOvertime(p, empPlannedEnds, defaultEnd);
+    const plEnd = empPlannedEnds[p.employee_id] || defaultEnd;
+    const row = [
+      p.id || '',
+      p.employee_id || '',
+      p.type || '',
+      t.toLocaleDateString('fr-FR'),
+      t.toLocaleTimeString('fr-FR'),
+      (p.type === 'sortie' || p.type === 'déconnexion' || p.type === 'Sortie') ? plEnd : '',
+      ov ? '+' + ov.text : '',
+      p.face_confidence != null ? parseFloat(p.face_confidence).toFixed(1) + '%' : '—',
+      p.latitude || '',
+      p.longitude || '',
+      p.statut || ''
+    ];
+    csvRows.push(row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+  });
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csvRows.join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download = 'lightcheck-pointages-overtime.csv'; a.click();
+}
+function exportJSON() {
+  if (!cachedPointages.length) { alert('Générez d\'abord un rapport.'); return; }
+  const empPlannedEnds = JSON.parse(localStorage.getItem('lc_emp_planned_ends') || '{}');
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+
+  const enrichedData = cachedPointages.map(p => {
+    const ov = calculateOvertime(p, empPlannedEnds, defaultEnd);
+    return {
+      ...p,
+      fin_prevue: (p.type === 'sortie' || p.type === 'déconnexion' || p.type === 'Sortie') ? (empPlannedEnds[p.employee_id] || defaultEnd) : null,
+      heures_sup: ov ? ov.text : null
+    };
+  });
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(enrichedData,null,2)],{type:'application/json'}));
+  a.download = 'lightcheck-pointages-overtime.json'; a.click();
+}
+
+// ══ SETTINGS (Supabase config table) ══
+async function loadSettings() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/config?id=eq.app`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await res.json();
+    if (rows && rows[0]) {
+      document.getElementById('set-facepp-key').value    = rows[0].facepp_key    || '';
+      document.getElementById('set-facepp-secret').value = rows[0].facepp_secret || '';
+      document.getElementById('set-threshold').value     = rows[0].confidence_threshold || 80;
+    }
+  } catch(e) {
+    console.warn('Impossible de charger la config Supabase :', e);
+  }
+  // Charger les paramètres d'heures supplémentaires
+  const defaultEnd = localStorage.getItem('lc_overtime_end_default') || '17:00';
+  document.getElementById('set-overtime-end').value = defaultEnd;
+}
+
+function saveOvertimeSettings() {
+  const endVal = document.getElementById('set-overtime-end').value.trim() || '17:00';
+  localStorage.setItem('lc_overtime_end_default', endVal);
+  alert('✓ Heure de fin prévue sauvegardée : ' + endVal);
+  loadDashboard();
+}
+
+async function saveFaceppKeys() {
+  const key    = document.getElementById('set-facepp-key').value.trim();
+  const secret = document.getElementById('set-facepp-secret').value.trim();
+  const thresh = parseInt(document.getElementById('set-threshold').value) || 80;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/config`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      },
+      body: JSON.stringify({
+        id: 'app',
+        facepp_key: key,
+        facepp_secret: secret,
+        confidence_threshold: thresh
+      })
+    });
+    const data = await res.json();
+    if (data && (Array.isArray(data) ? data[0] : data.id)) {
+      alert('✓ Clés Face++ enregistrées dans Supabase — disponibles sur tous les appareils.');
+    } else {
+      throw new Error(JSON.stringify(data));
+    }
+  } catch(e) {
+    alert('Erreur lors de la sauvegarde : ' + e.message);
+  }
+}
+async function testSupabase() {
+  try {
+    const data = await sbGet('employees','limit=1');
+    if (Array.isArray(data)) {
+      document.getElementById('sb-status').textContent = '◉ Connecté · '+data.length+' employé(s)';
+      document.getElementById('sb-status').className = 'badge bg';
+    } else throw new Error(JSON.stringify(data));
+  } catch(e) {
+    document.getElementById('sb-status').textContent = '✗ Erreur : '+e.message;
+    document.getElementById('sb-status').className = 'badge bo';
+  }
+}
+function changePassword() {
+  const np = document.getElementById('new-pass').value;
+  const cp = document.getElementById('conf-pass').value;
+  if (!np)    { alert('Entrez un nouveau mot de passe.'); return; }
+  if (np!==cp){ alert('Les mots de passe ne correspondent pas.'); return; }
+  adminPass = np; localStorage.setItem('lc_admin_pass', np);
+  alert('✓ Mot de passe mis à jour.');
+}
+
+// ══ MODAL ══
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bd').forEach(m=>
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); })
+);
+
+// ══ MOBILE SIDEBAR ══
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ══ NOTIFICATIONS (employee logouts) ══
+const NOTIF_KEY = 'lc_last_notif_seen';
+let notifData = [];
+
+async function fetchNotifications(){
+  const cutoff = new Date(Date.now() - 7*24*60*60*1000).toISOString(); // last 7 days
+  const [pointages, employees] = await Promise.all([
+    sbGet('pointages', `type=eq.déconnexion&created_at=gte.${cutoff}&order=created_at.desc&limit=30`),
+    sbGet('employees', '')
+  ]);
+  const empMap = {};
+  employees.forEach(e=>empMap[e.id]=e);
+  notifData = (pointages||[]).map(p=>({
+    ...p,
+    emp: empMap[p.employee_id]||{full_name:'Employé inconnu'}
+  }));
+  renderNotifications();
+}
+
+function renderNotifications(){
+  const lastSeen = parseInt(localStorage.getItem(NOTIF_KEY)||'0');
+  const list = document.getElementById('notif-list');
+  const badge = document.getElementById('notif-badge');
+
+  if(!notifData.length){
+    list.innerHTML='<div class="notif-empty">Aucune déconnexion récente</div>';
+    badge.style.display='none';
+    return;
+  }
+
+  const unreadCount = notifData.filter(n=>new Date(n.created_at).getTime()>lastSeen).length;
+  if(unreadCount>0){
+    badge.textContent = unreadCount>9?'9+':unreadCount;
+    badge.style.display='flex';
+  } else {
+    badge.style.display='none';
+  }
+
+  list.innerHTML = notifData.map(n=>{
+    const isUnread = new Date(n.created_at).getTime()>lastSeen;
+    const t = new Date(n.created_at);
+    const timeStr = t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' · '+t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="notif-item ${isUnread?'unread':''}">
+      <div class="notif-icon">🔓</div>
+      <div class="notif-info">
+        <div class="notif-name">${n.emp.full_name}</div>
+        <div class="notif-msg">S'est déconnecté(e) de l'application</div>
+        <div class="notif-time">${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleNotifications(){
+  const dd = document.getElementById('notif-dropdown');
+  dd.classList.toggle('open');
+}
+
+function clearNotifications(){
+  localStorage.setItem(NOTIF_KEY, Date.now().toString());
+  document.getElementById('notif-badge').style.display='none';
+  renderNotifications();
+}
+
+// Close notification dropdown when clicking outside
+document.addEventListener('click', e=>{
+  const wrap = document.querySelector('.notif-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    document.getElementById('notif-dropdown').classList.remove('open');
+  }
+});
+
+// Auto-refresh notifications every 30 seconds after admin login
+let notifInterval = null;
+function startNotifPolling(){
+  fetchNotifications();
+  notifInterval = setInterval(fetchNotifications, 30000);
+}
+
+// ══ ADMIN LOGOUT ══
+function adminLogout(){
+  if(!confirm('Se déconnecter de la console admin ?')) return;
+  localStorage.removeItem('lc_admin_session');
+  if(notifInterval) clearInterval(notifInterval);
+  location.reload();
+}
+
+</script>
+</body>
+</html>

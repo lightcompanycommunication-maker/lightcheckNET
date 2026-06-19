@@ -1,0 +1,11 @@
+{
+  "name": "lightcheck",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.1071.0",
+    "express": "^5.2.1",
+    "pg": "^8.21.0"
+  }
+}

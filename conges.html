@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Conges et jours feries</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#fff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#2e90fa;--blue-bg:#eff8ff;--blue-border:#b2ddff;--blue-dark:#1d4ed8;
+  --radius:10px;--shadow:0 1px 3px rgba(16,24,40,0.1);
+  --shadow-md:0 4px 8px -2px rgba(16,24,40,0.1);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;color:var(--text2);
+  padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:6px;
+  font-family:'Instrument Sans',sans-serif;transition:background 0.15s;}
+.back-btn:hover{background:var(--bg);color:var(--text);}
+.page-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;
+  position:absolute;left:50%;transform:translateX(-50%);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);}
+.icon-btn:hover{background:var(--bg);}
+
+/* TABS ROW */
+.tabs-row{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;align-items:flex-end;gap:0;
+  position:sticky;top:52px;z-index:90;}
+.tab{background:none;border:none;padding:14px 18px 10px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.925rem;font-weight:500;color:var(--text2);cursor:pointer;position:relative;
+  border-bottom:2px solid transparent;transition:color 0.15s;margin-bottom:-1px;white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue-dark);border-bottom-color:var(--blue-dark);font-weight:600;}
+
+/* CONTAINER */
+.container{max-width:1200px;margin:0 auto;padding:16px;}
+
+/* ACTION ROW */
+.action-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:260px;}
+.search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:8px;padding:8px 12px 8px 36px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;color:var(--text);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--blue);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  color:var(--text3);font-size:0.9rem;pointer-events:none;}
+.filter-select{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:8px;padding:8px 28px 8px 12px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;color:var(--text);outline:none;cursor:pointer;
+  appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667085' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;}
+.include-rejected{display:flex;align-items:center;gap:7px;font-size:0.875rem;color:var(--text);
+  cursor:pointer;user-select:none;}
+.include-rejected input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue-dark);cursor:pointer;}
+.action-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.btn-add{display:flex;align-items:center;gap:6px;background:var(--blue-dark);color:#fff;
+  border:none;border-radius:8px;padding:9px 16px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:600;cursor:pointer;transition:background 0.15s;white-space:nowrap;}
+.btn-add:hover{background:#1e40af;}
+.btn-more{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;
+  font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:500;
+  cursor:pointer;color:var(--text);transition:all 0.15s;position:relative;white-space:nowrap;}
+.btn-more:hover{background:var(--bg);}
+.more-menu{display:none;position:absolute;right:0;top:calc(100%+4px);background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);
+  min-width:200px;z-index:200;overflow:hidden;}
+.more-menu.open{display:block;}
+.more-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:0.85rem;
+  color:var(--text);cursor:pointer;border:none;background:none;width:100%;
+  font-family:'Instrument Sans',sans-serif;text-align:left;}
+.more-item:hover{background:var(--bg);}
+.more-item.danger{color:var(--red);}
+
+/* SPLIT LAYOUT */
+.split-layout{display:flex;gap:14px;align-items:flex-start;}
+.cal-panel{flex-shrink:0;width:340px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.table-panel{flex:1;min-width:0;}
+
+/* CALENDAR */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--border);}
+.cal-month{font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:4px;cursor:pointer;}
+.cal-month-chevron{font-size:0.7rem;color:var(--text2);}
+.cal-nav-btns{display:flex;align-items:center;gap:4px;}
+.cal-nav-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;color:var(--text2);transition:all 0.15s;}
+.cal-nav-btn:hover{background:var(--bg);color:var(--text);}
+.cal-refresh{background:none;border:none;font-size:0.8rem;color:var(--text2);cursor:pointer;
+  padding:4px 8px;border-radius:6px;font-family:'Instrument Sans',sans-serif;transition:background 0.15s;}
+.cal-refresh:hover{background:var(--bg);}
+.cal-grid{padding:8px;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;}
+.cal-wd{text-align:center;font-size:0.72rem;font-weight:600;color:var(--text2);padding:4px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{min-height:52px;border-radius:6px;padding:4px;cursor:pointer;
+  border:1px solid transparent;transition:all 0.15s;position:relative;}
+.cal-day:hover{background:var(--bg);}
+.cal-day.other-month{opacity:0.35;}
+.cal-day.today{background:#e8f4fd;border-color:var(--blue);}
+.cal-day.selected{background:var(--blue-dark);border-color:var(--blue-dark);}
+.cal-day.selected .cal-day-num{color:#fff;}
+.cal-day.selected .cal-day-chip{background:rgba(255,255,255,0.25);color:#fff;}
+.cal-day.has-leaves{border-color:var(--blue-border);}
+.cal-day-num{font-size:0.78rem;font-weight:600;color:var(--text);line-height:1;}
+.cal-day.today .cal-day-num{color:var(--blue-dark);}
+.cal-day-chip{margin-top:3px;font-size:0.62rem;font-weight:500;padding:1px 5px;
+  border-radius:20px;background:var(--blue-bg);color:var(--blue);white-space:nowrap;
+  display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+.cal-day-chip.no-leaves{background:transparent;color:var(--text3);font-weight:400;}
+.cal-legend{display:flex;align-items:center;gap:14px;padding:8px 14px;
+  border-top:1px solid var(--border);font-size:0.72rem;color:var(--text2);}
+.legend-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+.legend-swatch.today{background:#e8f4fd;border:1px solid var(--blue);}
+.legend-swatch.selected{background:var(--blue-dark);}
+.legend-swatch.leaves{background:var(--blue-bg);border:1px solid var(--blue-border);}
+
+/* TABLE CARD */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f9fafb;border-bottom:1px solid var(--border);}
+th{padding:10px 14px;text-align:left;font-size:0.75rem;font-weight:600;color:var(--text2);
+  white-space:nowrap;user-select:none;}
+th.sortable{cursor:pointer;}
+th.sortable:hover{color:var(--text);}
+.th-check{width:40px;}
+td{padding:11px 14px;border-top:1px solid var(--border);font-size:0.855rem;vertical-align:middle;}
+tr:hover td{background:#f9fafb;}
+tr.selected td{background:#eff8ff;}
+.cb{width:16px;height:16px;cursor:pointer;accent-color:var(--blue-dark);}
+.emp-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:0.68rem;font-weight:700;color:#fff;flex-shrink:0;margin-right:6px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+  font-size:0.72rem;font-weight:500;white-space:nowrap;}
+.badge-approved{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green-border);}
+.badge-pending{background:var(--amber-bg);color:var(--amber-dark);border:1px solid var(--amber-border);}
+.badge-rejected{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-type{background:var(--blue-bg);color:var(--blue-dark);border:1px solid var(--blue-border);}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text2);}
+.empty-icon{font-size:2rem;margin-bottom:8px;opacity:0.4;}
+.empty-text{font-size:0.875rem;}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+.per-page{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text2);}
+.per-page-select{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:4px 8px;font-family:'Instrument Sans',sans-serif;font-size:0.8rem;color:var(--text);outline:none;}
+.page-info{font-size:0.8rem;color:var(--text2);}
+.page-nav{display:flex;align-items:center;gap:4px;}
+.page-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;color:var(--text2);transition:all 0.15s;}
+.page-btn:hover:not(:disabled){background:var(--bg);color:var(--text);}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.page-input{width:40px;text-align:center;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:4px;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;
+  color:var(--text);outline:none;}
+.page-total{font-size:0.8rem;color:var(--text2);}
+
+/* HOLIDAYS TAB */
+.holidays-list{display:flex;flex-direction:column;gap:10px;padding:4px 0 16px;}
+.holiday-item{display:flex;align-items:center;gap:14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;
+  box-shadow:var(--shadow);}
+.holiday-date{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text2);
+  min-width:80px;flex-shrink:0;}
+.holiday-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;}
+.holiday-name{font-weight:500;font-size:0.875rem;flex:1;}
+.holiday-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;
+  font-size:0.72rem;font-weight:500;background:var(--blue-bg);color:var(--blue-dark);
+  border:1px solid var(--blue-border);}
+.holiday-actions{display:flex;gap:6px;margin-left:auto;}
+.holiday-btn{background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;
+  font-size:0.8rem;color:var(--text2);transition:background 0.15s;}
+.holiday-btn:hover{background:var(--bg);}
+.holiday-btn.del:hover{color:var(--red);background:var(--red-bg);}
+.section-header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;padding-top:4px;}
+.section-title{font-weight:600;font-size:0.9rem;color:var(--text);}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(16,24,40,0.4);z-index:500;
+  display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--surface);border-radius:12px;box-shadow:0 20px 60px rgba(16,24,40,0.2);
+  width:100%;max-width:480px;overflow:hidden;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-weight:700;font-size:1rem;font-family:'Fraunces',serif;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text2);
+  font-size:1.1rem;padding:4px;border-radius:6px;}
+.modal-close:hover{background:var(--bg);}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:0.825rem;font-weight:600;color:var(--text);}
+.form-input,.form-select,.form-textarea{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:8px;padding:9px 12px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;color:var(--text);outline:none;transition:border-color 0.15s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;
+  padding:14px 20px;border-top:1px solid var(--border);}
+.btn-cancel{background:none;border:1.5px solid var(--border);border-radius:8px;
+  padding:8px 16px;font-family:'Instrument Sans',sans-serif;font-size:0.875rem;
+  font-weight:500;cursor:pointer;color:var(--text);transition:all 0.15s;}
+.btn-cancel:hover{background:var(--bg);}
+.btn-save{background:var(--blue-dark);color:#fff;border:none;border-radius:8px;
+  padding:8px 20px;font-family:'Instrument Sans',sans-serif;font-size:0.875rem;
+  font-weight:600;cursor:pointer;transition:background 0.15s;}
+.btn-save:hover{background:#1e40af;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#101828;color:#fff;padding:10px 20px;border-radius:8px;
+  font-size:0.875rem;z-index:1000;opacity:0;transition:opacity 0.25s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* RESPONSIVE */
+@media(max-width:760px){
+  .split-layout{flex-direction:column;}
+  .cal-panel{width:100%;}
+  .page-title{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="window.location.href='index.html'">
+      ← Retour
+    </button>
+  </div>
+  <div class="page-title">Congés et jours fériés</div>
+  <div class="topbar-right">
+    <button class="icon-btn" title="Paramètres" onclick="window.location.href='settings.html'">⚙️</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-row">
+  <button class="tab active" id="tab-conges" onclick="switchTab('conges')">Congés</button>
+  <button class="tab" id="tab-feries" onclick="switchTab('feries')">Jours fériés</button>
+  <button class="tab" id="tab-absences" onclick="switchTab('absences')">Absences</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+  <!-- ── CONGÉS TAB ── -->
+  <div id="panel-conges">
+    <!-- ACTION ROW -->
+    <div class="action-row">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="search-input" placeholder="Rechercher un employé…" oninput="filterLeaves()"/>
+      </div>
+      <select class="filter-select" id="group-filter" onchange="filterLeaves()">
+        <option value="">Groupe</option>
+      </select>
+      <label class="include-rejected">
+        <input type="checkbox" id="include-rejected" onchange="filterLeaves()" checked/>
+        Inclure les congés refusés
+      </label>
+      <div class="action-right">
+        <button class="btn-add" onclick="openAddLeave()">+ Ajouter un congé</button>
+        <div style="position:relative;">
+          <button class="btn-more" id="more-btn" onclick="toggleMoreMenu()">
+            Plus d'actions ▾
+          </button>
+          <div class="more-menu" id="more-menu">
+            <button class="more-item" onclick="exportCSV()">📥 Exporter en CSV</button>
+            <button class="more-item" onclick="refreshLeaves()">🔄 Actualiser</button>
+            <button class="more-item danger" onclick="deleteSelected()">🗑 Supprimer la sélection</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPLIT: CALENDAR + TABLE -->
+    <div class="split-layout">
+
+      <!-- CALENDAR -->
+      <div class="cal-panel">
+        <div class="cal-nav">
+          <div class="cal-month" onclick="toggleMonthPicker()">
+            <span id="cal-month-label">Juin 2026</span>
+            <span class="cal-month-chevron">▾</span>
+          </div>
+          <div class="cal-nav-btns">
+            <button class="cal-refresh" onclick="refreshLeaves()">Rafraîchir</button>
+            <button class="cal-nav-btn" onclick="prevMonth()">‹</button>
+            <button class="cal-nav-btn" onclick="nextMonth()">›</button>
+          </div>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-weekdays">
+            <div class="cal-wd">Lun</div>
+            <div class="cal-wd">Mar</div>
+            <div class="cal-wd">Mer</div>
+            <div class="cal-wd">Jeu</div>
+            <div class="cal-wd">Ven</div>
+            <div class="cal-wd">Sam</div>
+            <div class="cal-wd">Dim</div>
+          </div>
+          <div class="cal-days" id="cal-days"></div>
+        </div>
+        <div class="cal-legend">
+          <div class="legend-swatch today"></div><span>Jour actuel</span>
+          <div class="legend-swatch selected" style="margin-left:8px;"></div><span>Sélectionné</span>
+          <div class="legend-swatch leaves" style="margin-left:8px;"></div><span>Congés</span>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-panel">
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="th-check"><input type="checkbox" class="cb" id="check-all" onchange="toggleAll(this)"/></th>
+                  <th class="sortable" onclick="sortBy('name')">Nom <span id="sort-name"></span></th>
+                  <th class="sortable" onclick="sortBy('start_date')">Date début <span id="sort-start_date"></span></th>
+                  <th class="sortable" onclick="sortBy('end_date')">Date fin <span id="sort-end_date"></span></th>
+                  <th>Nb jours</th>
+                  <th>Type</th>
+                  <th>Statut</th>
+                  <th>Approbateur</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="leaves-tbody"></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="per-page">
+              <select class="per-page-select" id="per-page" onchange="goPage(1)">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+              </select>
+              <span>éléments par page</span>
+            </div>
+            <div class="page-info" id="page-info">—</div>
+            <div class="page-nav">
+              <button class="page-btn" id="btn-first" onclick="goPage(1)">⟨⟨</button>
+              <button class="page-btn" id="btn-prev" onclick="goPage(currentPage-1)">‹</button>
+              <input class="page-input" id="page-input" type="number" min="1" value="1"
+                onchange="goPage(parseInt(this.value))"/>
+              <span class="page-total" id="page-total">/ 1</span>
+              <button class="page-btn" id="btn-next" onclick="goPage(currentPage+1)">›</button>
+              <button class="page-btn" id="btn-last" onclick="goPage(totalPages)">⟩⟩</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── JOURS FÉRIÉS TAB ── -->
+  <div id="panel-feries" style="display:none;">
+    <div class="action-row">
+      <div class="section-header" style="flex:1;">
+        <span class="section-title">Jours fériés officiels</span>
+      </div>
+      <div class="action-right">
+        <button class="btn-add" onclick="openAddHoliday()">+ Ajouter un jour férié</button>
+      </div>
+    </div>
+    <div class="holidays-list" id="holidays-list">
+      <div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">Chargement…</div></div>
+    </div>
+  </div>
+
+  <!-- ── ABSENCES TAB ── -->
+  <div id="panel-absences" style="display:none;">
+    <div class="action-row">
+      <div class="section-header" style="flex:1;">
+        <span class="section-title">Absences enregistrées</span>
+      </div>
+      <div class="action-right">
+        <button class="btn-add" onclick="openAddAbsence()">+ Saisir une absence</button>
+        <button class="btn-more" onclick="loadAbsences()">🔄 Actualiser</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Employé</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Motif</th>
+              <th>Justifié</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="absences-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:24px;">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: AJOUTER UN CONGÉ -->
+<div class="modal-backdrop" id="modal-leave" onclick="closeModal('modal-leave')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-leave-title">Ajouter un congé</div>
+      <button class="modal-close" onclick="closeModal('modal-leave')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Employé</label>
+        <select class="form-select" id="leave-employee">
+          <option value="">Sélectionner un employé…</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date de début</label>
+          <input class="form-input" type="date" id="leave-start"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de fin</label>
+          <input class="form-input" type="date" id="leave-end"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Type de congé</label>
+          <select class="form-select" id="leave-type">
+            <option value="Congé annuel">Congé annuel</option>
+            <option value="Maladie">Maladie</option>
+            <option value="Maternité / Paternité">Maternité / Paternité</option>
+            <option value="Sans solde">Sans solde</option>
+            <option value="Mission">Mission</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" id="leave-status">
+            <option value="en attente">En attente</option>
+            <option value="approuvé">Approuvé</option>
+            <option value="refusé">Refusé</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="leave-notes" placeholder="Optionnel…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modal-leave')">Annuler</button>
+      <button class="btn-save" onclick="saveLeave()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AJOUTER UN JOUR FÉRIÉ -->
+<div class="modal-backdrop" id="modal-holiday" onclick="closeModal('modal-holiday')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Ajouter un jour férié</div>
+      <button class="modal-close" onclick="closeModal('modal-holiday')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nom du jour férié</label>
+        <input class="form-input" type="text" id="holiday-name" placeholder="Ex: Fête du Travail"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="holiday-date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Récurrent chaque année</label>
+          <select class="form-select" id="holiday-recurring">
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modal-holiday')">Annuler</button>
+      <button class="btn-save" onclick="saveHoliday()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SAISIR UNE ABSENCE -->
+<div class="modal-backdrop" id="modal-absence" onclick="closeModal('modal-absence')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Saisir une absence</div>
+      <button class="modal-close" onclick="closeModal('modal-absence')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Employé</label>
+        <select class="form-select" id="abs-employee">
+          <option value="">Sélectionner un employé…</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date de l'absence</label>
+          <input class="form-input" type="date" id="abs-date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type d'absence</label>
+          <select class="form-select" id="abs-type">
+            <option value="CONGE">🏖 Congé</option>
+            <option value="MALADIE">🏥 Maladie</option>
+            <option value="MISSION">🚗 Mission</option>
+            <option value="FORMATION">🎓 Formation</option>
+            <option value="CONGE_SANS_SOLDE">🚫 Congé sans solde</option>
+            <option value="ABSENCE" selected>❌ Absence</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Justification</label>
+        <select class="form-select" id="abs-justifie">
+          <option value="false">Injustifiée</option>
+          <option value="true">Justifiée</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motif</label>
+        <textarea class="form-textarea" id="abs-motif" placeholder="Optionnel — précisez le motif…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modal-absence')">Annuler</button>
+      <button class="btn-save" onclick="saveAbsence()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+<script>
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const sbH = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+
+async function sbGet(t, q='')  { const r = await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{headers:sbH}); return r.json(); }
+async function sbInsert(t, d)  { const r = await fetch(`${SUPABASE_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(d)}); return r.json(); }
+async function sbPatch(t, q, d){ const r = await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{method:'PATCH',headers:{...sbH,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(d)}); return r.json(); }
+async function sbDelete(t, q)  { return fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{method:'DELETE',headers:sbH}); }
+
+// ── STATE ──
+let me           = null;
+let allLeaves    = [];
+let allEmployees = [];
+let allGroups    = [];
+let allHolidays  = [];
+let filteredLeaves = [];
+let currentPage  = 1;
+let sortField    = 'start_date';
+let sortDir      = 'desc';
+let calYear      = new Date().getFullYear();
+let calMonth     = new Date().getMonth();
+let selectedDay  = null;
+let editLeaveId  = null;
+let allAbsences  = [];
+
+// ── INIT ──
+async function init() {
+  await ensureTables();
+  await loadEmployees();
+  await loadGroups();
+  await loadLeaves();
+  renderCalendar();
+}
+
+async function ensureTables() {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/leaves?limit=1`, {headers: sbH});
+  } catch(e) {}
+}
+
+async function loadEmployees() {
+  const data = await sbGet('employees', 'select=id,full_name,company_id&order=full_name');
+  allEmployees = Array.isArray(data) ? data : [];
+  const sel = document.getElementById('leave-employee');
+  sel.innerHTML = '<option value="">Sélectionner un employé…</option>';
+  allEmployees.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.full_name;
+    sel.appendChild(opt);
+  });
+  // Même liste d'employés pour la saisie d'absence
+  const aSel = document.getElementById('abs-employee');
+  if (aSel) {
+    aSel.innerHTML = '<option value="">Sélectionner un employé…</option>';
+    allEmployees.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.id; o.textContent = e.full_name;
+      aSel.appendChild(o);
+    });
+  }
+}
+
+async function loadGroups() {
+  const data = await sbGet('companies', 'select=id,name&order=name');
+  allGroups = Array.isArray(data) ? data : [];
+  const sel = document.getElementById('group-filter');
+  sel.innerHTML = '<option value="">Groupe</option>';
+  allGroups.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = g.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadLeaves() {
+  const data = await LC.sbGet('leaves', 'select=*&order=start_date.desc');
+  if (Array.isArray(data)) {
+    allLeaves = data;
+  } else {
+    allLeaves = [];
+    if (data && data.code === '42P01') {
+      await createLeavesTable();
+    }
+  }
+  filterLeaves();
+}
+
+async function createLeavesTable() {
+  await fetch('/api/init-leaves', { method: 'POST' });
+  allLeaves = [];
+}
+
+async function loadHolidays() {
+  const data = await sbGet('holidays', 'select=*&order=date.asc');
+  if (Array.isArray(data)) {
+    allHolidays = data;
+  } else {
+    allHolidays = getDefaultHolidays();
+  }
+  renderHolidays();
+}
+
+function getDefaultHolidays() {
+  const year = new Date().getFullYear();
+  return [
+    { id: null, name: "Jour de l'An",       date: `${year}-01-01`, recurring: true },
+    { id: null, name: "Fête du Travail",     date: `${year}-05-01`, recurring: true },
+    { id: null, name: "Fête Nationale",      date: `${year}-07-14`, recurring: true },
+    { id: null, name: "Assomption",          date: `${year}-08-15`, recurring: true },
+    { id: null, name: "Toussaint",           date: `${year}-11-01`, recurring: true },
+    { id: null, name: "Armistice",           date: `${year}-11-11`, recurring: true },
+    { id: null, name: "Noël",               date: `${year}-12-25`, recurring: true },
+  ];
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  document.getElementById('panel-conges').style.display   = tab === 'conges'   ? '' : 'none';
+  document.getElementById('panel-feries').style.display   = tab === 'feries'   ? '' : 'none';
+  document.getElementById('panel-absences').style.display = tab === 'absences' ? '' : 'none';
+  document.getElementById('tab-conges').classList.toggle('active', tab === 'conges');
+  document.getElementById('tab-feries').classList.toggle('active', tab === 'feries');
+  document.getElementById('tab-absences').classList.toggle('active', tab === 'absences');
+  if (tab === 'feries' && allHolidays.length === 0) loadHolidays();
+  if (tab === 'absences') loadAbsences();
+}
+
+// ── CALENDAR ──
+function renderCalendar() {
+  const months = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('cal-month-label').textContent = `${months[calMonth]} ${calYear}`;
+
+  const today = new Date();
+  const firstDay = new Date(calYear, calMonth, 1);
+  let startDow = firstDay.getDay();
+  if (startDow === 0) startDow = 7;
+  startDow--;
+
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  // Build map of days that have leaves
+  const leaveDays = {};
+  filteredLeaves.forEach(l => {
+    const s = new Date(l.start_date + 'T00:00:00');
+    const e = new Date(l.end_date   + 'T00:00:00');
+    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+      if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
+        const key = d.getDate();
+        leaveDays[key] = (leaveDays[key] || 0) + 1;
+      }
+    }
+  });
+
+  const grid = document.getElementById('cal-days');
+  grid.innerHTML = '';
+  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day';
+    let dayNum, isOther = false;
+    if (i < startDow) {
+      dayNum = daysInPrev - startDow + i + 1;
+      isOther = true;
+    } else if (i >= startDow + daysInMonth) {
+      dayNum = i - startDow - daysInMonth + 1;
+      isOther = true;
+    } else {
+      dayNum = i - startDow + 1;
+    }
+    if (isOther) cell.classList.add('other-month');
+    if (!isOther && today.getFullYear() === calYear && today.getMonth() === calMonth && today.getDate() === dayNum) {
+      cell.classList.add('today');
+    }
+    if (!isOther && selectedDay === dayNum) cell.classList.add('selected');
+    if (!isOther && leaveDays[dayNum]) cell.classList.add('has-leaves');
+
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = dayNum;
+    cell.appendChild(numEl);
+
+    if (!isOther) {
+      const chip = document.createElement('div');
+      const count = leaveDays[dayNum] || 0;
+      chip.className = 'cal-day-chip' + (count === 0 ? ' no-leaves' : '');
+      chip.textContent = count === 0 ? 'Aucun' : `${count} congé${count > 1 ? 's' : ''}`;
+      cell.appendChild(chip);
+      cell.onclick = () => selectDay(dayNum);
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+function selectDay(day) {
+  selectedDay = (selectedDay === day) ? null : day;
+  renderCalendar();
+  if (selectedDay) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selectedDay).padStart(2,'0')}`;
+    const dayLeaves = allLeaves.filter(l => l.start_date <= dateStr && l.end_date >= dateStr);
+    filteredLeaves = dayLeaves.length > 0 ? dayLeaves : allLeaves;
+  } else {
+    filterLeaves();
+  }
+  renderTable();
+}
+
+function prevMonth() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  selectedDay = null;
+  renderCalendar();
+}
+
+function nextMonth() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  selectedDay = null;
+  renderCalendar();
+}
+
+function toggleMonthPicker() {}
+
+// ── FILTER & SORT ──
+function filterLeaves() {
+  selectedDay = null;
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const grp = document.getElementById('group-filter').value;
+  const inclRejected = document.getElementById('include-rejected').checked;
+
+  filteredLeaves = allLeaves.filter(l => {
+    const emp = allEmployees.find(e => e.id === l.employee_id);
+    const name = (emp ? emp.full_name : (l.employee_name || '')).toLowerCase();
+    if (q && !name.includes(q)) return false;
+    if (grp && emp && emp.company_id !== grp) return false;
+    if (!inclRejected && l.status === 'refusé') return false;
+    return true;
+  });
+
+  sortLeaves();
+  renderCalendar();
+  goPage(1);
+}
+
+function sortLeaves() {
+  filteredLeaves.sort((a, b) => {
+    let va, vb;
+    if (sortField === 'name') {
+      const ea = allEmployees.find(e => e.id === a.employee_id);
+      const eb = allEmployees.find(e => e.id === b.employee_id);
+      va = ea ? ea.full_name : ''; vb = eb ? eb.full_name : '';
+    } else {
+      va = a[sortField] || ''; vb = b[sortField] || '';
+    }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ?  1 : -1;
+    return 0;
+  });
+}
+
+function sortBy(field) {
+  if (sortField === field) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortField = field; sortDir = 'asc'; }
+  ['name','start_date','end_date'].forEach(f => {
+    document.getElementById('sort-'+f).textContent = '';
+  });
+  document.getElementById('sort-'+field).textContent = sortDir === 'asc' ? ' ↑' : ' ↓';
+  sortLeaves();
+  renderTable();
+}
+
+// ── TABLE ──
+let totalPages = 1;
+
+function goPage(p) {
+  const perPage = parseInt(document.getElementById('per-page').value);
+  totalPages = Math.max(1, Math.ceil(filteredLeaves.length / perPage));
+  currentPage = Math.max(1, Math.min(p, totalPages));
+  document.getElementById('page-input').value = currentPage;
+  document.getElementById('page-total').textContent = `/ ${totalPages}`;
+  const start = (currentPage - 1) * perPage;
+  const end   = Math.min(start + perPage, filteredLeaves.length);
+  document.getElementById('page-info').textContent =
+    filteredLeaves.length === 0 ? '0 résultat' : `${start+1}–${end} sur ${filteredLeaves.length}`;
+  document.getElementById('btn-first').disabled = currentPage === 1;
+  document.getElementById('btn-prev').disabled  = currentPage === 1;
+  document.getElementById('btn-next').disabled  = currentPage === totalPages;
+  document.getElementById('btn-last').disabled  = currentPage === totalPages;
+  renderTable(start, end);
+}
+
+function renderTable(start, end) {
+  const perPage = parseInt(document.getElementById('per-page').value);
+  if (start === undefined) {
+    totalPages = Math.max(1, Math.ceil(filteredLeaves.length / perPage));
+    start = (currentPage - 1) * perPage;
+    end   = Math.min(start + perPage, filteredLeaves.length);
+  }
+  const tbody = document.getElementById('leaves-tbody');
+  const slice = filteredLeaves.slice(start, end);
+
+  if (slice.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state">
+      <div class="empty-icon">ℹ️</div>
+      <div class="empty-text">Aucun congé</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = slice.map(l => {
+    const emp = allEmployees.find(e => e.id === l.employee_id);
+    const name = emp ? emp.full_name : (l.employee_name || '—');
+    const initials = name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+    const color = '#3498db';
+    const s = l.start_date || '—';
+    const e = l.end_date   || '—';
+    const days = (s !== '—' && e !== '—')
+      ? Math.max(1, Math.round((new Date(e) - new Date(s)) / 86400000) + 1)
+      : '—';
+    const statusBadge = {
+      'approuvé': 'badge-approved',
+      'en attente': 'badge-pending',
+      'refusé': 'badge-rejected'
+    }[l.status] || 'badge-pending';
+    const statusLabel = l.status
+      ? l.status.charAt(0).toUpperCase() + l.status.slice(1)
+      : 'En attente';
+    return `<tr>
+      <td><input type="checkbox" class="cb row-cb" data-id="${l.id}" onchange="updateBulk()"/></td>
+      <td style="white-space:nowrap;">
+        <span class="emp-avatar" style="background:${color}">${initials}</span>${name}
+      </td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.8rem;">${s}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.8rem;">${e}</td>
+      <td style="text-align:center;">${days}</td>
+      <td><span class="badge badge-type">${l.leave_type || 'Congé annuel'}</span></td>
+      <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+      <td style="color:var(--text2);font-size:0.82rem;">${l.approver_name ? esc(l.approver_name)+(l.approver_role?` <span style="color:var(--text3)">(${esc(l.approver_role)})</span>`:'')+(l.approved_at?`<br><span style="font-size:.72rem;color:var(--text3)">${fmt(l.approved_at)}</span>`:'') : '—'}</td>
+      <td>
+        <button style="background:none;border:none;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;font-size:0.8rem;" 
+          onclick="editLeave('${l.id}')" title="Modifier">✏️</button>
+        <button style="background:none;border:none;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;font-size:0.8rem;" 
+          onclick="confirmDelete('${l.id}')" title="Supprimer">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(c => c.checked = cb.checked);
+}
+
+function updateBulk() {
+  const all = document.querySelectorAll('.row-cb');
+  const checked = document.querySelectorAll('.row-cb:checked');
+  document.getElementById('check-all').indeterminate = checked.length > 0 && checked.length < all.length;
+  document.getElementById('check-all').checked = checked.length === all.length && all.length > 0;
+}
+
+// ── HOLIDAYS ──
+function renderHolidays() {
+  const list = document.getElementById('holidays-list');
+  if (allHolidays.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">Aucun jour férié enregistré</div></div>`;
+    return;
+  }
+  list.innerHTML = allHolidays.map(h => {
+    const d = new Date(h.date + 'T00:00:00');
+    const formatted = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'});
+    return `<div class="holiday-item">
+      <span class="holiday-date">${formatted}</span>
+      <div class="holiday-dot"></div>
+      <span class="holiday-name">${h.name}</span>
+      ${h.recurring ? '<span class="holiday-badge">Récurrent</span>' : ''}
+      <div class="holiday-actions">
+        <button class="holiday-btn del" onclick="confirmDeleteHoliday('${h.id}', '${h.name}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL: ADD/EDIT LEAVE ──
+function openAddLeave() {
+  editLeaveId = null;
+  document.getElementById('modal-leave-title').textContent = 'Ajouter un congé';
+  document.getElementById('leave-employee').value = '';
+  document.getElementById('leave-start').value = '';
+  document.getElementById('leave-end').value = '';
+  document.getElementById('leave-type').value = 'Congé annuel';
+  document.getElementById('leave-status').value = 'en attente';
+  document.getElementById('leave-notes').value = '';
+  document.getElementById('modal-leave').classList.add('open');
+}
+
+function editLeave(id) {
+  const l = allLeaves.find(x => x.id === id);
+  if (!l) return;
+  editLeaveId = id;
+  document.getElementById('modal-leave-title').textContent = 'Modifier le congé';
+  document.getElementById('leave-employee').value = l.employee_id || '';
+  document.getElementById('leave-start').value = l.start_date || '';
+  document.getElementById('leave-end').value = l.end_date || '';
+  document.getElementById('leave-type').value = l.leave_type || 'Congé annuel';
+  document.getElementById('leave-status').value = l.status || 'en attente';
+  document.getElementById('leave-notes').value = l.notes || '';
+  document.getElementById('modal-leave').classList.add('open');
+}
+
+async function saveLeave() {
+  const employee_id = document.getElementById('leave-employee').value;
+  const start_date  = document.getElementById('leave-start').value;
+  const end_date    = document.getElementById('leave-end').value;
+  const leave_type  = document.getElementById('leave-type').value;
+  const status      = document.getElementById('leave-status').value;
+  const notes       = document.getElementById('leave-notes').value;
+
+  if (!employee_id || !start_date || !end_date) {
+    showToast('Veuillez remplir tous les champs obligatoires.'); return;
+  }
+  if (end_date < start_date) {
+    showToast('La date de fin doit être après la date de début.'); return;
+  }
+
+  const payload = { employee_id, start_date, end_date, leave_type, status, notes };
+  // Traçabilité du validateur : qui a validé / refusé
+  if (status === 'approuvé' || status === 'refusé') {
+    payload.approver_id   = (me && me.user_id)   || null;
+    payload.approver_name = (me && me.full_name) || null;
+    payload.approver_role = (me && me.role)      || null;
+    payload.approved_at   = new Date().toISOString();
+  } else {
+    payload.approver_id = null; payload.approver_name = null; payload.approver_role = null; payload.approved_at = null;
+  }
+  let result;
+  if (editLeaveId) {
+    result = await LC.sbPatch('leaves', `id=eq.${editLeaveId}`, payload);
+  } else {
+    result = await LC.sbInsert('leaves', payload);
+  }
+
+  if (Array.isArray(result) || (result && !result.code)) {
+    closeModal('modal-leave');
+    showToast(editLeaveId ? 'Congé modifié.' : 'Congé ajouté.');
+    await loadLeaves();
+    renderCalendar();
+  } else {
+    showToast('Erreur: ' + (result?.message || 'Table introuvable. Initialisez la base d\'abord.'));
+  }
+}
+
+// ── MODAL: HOLIDAY ──
+function openAddHoliday() {
+  document.getElementById('holiday-name').value = '';
+  document.getElementById('holiday-date').value = '';
+  document.getElementById('holiday-recurring').value = 'true';
+  document.getElementById('modal-holiday').classList.add('open');
+}
+
+async function saveHoliday() {
+  const name      = document.getElementById('holiday-name').value.trim();
+  const date      = document.getElementById('holiday-date').value;
+  const recurring = document.getElementById('holiday-recurring').value === 'true';
+
+  if (!name || !date) { showToast('Veuillez remplir tous les champs.'); return; }
+
+  const result = await sbInsert('holidays', { name, date, recurring });
+  if (Array.isArray(result) || (result && !result.code)) {
+    closeModal('modal-holiday');
+    showToast('Jour férié ajouté.');
+    await loadHolidays();
+  } else {
+    allHolidays.push({ id: Date.now(), name, date, recurring });
+    renderHolidays();
+    closeModal('modal-holiday');
+    showToast('Jour férié ajouté localement.');
+  }
+}
+
+// ── DELETE ──
+function confirmDelete(id) {
+  if (!confirm('Supprimer ce congé ?')) return;
+  deleteLeave(id);
+}
+
+async function deleteLeave(id) {
+  await LC.sbDelete('leaves', `id=eq.${id}`);
+  allLeaves = allLeaves.filter(l => l.id !== id);
+  filterLeaves();
+  renderCalendar();
+  showToast('Congé supprimé.');
+}
+
+function deleteSelected() {
+  const ids = [...document.querySelectorAll('.row-cb:checked')].map(cb => cb.dataset.id);
+  if (ids.length === 0) { showToast('Aucune ligne sélectionnée.'); return; }
+  if (!confirm(`Supprimer ${ids.length} congé(s) ?`)) return;
+  Promise.all(ids.map(id => LC.sbDelete('leaves', `id=eq.${id}`))).then(() => {
+    allLeaves = allLeaves.filter(l => !ids.includes(l.id));
+    filterLeaves();
+    renderCalendar();
+    showToast(`${ids.length} congé(s) supprimé(s).`);
+  });
+}
+
+async function confirmDeleteHoliday(id, name) {
+  if (!confirm(`Supprimer "${name}" ?`)) return;
+  if (id && id !== 'null') await sbDelete('holidays', `id=eq.${id}`);
+  allHolidays = allHolidays.filter(h => String(h.id) !== String(id));
+  renderHolidays();
+  showToast('Jour férié supprimé.');
+}
+
+// ── REFRESH ──
+async function refreshLeaves() {
+  showToast('Actualisation…');
+  await loadLeaves();
+  renderCalendar();
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  const rows = [['Nom','Date début','Date fin','Nb jours','Type','Statut','Notes']];
+  filteredLeaves.forEach(l => {
+    const emp = allEmployees.find(e => e.id === l.employee_id);
+    const name = emp ? emp.full_name : '';
+    const days = (l.start_date && l.end_date)
+      ? Math.max(1, Math.round((new Date(l.end_date) - new Date(l.start_date)) / 86400000) + 1) : '';
+    rows.push([name, l.start_date||'', l.end_date||'', days, l.leave_type||'', l.status||'', l.notes||'']);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'conges.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toggleMoreMenu(true);
+}
+
+// ── MORE MENU ──
+function toggleMoreMenu(forceClose) {
+  const m = document.getElementById('more-menu');
+  if (forceClose) { m.classList.remove('open'); return; }
+  m.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!document.getElementById('more-btn').contains(e.target)) {
+    document.getElementById('more-menu').classList.remove('open');
+  }
+});
+
+// ── MODAL HELPERS ──
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ════════ ABSENCES (saisie RH) ════════
+const ABSENCE_TYPE_LABEL = {
+  'CONGE':'🏖 Congé', 'MALADIE':'🏥 Maladie', 'MISSION':'🚗 Mission',
+  'FORMATION':'🎓 Formation', 'ABSENCE':'❌ Absence', 'CONGE_SANS_SOLDE':'🚫 Congé sans solde'
+};
+
+function openAddAbsence() {
+  document.getElementById('abs-employee').value = '';
+  document.getElementById('abs-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('abs-type').value = 'ABSENCE';
+  document.getElementById('abs-justifie').value = 'false';
+  document.getElementById('abs-motif').value = '';
+  document.getElementById('modal-absence').classList.add('open');
+}
+
+async function saveAbsence() {
+  const employee_id  = document.getElementById('abs-employee').value;
+  const date_absence = document.getElementById('abs-date').value;
+  const type_absence = document.getElementById('abs-type').value;
+  const motif        = document.getElementById('abs-motif').value.trim();
+  const justifie     = document.getElementById('abs-justifie').value === 'true';
+
+  if (!employee_id || !date_absence) {
+    showToast('Veuillez choisir un employé et une date.'); return;
+  }
+  const emp = allEmployees.find(e => e.id === employee_id);
+  const payload = {
+    employee_id,
+    company_id: emp ? (emp.company_id || null) : null,
+    date_absence,
+    type_absence,
+    motif: motif || null,
+    justifie
+  };
+  const result = await LC.sbInsert('absences', payload);
+  if (Array.isArray(result) || (result && !result.code)) {
+    closeModal('modal-absence');
+    showToast('Absence enregistrée.');
+    await loadAbsences();
+  } else {
+    showToast('Erreur: ' + (result?.message || 'enregistrement impossible.'));
+  }
+}
+
+async function loadAbsences() {
+  const data = await LC.sbGet('absences', 'select=*&order=date_absence.desc');
+  allAbsences = Array.isArray(data) ? data : [];
+  renderAbsences();
+}
+
+function renderAbsences() {
+  const tb = document.getElementById('absences-tbody');
+  if (!tb) return;
+  if (!allAbsences.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;opacity:.6;">Aucune absence enregistrée.</td></tr>';
+    return;
+  }
+  const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const fmt = d => { try { return new Date(String(d).slice(0,10)+'T12:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return d; } };
+  const isYes = v => v===true || v==='true' || v===1 || v==='1';
+  tb.innerHTML = allAbsences.map(a => {
+    const emp = allEmployees.find(e => e.id === a.employee_id);
+    const just = isYes(a.justifie)
+      ? '<span style="background:rgba(46,204,113,.15);color:#2ecc71;padding:3px 9px;border-radius:20px;font-size:.75rem;white-space:nowrap;">Justifiée</span>'
+      : '<span style="background:rgba(231,76,60,.15);color:#e74c3c;padding:3px 9px;border-radius:20px;font-size:.75rem;white-space:nowrap;">Injustifiée</span>';
+    return `<tr>
+      <td>${emp ? esc(emp.full_name) : '—'}</td>
+      <td>${fmt(a.date_absence)}</td>
+      <td>${ABSENCE_TYPE_LABEL[a.type_absence] || esc(a.type_absence || '—')}</td>
+      <td>${a.motif ? esc(a.motif) : '—'}</td>
+      <td>${just}</td>
+      <td style="text-align:right;"><button onclick="deleteAbsence('${a.id}')" title="Supprimer" style="background:none;border:none;cursor:pointer;font-size:1rem;">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteAbsence(id) {
+  if (!confirm('Supprimer cette absence ?')) return;
+  await LC.sbDelete('absences', `id=eq.${id}`);
+  showToast('Absence supprimée.');
+  await loadAbsences();
+}
+
+// ── START ──
+(async()=>{ me = await LC.requireAuth({ roles:['patron','rh'], fallback:'index.html' }); if(!me) return; init(); })();
+</script>
+</body>

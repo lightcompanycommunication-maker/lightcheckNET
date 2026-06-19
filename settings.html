@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Paramètres</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#fff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#2e90fa;--blue-bg:#eff8ff;--blue-border:#b2ddff;
+  --radius:12px;--shadow:0 1px 3px rgba(16,24,40,0.1),0 1px 2px rgba(16,24,40,0.06);
+  --shadow-md:0 4px 8px -2px rgba(16,24,40,0.1),0 2px 4px -2px rgba(16,24,40,0.06);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;color:var(--text2);
+  padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:6px;
+  font-family:'Instrument Sans',sans-serif;transition:background 0.15s;}
+.back-btn:hover{background:var(--bg);color:var(--text);}
+.back-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
+.page-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;}
+
+/* ── CONTAINER ── */
+.container{max-width:700px;margin:0 auto;padding:20px 16px 48px;}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:20px;}
+.page-header h1{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;letter-spacing:-0.3px;}
+.page-header p{font-size:0.85rem;color:var(--text2);margin-top:4px;}
+
+/* ── CATEGORY TABS ── */
+.cat-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.cat-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{background:none;border:none;padding:10px 18px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:500;color:var(--text2);cursor:pointer;position:relative;
+  white-space:nowrap;transition:color 0.15s;flex-shrink:0;}
+.cat-tab::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;
+  background:var(--green);border-radius:2px 2px 0 0;transform:scaleX(0);transition:transform 0.2s ease;}
+.cat-tab.active{color:var(--green-dark);font-weight:600;}
+.cat-tab.active::after{transform:scaleX(1);}
+.cat-tab:hover:not(.active){color:var(--text);}
+
+/* ── SETTINGS PANEL ── */
+.settings-panel{display:none;}
+.settings-panel.active{display:block;}
+
+/* ── SETTINGS SECTION ── */
+.settings-section{margin-bottom:28px;}
+.section-label{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:2px;
+  color:var(--text3);font-family:'IBM Plex Mono',monospace;padding:0 0 10px;
+  border-bottom:1px solid var(--border);margin-bottom:0;}
+
+/* ── SETTING ROW ── */
+.setting-row{display:flex;align-items:center;gap:12px;padding:14px 0;
+  border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-info{flex:1;min-width:0;}
+.setting-label{font-size:0.875rem;font-weight:500;color:var(--text);display:flex;align-items:center;gap:6px;}
+.setting-desc{font-size:0.78rem;color:var(--text2);margin-top:2px;line-height:1.4;}
+.setting-hint{font-size:0.72rem;color:var(--text3);margin-top:3px;font-family:'IBM Plex Mono',monospace;}
+.setting-control{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+
+/* Help icon */
+.help-icon{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--text3);
+  display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;
+  color:var(--text3);cursor:default;font-weight:700;line-height:1;flex-shrink:0;
+  position:relative;}
+.help-icon:hover::after{content:attr(data-tip);position:absolute;left:20px;top:50%;transform:translateY(-50%);
+  background:#101828;color:#fff;font-size:0.72rem;font-family:'Instrument Sans',sans-serif;
+  padding:6px 10px;border-radius:6px;white-space:nowrap;z-index:999;line-height:1.4;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+
+/* Select */
+.s-select{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:7px 32px 7px 10px;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;
+  color:var(--text);outline:none;appearance:none;cursor:pointer;min-width:160px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23667085' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  transition:border-color 0.15s;}
+.s-select:focus{border-color:var(--blue);}
+
+/* Input number/text */
+.s-input{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;
+  color:var(--text);outline:none;width:80px;transition:border-color 0.15s;text-align:center;}
+.s-input:focus{border-color:var(--blue);}
+.s-input-wide{width:200px;text-align:left;font-family:'Instrument Sans',sans-serif;}
+.s-unit{font-size:0.78rem;color:var(--text2);white-space:nowrap;}
+
+/* Time input */
+.s-time{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;
+  color:var(--text);outline:none;width:110px;transition:border-color 0.15s;}
+.s-time:focus{border-color:var(--blue);}
+
+/* Toggle */
+.toggle-wrap{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0;}
+.toggle-wrap input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;border-radius:22px;background:var(--border);
+  cursor:pointer;transition:background 0.2s;}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);
+  transition:transform 0.2s;pointer-events:none;}
+.toggle-wrap input:checked+.toggle-track{background:var(--green);}
+.toggle-wrap input:checked~.toggle-thumb{transform:translateX(18px);}
+
+/* Reset button */
+.reset-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:1rem;
+  padding:4px;border-radius:6px;transition:color 0.15s,background 0.15s;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.reset-btn:hover{background:var(--bg);color:var(--text2);}
+.reset-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
+
+/* Radio group */
+.radio-group{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.radio-item{display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;}
+.radio-item input{accent-color:var(--green);width:16px;height:16px;cursor:pointer;}
+
+/* ── RESET ALL BUTTON ── */
+.reset-all-wrap{border-top:1px solid var(--border);padding-top:20px;margin-top:4px;text-align:right;}
+.btn-reset-all{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 18px;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;
+  font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.btn-reset-all:hover{background:var(--bg);border-color:var(--text3);color:var(--text);}
+
+/* ── SAVE BAR ── */
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;
+  justify-content:space-between;box-shadow:0 -4px 12px rgba(16,24,40,0.06);
+  z-index:50;transform:translateY(100%);transition:transform 0.25s ease;}
+.save-bar.visible{transform:translateY(0);}
+.save-bar-msg{font-size:0.82rem;color:var(--text2);}
+.save-bar-actions{display:flex;gap:8px;}
+.btn-discard{background:none;border:1.5px solid var(--border);border-radius:8px;
+  padding:8px 16px;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;
+  font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.btn-discard:hover{background:var(--bg);}
+.btn-save{background:var(--green);border:none;border-radius:8px;padding:8px 20px;
+  font-family:'Instrument Sans',sans-serif;font-size:0.82rem;font-weight:600;
+  color:#fff;cursor:pointer;transition:background 0.15s;}
+.btn-save:hover{background:var(--green-dark);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:#101828;color:#fff;font-size:0.82rem;padding:10px 18px;
+  border-radius:8px;opacity:0;transition:all 0.3s ease;pointer-events:none;z-index:999;
+  white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── RESPONSIVE ── */
+@media(min-width:768px){
+  .container{padding:28px 28px 64px;}
+  .cat-tab{padding:11px 22px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Tableau de bord
+    </button>
+  </div>
+  <div style="font-family:'Fraunces',serif;font-size:1rem;font-weight:700;position:absolute;left:50%;transform:translateX(-50%);">
+    Paramètres
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+  <div class="page-header">
+    <h1>Paramètres</h1>
+    <p>Configurez le comportement de votre espace Light Check.</p>
+  </div>
+
+  <!-- CATEGORY TABS -->
+  <div class="cat-tabs" id="cat-tabs">
+    <button class="cat-tab active" data-panel="general" onclick="switchTab(this,'general')">Général</button>
+    <button class="cat-tab" data-panel="pointage" onclick="switchTab(this,'pointage')">Pointage</button>
+    <button class="cat-tab" data-panel="notifications" onclick="switchTab(this,'notifications')">Notifications</button>
+    <button class="cat-tab" data-panel="securite" onclick="switchTab(this,'securite')">Sécurité</button>
+  </div>
+
+  <!-- ═══════════════ GÉNÉRAL ═══════════════ -->
+  <div class="settings-panel active" id="panel-general">
+
+    <div class="settings-section">
+      <div class="section-label">Date & Heure</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Heure de début de journée
+            <span class="help-icon" data-tip="Heure à laquelle commence officiellement la journée de travail">?</span>
+          </div>
+          <div class="setting-desc">Utilisée pour les calculs de durée de shift.</div>
+        </div>
+        <div class="setting-control">
+          <input type="time" class="s-time" id="s-day-start" value="00:00" onchange="markDirty()"/>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetField('s-day-start','00:00')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Jour de début de semaine
+            <span class="help-icon" data-tip="Définit le premier jour affiché dans les calendriers et rapports hebdomadaires">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-week-start" onchange="markDirty()">
+            <option value="lundi" selected>Lundi</option>
+            <option value="dimanche">Dimanche</option>
+            <option value="samedi">Samedi</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-week-start','lundi')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Jour de début de mois
+            <span class="help-icon" data-tip="Jour du mois utilisé pour les résumés et rapports mensuels">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-month-start" onchange="markDirty()">
+            <option value="1" selected>1</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-month-start','1')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Format de date
+            <span class="help-icon" data-tip="Format utilisé pour l'affichage des dates dans toute l'application">?</span>
+          </div>
+          <div class="setting-hint" id="date-example">Exemple : 04/06/2026</div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-date-fmt" onchange="markDirty();updateDateExample()">
+            <option value="DD/MM/YYYY" selected>DD/MM/YYYY</option>
+            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+            <option value="D MMMM YYYY">D MMMM YYYY</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-date-fmt','DD/MM/YYYY');updateDateExample()">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Format d'heure
+            <span class="help-icon" data-tip="Format utilisé pour l'affichage des horaires de pointage">?</span>
+          </div>
+          <div class="setting-hint" id="time-example">Exemple : 14:30</div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-time-fmt" onchange="markDirty();updateTimeExample()">
+            <option value="HH:mm" selected>HH:mm</option>
+            <option value="HH:mm:ss">HH:mm:ss</option>
+            <option value="hh:mm a">hh:mm a</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-time-fmt','HH:mm');updateTimeExample()">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Fuseau horaire
+            <span class="help-icon" data-tip="Fuseau horaire de référence pour tous les enregistrements de pointage">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-timezone" onchange="markDirty()">
+            <option value="Europe/Paris" selected>Europe/Paris (UTC+2)</option>
+            <option value="Europe/London">Europe/London (UTC+1)</option>
+            <option value="Africa/Casablanca">Africa/Casablanca (UTC+1)</option>
+            <option value="Africa/Abidjan">Africa/Abidjan (UTC+0)</option>
+            <option value="America/New_York">America/New_York (UTC-4)</option>
+            <option value="America/Los_Angeles">America/Los_Angeles (UTC-7)</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-timezone','Europe/Paris')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-label">Organisation</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Nom de l'entreprise</div>
+          <div class="setting-desc">Affiché sur la page de pointage employé.</div>
+        </div>
+        <div class="setting-control">
+          <input type="text" class="s-input s-input-wide" id="s-company-name" placeholder="Nom de l'entreprise" onchange="markDirty()"/>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="document.getElementById('s-company-name').value='';markDirty()">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Langue de l'interface</div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-lang" onchange="markDirty()">
+            <option value="fr" selected>Français</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-lang','fr')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="reset-all-wrap">
+      <button class="btn-reset-all" onclick="resetAllGeneral()">Réinitialiser tout aux valeurs par défaut</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ POINTAGE ═══════════════ -->
+  <div class="settings-panel" id="panel-pointage">
+
+    <div class="settings-section">
+      <div class="section-label">Reconnaissance faciale</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Seuil de confiance
+            <span class="help-icon" data-tip="Pourcentage minimum pour qu'une reconnaissance faciale soit acceptée. Plus élevé = plus strict.">?</span>
+          </div>
+          <div class="setting-desc">En dessous de ce seuil, la détection est refusée.</div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-face-threshold" onchange="markDirty()">
+            <option value="60">60% — Permissif</option>
+            <option value="70" selected>70% — Standard</option>
+            <option value="80">80% — Strict</option>
+            <option value="90">90% — Très strict</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-face-threshold','70')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Tentatives max de détection
+            <span class="help-icon" data-tip="Nombre de fois que l'employé peut réessayer la reconnaissance avant le blocage">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <input type="number" class="s-input" id="s-face-retries" value="3" min="1" max="10" onchange="markDirty()"/>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetField('s-face-retries','3')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-label">Sessions & Automatisation</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Déconnexion auto en fin de shift
+            <span class="help-icon" data-tip="Déconnecte automatiquement l'employé à l'heure de fin de journée définie">?</span>
+          </div>
+          <div class="setting-desc">L'employé est pointé comme sorti automatiquement.</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-auto-checkout" onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-auto-checkout',false)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Durée de session employé
+            <span class="help-icon" data-tip="Durée après laquelle la session de la borne de pointage expire">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-session-dur" onchange="markDirty()">
+            <option value="4">4 heures</option>
+            <option value="8" selected>8 heures</option>
+            <option value="12">12 heures</option>
+            <option value="24">24 heures</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-session-dur','8')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Réévaluation automatique des pointages non identifiés
+            <span class="help-icon" data-tip="Tente de relier automatiquement les pointages sans correspondance à un employé">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-re-eval" onchange="markDirty()">
+            <option value="disabled" selected>Désactivée</option>
+            <option value="daily">Quotidienne</option>
+            <option value="weekly">Hebdomadaire</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-re-eval','disabled')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-label">Images & Conservation</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Conserver les photos de pointage
+            <span class="help-icon" data-tip="Enregistre la photo capturée à chaque pointage pour audit ultérieur">?</span>
+          </div>
+          <div class="setting-desc">Les photos sont stockées de façon sécurisée dans Supabase.</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-save-photos" checked onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-save-photos',true)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Durée de conservation des images
+            <span class="help-icon" data-tip="Après cette durée, les photos de pointage sont supprimées automatiquement. Mettre 0 pour ne jamais supprimer.">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <input type="number" class="s-input" id="s-img-retention" value="12" min="0" onchange="markDirty()"/>
+          <span class="s-unit">mois</span>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetField('s-img-retention','12')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row" style="align-items:flex-start;">
+        <div class="setting-info">
+          <div class="setting-label">Qualité de conservation des images</div>
+          <div class="setting-desc">Choisissez entre image complète ou vignette légère.</div>
+          <div class="radio-group" style="margin-top:10px;">
+            <label class="radio-item">
+              <input type="radio" name="img-quality" value="full" checked onchange="markDirty()"/>
+              Conserver l'image complète
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="img-quality" value="thumb" onchange="markDirty()"/>
+              Conserver uniquement la vignette
+            </label>
+          </div>
+        </div>
+        <div class="setting-control" style="margin-top:2px;"></div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetRadio('img-quality','full')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="reset-all-wrap">
+      <button class="btn-reset-all" onclick="resetAllPointage()">Réinitialiser tout aux valeurs par défaut</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ NOTIFICATIONS ═══════════════ -->
+  <div class="settings-panel" id="panel-notifications">
+
+    <div class="settings-section">
+      <div class="section-label">Alertes de présence</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Alerte en cas de retard
+            <span class="help-icon" data-tip="Notifie l'administrateur quand un employé attendu ne s'est pas pointé à l'heure">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-notif-late" checked onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-notif-late',true)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Alerte d'absence non justifiée
+            <span class="help-icon" data-tip="Notifie lorsqu'un employé est absent sans congé planifié">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-notif-absent" checked onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-notif-absent',true)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Tentatives de pointage sur congé restreint
+            <span class="help-icon" data-tip="Notifie quand un employé en congé tente de se pointer">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-notif-leave" onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-notif-leave',false)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Pointages non reconnus
+            <span class="help-icon" data-tip="Notifie quand une tentative de pointage ne correspond à aucun employé enregistré">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-notif-unknown" checked onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-notif-unknown',true)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-label">Rapports automatiques</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Résumé quotidien par email
+            <span class="help-icon" data-tip="Envoie chaque soir un résumé des présences de la journée">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-daily-report" onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-daily-report',false)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Résumé hebdomadaire par email</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-weekly-report" checked onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-weekly-report',true)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Email pour les notifications</div>
+          <div class="setting-desc">Les alertes et rapports sont envoyés à cette adresse.</div>
+        </div>
+        <div class="setting-control">
+          <input type="email" class="s-input s-input-wide" id="s-notif-email" placeholder="admin@exemple.com" onchange="markDirty()"/>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="document.getElementById('s-notif-email').value='';markDirty()">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="reset-all-wrap">
+      <button class="btn-reset-all" onclick="resetAllNotifications()">Réinitialiser tout aux valeurs par défaut</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SÉCURITÉ ═══════════════ -->
+  <div class="settings-panel" id="panel-securite">
+
+    <div class="settings-section">
+      <div class="section-label">Connexion & Accès</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Double authentification administrateur
+            <span class="help-icon" data-tip="Requiert une confirmation supplémentaire pour les connexions admin sensibles">?</span>
+          </div>
+          <div class="setting-desc">Renforce la sécurité de l'accès à la console d'administration.</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-2fa" onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-2fa',false)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Tentatives max de connexion
+            <span class="help-icon" data-tip="Après ce nombre d'échecs, le compte est temporairement verrouillé">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <input type="number" class="s-input" id="s-max-login" value="5" min="1" max="20" onchange="markDirty()"/>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetField('s-max-login','5')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Durée de session administrateur
+            <span class="help-icon" data-tip="Durée d'inactivité après laquelle la session admin expire et nécessite une reconnexion">?</span>
+          </div>
+        </div>
+        <div class="setting-control">
+          <select class="s-select" id="s-admin-session" onchange="markDirty()">
+            <option value="1">1 heure</option>
+            <option value="4">4 heures</option>
+            <option value="8" selected>8 heures</option>
+            <option value="24">24 heures</option>
+            <option value="0">Pas de limite</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetSelect('s-admin-session','8')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-label">Données & Confidentialité</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Journalisation des accès admin
+            <span class="help-icon" data-tip="Enregistre chaque action effectuée dans la console d'administration">?</span>
+          </div>
+          <div class="setting-desc">Utile pour les audits de sécurité.</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-wrap">
+            <input type="checkbox" id="s-audit-log" checked onchange="markDirty()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetToggle('s-audit-log',true)">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">
+            Nombre de pointages non identifiés à conserver
+            <span class="help-icon" data-tip="Nombre maximum d'événements sans correspondance conservés dans le journal. -1 = illimité.">?</span>
+          </div>
+          <div class="setting-desc">Entrez -1 pour ne pas limiter.</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" class="s-input" id="s-unid-keep" value="-1" min="-1" onchange="markDirty()"/>
+        </div>
+        <button class="reset-btn" title="Réinitialiser" onclick="resetField('s-unid-keep','-1')">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="reset-all-wrap">
+      <button class="btn-reset-all" onclick="resetAllSecurite()">Réinitialiser tout aux valeurs par défaut</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar" id="save-bar">
+  <div class="save-bar-msg">Vous avez des modifications non enregistrées.</div>
+  <div class="save-bar-actions">
+    <button class="btn-discard" onclick="discardChanges()">Annuler</button>
+    <button class="btn-save" onclick="saveSettings()">Enregistrer</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+const SETTINGS_KEY = 'lc_settings';
+let dirty = false;
+let originalState = null;
+
+// ── TAB SWITCHING ──
+function switchTab(el, panelId){
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.settings-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+panelId).classList.add('active');
+}
+
+// ── DIRTY STATE ──
+function markDirty(){
+  if(!dirty){
+    dirty = true;
+    document.getElementById('save-bar').classList.add('visible');
+  }
+}
+
+function captureState(){
+  return {
+    dayStart: document.getElementById('s-day-start').value,
+    weekStart: document.getElementById('s-week-start').value,
+    monthStart: document.getElementById('s-month-start').value,
+    dateFmt: document.getElementById('s-date-fmt').value,
+    timeFmt: document.getElementById('s-time-fmt').value,
+    timezone: document.getElementById('s-timezone').value,
+    companyName: document.getElementById('s-company-name').value,
+    lang: document.getElementById('s-lang').value,
+    faceThreshold: document.getElementById('s-face-threshold').value,
+    faceRetries: document.getElementById('s-face-retries').value,
+    autoCheckout: document.getElementById('s-auto-checkout').checked,
+    sessionDur: document.getElementById('s-session-dur').value,
+    reEval: document.getElementById('s-re-eval').value,
+    savePhotos: document.getElementById('s-save-photos').checked,
+    imgRetention: document.getElementById('s-img-retention').value,
+    imgQuality: document.querySelector('[name="img-quality"]:checked')?.value || 'full',
+    notifLate: document.getElementById('s-notif-late').checked,
+    notifAbsent: document.getElementById('s-notif-absent').checked,
+    notifLeave: document.getElementById('s-notif-leave').checked,
+    notifUnknown: document.getElementById('s-notif-unknown').checked,
+    dailyReport: document.getElementById('s-daily-report').checked,
+    weeklyReport: document.getElementById('s-weekly-report').checked,
+    notifEmail: document.getElementById('s-notif-email').value,
+    twoFA: document.getElementById('s-2fa').checked,
+    maxLogin: document.getElementById('s-max-login').value,
+    adminSession: document.getElementById('s-admin-session').value,
+    auditLog: document.getElementById('s-audit-log').checked,
+    unidKeep: document.getElementById('s-unid-keep').value,
+  };
+}
+
+function applyState(s){
+  document.getElementById('s-day-start').value = s.dayStart;
+  document.getElementById('s-week-start').value = s.weekStart;
+  document.getElementById('s-month-start').value = s.monthStart;
+  document.getElementById('s-date-fmt').value = s.dateFmt;
+  document.getElementById('s-time-fmt').value = s.timeFmt;
+  document.getElementById('s-timezone').value = s.timezone;
+  document.getElementById('s-company-name').value = s.companyName;
+  document.getElementById('s-lang').value = s.lang;
+  document.getElementById('s-face-threshold').value = s.faceThreshold;
+  document.getElementById('s-face-retries').value = s.faceRetries;
+  document.getElementById('s-auto-checkout').checked = s.autoCheckout;
+  document.getElementById('s-session-dur').value = s.sessionDur;
+  document.getElementById('s-re-eval').value = s.reEval;
+  document.getElementById('s-save-photos').checked = s.savePhotos;
+  document.getElementById('s-img-retention').value = s.imgRetention;
+  const qRadio = document.querySelector(`[name="img-quality"][value="${s.imgQuality}"]`);
+  if(qRadio) qRadio.checked = true;
+  document.getElementById('s-notif-late').checked = s.notifLate;
+  document.getElementById('s-notif-absent').checked = s.notifAbsent;
+  document.getElementById('s-notif-leave').checked = s.notifLeave;
+  document.getElementById('s-notif-unknown').checked = s.notifUnknown;
+  document.getElementById('s-daily-report').checked = s.dailyReport;
+  document.getElementById('s-weekly-report').checked = s.weeklyReport;
+  document.getElementById('s-notif-email').value = s.notifEmail;
+  document.getElementById('s-2fa').checked = s.twoFA;
+  document.getElementById('s-max-login').value = s.maxLogin;
+  document.getElementById('s-admin-session').value = s.adminSession;
+  document.getElementById('s-audit-log').checked = s.auditLog;
+  document.getElementById('s-unid-keep').value = s.unidKeep;
+  updateDateExample();
+  updateTimeExample();
+}
+
+// ── RESET HELPERS ──
+function resetField(id, val){ document.getElementById(id).value = val; markDirty(); }
+function resetSelect(id, val){ document.getElementById(id).value = val; markDirty(); updateDateExample(); updateTimeExample(); }
+function resetToggle(id, val){ document.getElementById(id).checked = val; markDirty(); }
+function resetRadio(name, val){
+  const r = document.querySelector(`[name="${name}"][value="${val}"]`);
+  if(r){ r.checked = true; markDirty(); }
+}
+
+// ── RESET ALL ──
+const DEFAULTS = {
+  dayStart:'00:00',weekStart:'lundi',monthStart:'1',dateFmt:'DD/MM/YYYY',
+  timeFmt:'HH:mm',timezone:'Europe/Paris',companyName:'',lang:'fr',
+  faceThreshold:'70',faceRetries:'3',autoCheckout:false,sessionDur:'8',
+  reEval:'disabled',savePhotos:true,imgRetention:'12',imgQuality:'full',
+  notifLate:true,notifAbsent:true,notifLeave:false,notifUnknown:true,
+  dailyReport:false,weeklyReport:true,notifEmail:'',
+  twoFA:false,maxLogin:'5',adminSession:'8',auditLog:true,unidKeep:'-1'
+};
+function resetAllGeneral(){ applyState({...captureState(),...{dayStart:DEFAULTS.dayStart,weekStart:DEFAULTS.weekStart,monthStart:DEFAULTS.monthStart,dateFmt:DEFAULTS.dateFmt,timeFmt:DEFAULTS.timeFmt,timezone:DEFAULTS.timezone,companyName:DEFAULTS.companyName,lang:DEFAULTS.lang}}); markDirty(); }
+function resetAllPointage(){ applyState({...captureState(),...{faceThreshold:DEFAULTS.faceThreshold,faceRetries:DEFAULTS.faceRetries,autoCheckout:DEFAULTS.autoCheckout,sessionDur:DEFAULTS.sessionDur,reEval:DEFAULTS.reEval,savePhotos:DEFAULTS.savePhotos,imgRetention:DEFAULTS.imgRetention,imgQuality:DEFAULTS.imgQuality}}); markDirty(); }
+function resetAllNotifications(){ applyState({...captureState(),...{notifLate:DEFAULTS.notifLate,notifAbsent:DEFAULTS.notifAbsent,notifLeave:DEFAULTS.notifLeave,notifUnknown:DEFAULTS.notifUnknown,dailyReport:DEFAULTS.dailyReport,weeklyReport:DEFAULTS.weeklyReport,notifEmail:DEFAULTS.notifEmail}}); markDirty(); }
+function resetAllSecurite(){ applyState({...captureState(),...{twoFA:DEFAULTS.twoFA,maxLogin:DEFAULTS.maxLogin,adminSession:DEFAULTS.adminSession,auditLog:DEFAULTS.auditLog,unidKeep:DEFAULTS.unidKeep}}); markDirty(); }
+
+// ── SAVE / DISCARD ──
+function saveSettings(){
+  const state = captureState();
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(state));
+  originalState = JSON.stringify(state);
+  dirty = false;
+  document.getElementById('save-bar').classList.remove('visible');
+  showToast('Paramètres enregistrés ✓');
+}
+
+function discardChanges(){
+  if(originalState) applyState(JSON.parse(originalState));
+  else applyState(DEFAULTS);
+  dirty = false;
+  document.getElementById('save-bar').classList.remove('visible');
+}
+
+// ── EXAMPLES ──
+function updateDateExample(){
+  const fmt = document.getElementById('s-date-fmt').value;
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2,'0');
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const y = now.getFullYear();
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  let ex = '';
+  if(fmt==='DD/MM/YYYY') ex=`${d}/${m}/${y}`;
+  else if(fmt==='MM/DD/YYYY') ex=`${m}/${d}/${y}`;
+  else if(fmt==='YYYY-MM-DD') ex=`${y}-${m}-${d}`;
+  else if(fmt==='D MMMM YYYY') ex=`${parseInt(d)} ${months[now.getMonth()]} ${y}`;
+  document.getElementById('date-example').textContent = 'Exemple : '+ex;
+}
+
+function updateTimeExample(){
+  const fmt = document.getElementById('s-time-fmt').value;
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const h12 = now.getHours()%12||12;
+  const ampm = now.getHours()<12?'am':'pm';
+  let ex = '';
+  if(fmt==='HH:mm') ex=`${h}:${m}`;
+  else if(fmt==='HH:mm:ss') ex=`${h}:${m}:${s}`;
+  else if(fmt==='hh:mm a') ex=`${String(h12).padStart(2,'0')}:${m} ${ampm}`;
+  document.getElementById('time-example').textContent = 'Exemple : '+ex;
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+(function init(){
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if(saved){
+    try{ applyState(JSON.parse(saved)); }
+    catch(e){ applyState(DEFAULTS); }
+  } else {
+    applyState(DEFAULTS);
+  }
+  originalState = localStorage.getItem(SETTINGS_KEY) || JSON.stringify(DEFAULTS);
+  updateDateExample();
+  updateTimeExample();
+})();
+</script>
+</body>
+</html>

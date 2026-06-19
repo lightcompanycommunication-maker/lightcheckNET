@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Horaires et équipes</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#fff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#1d4ed8;--blue-light:#2e90fa;--blue-bg:#eff8ff;--blue-border:#b2ddff;
+  --radius:10px;--shadow:0 1px 3px rgba(16,24,40,0.1);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:6px 8px;
+  border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:0.85rem;
+  display:flex;align-items:center;gap:4px;}
+.back-btn:hover{background:var(--bg);}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);}
+.icon-btn:hover{background:var(--bg);}
+
+/* TABS ROW (full width, sticky under topbar) */
+.tabs-row{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:52px;z-index:90;gap:8px;flex-wrap:wrap;min-height:48px;}
+.tabs{display:flex;align-items:flex-end;gap:0;}
+.tab{background:none;border:none;padding:14px 16px 10px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.925rem;font-weight:500;color:var(--text2);cursor:pointer;position:relative;
+  border-bottom:2px solid transparent;transition:color 0.15s;margin-bottom:-1px;white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+
+/* FILTER PILLS (Bio Attendance / Gestion visiteurs) */
+.filter-pills{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0;}
+.pill{background:var(--surface);border:none;padding:7px 14px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.8rem;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.pill + .pill{border-left:1px solid var(--border);}
+.pill.active{background:var(--blue);color:#fff;}
+.pill:hover:not(.active){background:var(--bg);}
+
+/* ACTION ROW */
+.action-row{display:flex;align-items:center;gap:10px;padding:14px 16px;flex-wrap:wrap;}
+.btn-primary-blue{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;
+  border:none;border-radius:8px;padding:9px 18px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:600;cursor:pointer;transition:background 0.15s;white-space:nowrap;}
+.btn-primary-blue:hover{background:#1e3a8a;}
+.btn-import-split{display:flex;align-items:stretch;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;overflow:hidden;transition:all 0.15s;}
+.btn-import-split:hover{background:var(--bg);}
+.btn-import-main{background:none;border:none;padding:9px 14px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap;}
+.btn-import-arrow{background:none;border:none;border-left:1px solid var(--border);
+  padding:9px 10px;font-size:0.8rem;color:var(--text2);cursor:pointer;}
+.btn-import-arrow:hover{background:var(--bg);}
+
+/* IMPORT DROPDOWN */
+.import-wrap{position:relative;}
+.import-menu{display:none;position:absolute;left:0;top:calc(100%+4px);background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  min-width:180px;z-index:200;overflow:hidden;}
+.import-menu.open{display:block;}
+.im-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:0.85rem;
+  color:var(--text);cursor:pointer;border:none;background:none;width:100%;
+  font-family:'Instrument Sans',sans-serif;text-align:left;}
+.im-item:hover{background:var(--bg);}
+
+/* SCHEDULE CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px;padding:0 16px 24px;}
+
+/* SCHEDULE CARD */
+.schedule-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:box-shadow 0.15s;}
+.schedule-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.sc-header{padding:14px 14px 10px;display:flex;align-items:flex-start;justify-content:space-between;}
+.sc-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;margin-bottom:2px;}
+.sc-type{font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;}
+.sc-body{padding:0 14px 14px;}
+.sc-info{display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text2);margin-bottom:4px;}
+.sc-days{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;}
+.sc-day{width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:600;
+  color:var(--text2);}
+.sc-day.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.sc-footer{padding:10px 14px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+  font-size:0.72rem;font-weight:500;}
+.badge-green{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green-border);}
+.badge-amber{background:var(--amber-bg);color:var(--amber-dark);border:1px solid var(--amber-border);}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+
+/* SHIFT ROW */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);margin:0 16px 24px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f9fafb;border-bottom:1px solid var(--border);}
+th{padding:10px 14px;text-align:left;font-size:0.75rem;font-weight:600;color:var(--text2);white-space:nowrap;}
+td{padding:11px 14px;border-top:1px solid var(--border);font-size:0.855rem;vertical-align:middle;}
+tr:hover td{background:#f9fafb;}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 24px;text-align:center;}
+.empty-icon-wrap{width:72px;height:72px;border-radius:50%;background:var(--bg);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;margin-bottom:16px;}
+.empty-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;margin-bottom:6px;color:var(--text);}
+.empty-sub{font-size:0.875rem;color:var(--text2);max-width:260px;line-height:1.5;}
+
+/* MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);z-index:300;align-items:flex-end;justify-content:center;}
+.modal-bd.open{display:flex;}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;
+  width:100%;max-width:520px;animation:slideUp 0.25s ease;max-height:92vh;
+  overflow:hidden;display:flex;flex-direction:column;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px 20px;}
+.modal-footer{padding:12px 20px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;}
+
+/* FORM */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:0.875rem;font-weight:500;color:var(--text);margin-bottom:6px;}
+.fl-req{color:var(--red);}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;outline:none;}
+.fi:focus{border-color:var(--blue-light);background:var(--surface);}
+.fsel{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;
+  font-size:0.9rem;outline:none;appearance:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.time-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;}
+.time-sep{color:var(--text3);font-size:0.875rem;text-align:center;}
+
+/* DAY PICKER */
+.day-picker{display:flex;gap:6px;flex-wrap:wrap;}
+.dp-day{width:36px;height:36px;border-radius:50%;background:var(--bg);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;
+  color:var(--text2);cursor:pointer;transition:all 0.15s;user-select:none;}
+.dp-day.sel{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+/* COLOR PICKER */
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;}
+.cp-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+  transition:border-color 0.15s;}
+.cp-swatch.sel{border-color:var(--text);}
+
+/* UTILS */
+.btn-ghost-sm{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:transparent;
+  color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:0.875rem;cursor:pointer;}
+.btn-ghost-sm:hover{background:var(--bg);}
+.btn-blue{padding:9px 22px;border-radius:8px;border:none;background:var(--blue);color:#fff;
+  font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;}
+.btn-blue:hover{background:#1e3a8a;}
+.alert-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);
+  border-radius:8px;padding:10px 14px;font-size:0.82rem;display:flex;gap:8px;margin-top:10px;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.detail-row{display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--border);font-size:0.875rem;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{color:var(--text2);}
+.detail-val{font-weight:500;}
+
+@media(min-width:768px){
+  .modal-bd{align-items:center;}
+  .modal{border-radius:16px;}
+  .modal-handle{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <button class="back-btn" onclick="window.location.href='index.html'">← Tableau de bord</button>
+  </div>
+  <div style="font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;
+    position:absolute;left:50%;transform:translateX(-50%);">
+    Horaires et équipes
+  </div>
+  <div style="display:flex;gap:6px;">
+    <button class="icon-btn" title="Actualiser" onclick="reload()">↻</button>
+  </div>
+</div>
+
+<!-- TABS + FILTER PILLS ROW -->
+<div class="tabs-row">
+  <div class="tabs">
+    <button class="tab active" id="tab-schedules" onclick="switchTab('schedules')">Horaires</button>
+    <button class="tab" id="tab-shifts"    onclick="switchTab('shifts')">Équipes</button>
+  </div>
+  <div class="filter-pills">
+    <button class="pill active" id="pill-bio" onclick="switchPill('bio')">Bio Attendance</button>
+    <button class="pill" id="pill-visitor" onclick="switchPill('visitor')">Gestion des visiteurs</button>
+  </div>
+</div>
+
+<!-- ACTION ROW -->
+<div class="action-row">
+  <button class="btn-primary-blue" id="btn-main-action" onclick="openCreateModal()">
+    <span>+</span> <span id="action-label">Créer un horaire</span>
+  </button>
+  <div class="import-wrap">
+    <div class="btn-import-split">
+      <button class="btn-import-main" onclick="alert('Import — bientôt disponible')">Importer</button>
+      <button class="btn-import-arrow" onclick="toggleImportMenu()">▾</button>
+    </div>
+    <div class="import-menu" id="import-menu">
+      <button class="im-item" onclick="closeImportMenu()">📄 Importer depuis CSV</button>
+      <button class="im-item" onclick="closeImportMenu()">📋 Copier depuis un autre site</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHEDULES PANEL ══ -->
+<div id="panel-schedules">
+  <div id="schedules-loading" class="empty-state">
+    <div style="font-size:1.5rem;">⏳</div>
+    <div style="color:var(--text3);margin-top:8px;">Chargement…</div>
+  </div>
+  <div id="schedules-empty" class="empty-state" style="display:none;">
+    <div class="empty-icon-wrap">🗓</div>
+    <div class="empty-title">Aucun horaire d'employé</div>
+    <div class="empty-sub">Créez un horaire pour commencer !</div>
+  </div>
+  <div class="cards-grid" id="schedules-grid" style="display:none;"></div>
+</div>
+
+<!-- ══ SHIFTS PANEL ══ -->
+<div id="panel-shifts" style="display:none;">
+  <div id="shifts-loading" class="empty-state">
+    <div style="font-size:1.5rem;">⏳</div>
+    <div style="color:var(--text3);margin-top:8px;">Chargement…</div>
+  </div>
+  <div id="shifts-empty" class="empty-state" style="display:none;">
+    <div class="empty-icon-wrap">👥</div>
+    <div class="empty-title">Aucune équipe configurée</div>
+    <div class="empty-sub">Créez une équipe pour commencer !</div>
+  </div>
+  <div class="table-card" id="shifts-table" style="display:none;">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nom de l'équipe</th>
+            <th>Horaire lié</th>
+            <th>Membres</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="shifts-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CRÉER UN HORAIRE — ÉTAPE 1: DÉTAILS ══ -->
+<div class="modal-bd" id="modal-schedule">
+  <div class="modal" style="padding:0;overflow:hidden;">
+    <div class="modal-handle" style="margin:12px auto 0;"></div>
+
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;">
+      <div style="font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;">Créer un horaire</div>
+      <button onclick="closeModal('modal-schedule')" style="background:none;border:none;font-size:1.1rem;
+        cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;line-height:1;">✕</button>
+    </div>
+
+    <!-- BREADCRUMB (NCheck: "Schedule details › Add groups or users") -->
+    <div style="padding:0 20px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="color:#1d4ed8;font-size:0.875rem;font-weight:600;">Détails de l'horaire</span>
+      <span style="color:var(--text3);font-size:0.8rem;">›</span>
+      <span id="sc-crumb-2" style="color:var(--text3);font-size:0.875rem;">Ajouter des groupes ou utilisateurs</span>
+    </div>
+
+    <!-- STEP 1 BODY -->
+    <div style="overflow-y:auto;max-height:calc(90vh - 190px);padding:16px 20px 20px;">
+
+      <!-- CARD: Informations de base (matching NCheck white bordered card) -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;
+        padding:16px;margin-bottom:18px;">
+
+        <!-- Schedule name -->
+        <div class="fg">
+          <label class="fl">Nom de l'horaire <span class="fl-req">*</span></label>
+          <input class="fi" id="sc-name" placeholder="Nom de l'horaire"
+            style="background:var(--surface);"/>
+        </div>
+
+        <!-- Repetition: number + period dropdown side-by-side (NCheck style) -->
+        <div class="fg">
+          <label class="fl">Répétition <span class="fl-req">*</span></label>
+          <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:8px;
+            overflow:hidden;background:var(--surface);">
+            <input type="number" id="sc-repeat-n" value="1" min="1" max="52"
+              style="flex:1;border:none;padding:9px 12px;font-family:'IBM Plex Mono',monospace;
+              font-size:0.9rem;color:var(--text);background:transparent;outline:none;
+              border-right:1px solid var(--border);min-width:0;"/>
+            <select id="sc-repeat-unit"
+              style="border:none;padding:9px 10px;padding-right:28px;font-family:'Instrument Sans',sans-serif;
+              font-size:0.875rem;color:var(--text);background:transparent;outline:none;
+              appearance:none;cursor:pointer;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23667085' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\");
+              background-repeat:no-repeat;background-position:right 8px center;">
+              <option value="daily">Quotidien</option>
+              <option value="weekly" selected>Hebdomadaire</option>
+              <option value="monthly">Mensuel</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Start date -->
+        <div class="fg">
+          <label class="fl">Date de début</label>
+          <div style="position:relative;">
+            <input type="date" id="sc-start-date" class="fi"
+              style="background:var(--surface);padding-right:36px;"/>
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+              font-size:1rem;color:var(--text3);pointer-events:none;">📅</span>
+          </div>
+        </div>
+
+        <!-- End of repetition -->
+        <div style="margin-bottom:0;">
+          <label class="fl" style="margin-bottom:10px;">Fin de répétition</label>
+          <div style="display:flex;align-items:center;gap:20px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.875rem;color:var(--text);">
+              <input type="radio" name="sc-end-mode" value="none" id="sc-end-none" checked
+                onchange="scToggleEndDate()"
+                style="width:18px;height:18px;accent-color:var(--blue);flex-shrink:0;"/>
+              Pas de date de fin
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.875rem;color:var(--text);">
+              <input type="radio" name="sc-end-mode" value="date" id="sc-end-by"
+                onchange="scToggleEndDate()"
+                style="width:18px;height:18px;accent-color:var(--blue);flex-shrink:0;"/>
+              Se termine le
+            </label>
+          </div>
+          <!-- End date (shown only when "Se termine le" is selected) -->
+          <div id="sc-end-date-wrap" style="display:none;margin-top:10px;position:relative;">
+            <input type="date" id="sc-end-date" class="fi"
+              style="background:var(--surface);padding-right:36px;"/>
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+              font-size:1rem;color:var(--text3);pointer-events:none;">📅</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD: Détails des horaires de travail -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;
+        padding:16px;margin-bottom:18px;">
+        <div style="font-size:0.875rem;font-weight:600;color:var(--text);margin-bottom:14px;">
+          Horaires de travail
+        </div>
+
+        <!-- Plage horaire -->
+        <div class="fg">
+          <label class="fl">Plage horaire</label>
+          <div class="time-row">
+            <input class="fi" id="sc-start" type="time" value="08:00" style="background:var(--surface);"/>
+            <div class="time-sep">—</div>
+            <input class="fi" id="sc-end" type="time" value="17:00" style="background:var(--surface);"/>
+          </div>
+        </div>
+
+        <!-- Jours travaillés -->
+        <div class="fg">
+          <label class="fl">Jours travaillés</label>
+          <div class="day-picker" id="day-picker">
+            <div class="dp-day sel" data-day="1">Lu</div>
+            <div class="dp-day sel" data-day="2">Ma</div>
+            <div class="dp-day sel" data-day="3">Me</div>
+            <div class="dp-day sel" data-day="4">Je</div>
+            <div class="dp-day sel" data-day="5">Ve</div>
+            <div class="dp-day" data-day="6">Sa</div>
+            <div class="dp-day" data-day="0">Di</div>
+          </div>
+        </div>
+
+        <!-- Tolérance -->
+        <div class="fg" style="margin-bottom:0;">
+          <label class="fl">Tolérance (minutes)</label>
+          <div class="form-row">
+            <div>
+              <div style="font-size:0.75rem;color:var(--text2);margin-bottom:4px;">Retard admis</div>
+              <input class="fi" id="sc-late-tol" type="number" min="0" max="120" value="15"
+                style="font-family:'IBM Plex Mono',monospace;background:var(--surface);"/>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--text2);margin-bottom:4px;">Départ anticipé</div>
+              <input class="fi" id="sc-early-tol" type="number" min="0" max="120" value="10"
+                style="font-family:'IBM Plex Mono',monospace;background:var(--surface);"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Couleur -->
+      <div class="fg">
+        <label class="fl">Couleur de l'horaire</label>
+        <div class="color-picker" id="color-picker">
+          <div class="cp-swatch sel" data-color="#1d4ed8" style="background:#1d4ed8;"></div>
+          <div class="cp-swatch" data-color="#12b76a" style="background:#12b76a;"></div>
+          <div class="cp-swatch" data-color="#f79009" style="background:#f79009;"></div>
+          <div class="cp-swatch" data-color="#f04438" style="background:#f04438;"></div>
+          <div class="cp-swatch" data-color="#7f56d9" style="background:#7f56d9;"></div>
+          <div class="cp-swatch" data-color="#0891b2" style="background:#0891b2;"></div>
+          <div class="cp-swatch" data-color="#101828" style="background:#101828;"></div>
+        </div>
+      </div>
+
+      <div id="sc-error" class="alert-error" style="display:none;">
+        <span>⚠</span><span id="sc-error-msg">Erreur.</span>
+      </div>
+    </div>
+
+    <!-- FOOTER: "Next" button bottom-right only -->
+    <div style="padding:12px 20px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+      <button onclick="scStep1Next()"
+        style="padding:10px 28px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;
+        font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;">
+        Suivant
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CRÉER UN HORAIRE — ÉTAPE 2: GROUPES / UTILISATEURS ══ -->
+<div class="modal-bd" id="modal-schedule-step2">
+  <div class="modal" style="padding:0;overflow:hidden;">
+    <div class="modal-handle" style="margin:12px auto 0;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;">
+      <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;">
+        Ajouter des groupes ou utilisateurs
+      </div>
+      <button onclick="closeModal('modal-schedule-step2')" style="background:none;border:none;
+        font-size:1.1rem;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;">✕</button>
+    </div>
+
+    <!-- BREADCRUMB step 2 active -->
+    <div style="padding:0 20px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="color:var(--green-dark);font-size:0.875rem;font-weight:500;">✓ Détails de l'horaire</span>
+      <span style="color:var(--text3);font-size:0.8rem;">›</span>
+      <span style="color:#1d4ed8;font-size:0.875rem;font-weight:600;">Ajouter des groupes ou utilisateurs</span>
+    </div>
+
+    <div style="overflow-y:auto;max-height:calc(90vh - 200px);padding:16px 20px 20px;">
+
+      <!-- Recap card -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;
+        padding:14px;margin-bottom:16px;">
+        <div style="font-size:0.72rem;font-weight:600;color:var(--text2);text-transform:uppercase;
+          letter-spacing:1px;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;">Récapitulatif</div>
+        <div class="detail-row"><span class="detail-key">Nom</span><span class="detail-val" id="s2-sc-name">—</span></div>
+        <div class="detail-row"><span class="detail-key">Répétition</span><span class="detail-val" id="s2-sc-repeat">—</span></div>
+        <div class="detail-row"><span class="detail-key">Plage horaire</span><span class="detail-val" id="s2-sc-time">—</span></div>
+        <div class="detail-row"><span class="detail-key">Date de début</span><span class="detail-val" id="s2-sc-startdate">—</span></div>
+      </div>
+
+      <!-- Assign to groups -->
+      <div class="fg">
+        <label class="fl">Groupes assignés</label>
+        <div id="sc-group-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:24px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;" id="sc-group-select">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Assign to employees -->
+      <div class="fg" style="margin-bottom:0;">
+        <label class="fl">Employés assignés</label>
+        <div style="position:relative;">
+          <input class="fi" id="sc-emp-search" type="text" placeholder="Rechercher un employé…"
+            oninput="scFilterEmps(this.value)"
+            onfocus="document.getElementById('sc-emp-dd').style.display='block'"
+            onblur="setTimeout(()=>document.getElementById('sc-emp-dd').style.display='none',200)"
+            autocomplete="off" style="background:var(--surface);"/>
+          <div id="sc-emp-dd" style="display:none;position:absolute;left:0;right:0;top:calc(100%+4px);
+            background:var(--surface);border:1px solid var(--border);border-radius:8px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:400;max-height:180px;overflow-y:auto;"></div>
+        </div>
+        <div id="sc-emp-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+      </div>
+
+      <div id="sc-error-2" class="alert-error" style="display:none;margin-top:12px;">
+        <span>⚠</span><span id="sc-error-msg-2">Erreur.</span>
+      </div>
+    </div>
+
+    <div style="padding:12px 20px 20px;border-top:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;">
+      <button onclick="scGoBack()"
+        style="padding:10px 20px;background:transparent;color:var(--text2);
+        border:1.5px solid var(--border);border-radius:8px;
+        font-family:'Instrument Sans',sans-serif;font-size:0.875rem;cursor:pointer;">
+        ← Retour
+      </button>
+      <button id="btn-sc-save" onclick="saveSchedule()"
+        style="padding:10px 28px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;
+        font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;">
+        <span id="btn-sc-label">Créer l'horaire</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: SUCCÈS CRÉATION ══ -->
+<div class="modal-bd" id="modal-schedule-done">
+  <div class="modal" style="text-align:center;padding:28px 24px 32px;">
+    <div class="modal-handle"></div>
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--green-bg);
+      border:2px solid var(--green-border);display:flex;align-items:center;justify-content:center;
+      font-size:1.8rem;margin:0 auto 16px;">✓</div>
+    <div style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;margin-bottom:6px;">Horaire créé !</div>
+    <div style="color:var(--text2);font-size:0.875rem;margin-bottom:20px;">L'horaire a été enregistré avec succès.</div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;
+      text-align:left;margin-bottom:20px;">
+      <div class="detail-row"><span class="detail-key">Nom</span><span class="detail-val" id="done-sc-name">—</span></div>
+      <div class="detail-row"><span class="detail-key">Répétition</span><span class="detail-val" id="done-sc-repeat">—</span></div>
+      <div class="detail-row"><span class="detail-key">Horaire</span><span class="detail-val" id="done-sc-time">—</span></div>
+      <div class="detail-row"><span class="detail-key">Jours</span><span class="detail-val" id="done-sc-days">—</span></div>
+    </div>
+    <button onclick="closeModal('modal-schedule-done');loadSchedules();"
+      style="width:100%;padding:11px;background:transparent;border:1.5px solid var(--border);
+      border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:0.875rem;
+      cursor:pointer;color:var(--text2);">
+      Fermer
+    </button>
+  </div>
+</div>
+
+<!-- ══ MODAL: CRÉER UNE ÉQUIPE ══ -->
+<div class="modal-bd" id="modal-shift">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;">Créer une équipe</div>
+        <button onclick="closeModal('modal-shift')" style="background:none;border:none;font-size:1.1rem;
+          cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;">✕</button>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Nom de l'équipe <span class="fl-req">*</span></label>
+        <input class="fi" id="sh-name" placeholder="Ex : Équipe A, Nuit, Week-end…"/>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Horaire lié</label>
+        <select class="fsel" id="sh-schedule">
+          <option value="">— Aucun horaire —</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Description</label>
+        <input class="fi" id="sh-desc" placeholder="Description optionnelle…"/>
+      </div>
+
+      <div id="sh-error" class="alert-error" style="display:none;">
+        <span>⚠</span><span id="sh-error-msg">Erreur.</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost-sm" onclick="closeModal('modal-shift')">Annuler</button>
+      <button class="btn-blue" id="btn-sh-save" onclick="saveShift()">
+        <span id="btn-sh-label">Créer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: DÉTAIL HORAIRE ══ -->
+<div class="modal-bd" id="modal-sc-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <div id="det-sc-color-dot" style="width:14px;height:14px;border-radius:50%;flex-shrink:0;background:#1d4ed8;"></div>
+        <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;flex:1;" id="det-sc-name">—</div>
+        <button onclick="closeModal('modal-sc-detail')" style="background:none;border:none;font-size:1.1rem;
+          cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;">✕</button>
+      </div>
+      <div id="det-sc-rows"></div>
+      <div style="margin-top:14px;">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;
+          letter-spacing:1px;margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">Jours travaillés</div>
+        <div class="sc-days" id="det-sc-days"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn-ghost-sm" style="color:var(--red);border-color:var(--red-border);"
+        onclick="deleteSchedule()">Supprimer</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost-sm" onclick="closeModal('modal-sc-detail')">Fermer</button>
+        <button class="btn-blue" onclick="editSchedule()">Modifier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script src="lc-auth.js"></script>
+<script>
+// ══ CONFIG ══
+const SB_URL = window.LC_CONFIG.SUPABASE_URL;
+const SB_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const H = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+let me = null;
+
+async function sbGet(t, q=''){
+  try{
+    const r = await fetch(`${SB_URL}/rest/v1/${t}?${q}`,{headers:H});
+    if(!r.ok) return [];
+    return r.json();
+  }catch{ return []; }
+}
+async function sbInsert(t, d){
+  const r = await fetch(`${SB_URL}/rest/v1/${t}`,{
+    method:'POST', headers:{...H,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(d)
+  });
+  return r.json();
+}
+async function sbDelete(t, q){
+  return (await fetch(`${SB_URL}/rest/v1/${t}?${q}`,{
+    method:'DELETE', headers:{...H, Prefer:'return=representation'}
+  })).json();
+}
+
+// ══ STATE ══
+let currentTab  = 'schedules';
+let currentPill = 'bio';
+let allSchedules  = [];
+let allShifts     = [];
+let allEmployees  = [];
+let selectedColor = '#1d4ed8';
+let selectedDays  = new Set([1,2,3,4,5]);
+let detailSchedule = null;
+let editMode = false;
+
+const DAY_NAMES = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+
+// ══ TAB / PILL ══
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tab-schedules').classList.toggle('active', tab==='schedules');
+  document.getElementById('tab-shifts').classList.toggle('active', tab==='shifts');
+  document.getElementById('panel-schedules').style.display = tab==='schedules' ? '' : 'none';
+  document.getElementById('panel-shifts').style.display    = tab==='shifts' ? '' : 'none';
+  document.getElementById('action-label').textContent = tab==='schedules' ? 'Créer un horaire' : 'Créer une équipe';
+}
+
+function switchPill(pill){
+  currentPill = pill;
+  document.getElementById('pill-bio').classList.toggle('active', pill==='bio');
+  document.getElementById('pill-visitor').classList.toggle('active', pill==='visitor');
+  reload();
+}
+
+function reload(){
+  loadSchedules();
+  loadShifts();
+}
+
+// ══ IMPORT MENU ══
+function toggleImportMenu(){
+  document.getElementById('import-menu').classList.toggle('open');
+}
+function closeImportMenu(){
+  document.getElementById('import-menu').classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.import-wrap')) closeImportMenu();
+});
+
+// ══ SCHEDULES ══
+async function loadSchedules(){
+  document.getElementById('schedules-loading').style.display = 'flex';
+  document.getElementById('schedules-empty').style.display   = 'none';
+  document.getElementById('schedules-grid').style.display    = 'none';
+
+  allSchedules = await LC.sbGet('schedules','order=name.asc') || [];
+
+  document.getElementById('schedules-loading').style.display = 'none';
+
+  if(allSchedules.length === 0){
+    document.getElementById('schedules-empty').style.display = 'flex';
+  } else {
+    document.getElementById('schedules-grid').style.display = 'grid';
+    renderSchedules();
+  }
+}
+
+function renderSchedules(){
+  const grid = document.getElementById('schedules-grid');
+  grid.innerHTML = allSchedules.map(s => {
+    const color = s.color || '#1d4ed8';
+    const days = s.work_days || [1,2,3,4,5];
+    const daysHtml = [1,2,3,4,5,6,0].map(d =>
+      `<div class="sc-day ${days.includes(d)?'active':''}" style="${days.includes(d)?'background:'+color+';border-color:'+color+';':''}">${DAY_NAMES[d]}</div>`
+    ).join('');
+    const startTime = s.start_time||'08:00';
+    const endTime   = s.end_time||'17:00';
+    const hours = calcHours(startTime, endTime);
+    return `
+    <div class="schedule-card" onclick="openScDetail('${s.id}')">
+      <div class="sc-header">
+        <div>
+          <div class="sc-title" style="color:${color}">${s.name||'—'}</div>
+          <div class="sc-type">${typeLabel(s.type)}</div>
+        </div>
+        <span class="badge badge-blue">${hours}h/j</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-info">🕐 ${startTime} — ${endTime}</div>
+        <div class="sc-info">⏱ Tolérance : +${s.late_tolerance||15}min / -${s.early_tolerance||10}min</div>
+        <div class="sc-days">${daysHtml}</div>
+      </div>
+      <div class="sc-footer">
+        <span class="badge badge-green">● Actif</span>
+        <span style="font-size:0.75rem;color:var(--text3);">
+          ${new Date(s.created_at||Date.now()).toLocaleDateString('fr-FR')}
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Also populate shift schedule selector
+  const sel = document.getElementById('sh-schedule');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Aucun horaire —</option>' +
+    allSchedules.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  sel.value = cur;
+}
+
+function typeLabel(t){
+  if(t==='flexible') return 'Flexible';
+  if(t==='open') return 'Ouvert';
+  return 'Fixe';
+}
+
+function calcHours(start, end){
+  const [sh,sm]=start.split(':').map(Number);
+  const [eh,em]=end.split(':').map(Number);
+  const mins = (eh*60+em)-(sh*60+sm);
+  return mins>0 ? (mins/60).toFixed(1).replace('.0','') : '—';
+}
+
+// ══ SHIFTS ══
+async function loadShifts(){
+  document.getElementById('shifts-loading').style.display = 'flex';
+  document.getElementById('shifts-empty').style.display   = 'none';
+  document.getElementById('shifts-table').style.display   = 'none';
+
+  allShifts = await sbGet('shifts','order=name.asc') || [];
+
+  document.getElementById('shifts-loading').style.display = 'none';
+
+  if(allShifts.length === 0){
+    document.getElementById('shifts-empty').style.display = 'flex';
+  } else {
+    document.getElementById('shifts-table').style.display = 'block';
+    renderShifts();
+  }
+}
+
+function renderShifts(){
+  const tbody = document.getElementById('shifts-tbody');
+  tbody.innerHTML = allShifts.map(sh=>{
+    const sc = allSchedules.find(s=>s.id===sh.schedule_id);
+    return `
+    <tr>
+      <td style="font-weight:500;">${sh.name||'—'}</td>
+      <td>${sc ? `<span style="color:${sc.color||'#1d4ed8'};font-weight:500;">${sc.name}</span>` : '<span style="color:var(--text3);">—</span>'}</td>
+      <td><span class="badge badge-blue">${sh.member_count||0} membre(s)</span></td>
+      <td><span class="badge badge-green">● Actif</span></td>
+      <td style="text-align:right;">
+        <button onclick="deleteShiftById('${sh.id}')"
+          style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.85rem;padding:4px 8px;border-radius:6px;"
+          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ DAY PICKER ══
+document.getElementById('day-picker').addEventListener('click', e=>{
+  const day = e.target.closest('.dp-day');
+  if(!day) return;
+  const d = parseInt(day.dataset.day);
+  if(selectedDays.has(d)) selectedDays.delete(d);
+  else selectedDays.add(d);
+  day.classList.toggle('sel', selectedDays.has(d));
+});
+
+// ══ COLOR PICKER ══
+document.getElementById('color-picker').addEventListener('click', e=>{
+  const sw = e.target.closest('.cp-swatch');
+  if(!sw) return;
+  document.querySelectorAll('.cp-swatch').forEach(s=>s.classList.remove('sel'));
+  sw.classList.add('sel');
+  selectedColor = sw.dataset.color;
+});
+
+// ══ CREATE SCHEDULE: 2-STEP FLOW ══
+let scAssignedGroups = []; // [{id,code}]
+let scAssignedEmps   = []; // [{id,name}]
+let allGroups = [];
+
+function openCreateModal(){
+  if(currentTab === 'shifts'){ openShiftModal(); return; }
+  editMode = false;
+  detailSchedule = null;
+  document.getElementById('sc-name').value = '';
+  document.getElementById('sc-repeat-n').value = '1';
+  document.getElementById('sc-repeat-unit').value = 'weekly';
+  document.getElementById('sc-start-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('sc-end-none').checked = true;
+  document.getElementById('sc-end-date-wrap').style.display = 'none';
+  document.getElementById('sc-start').value = '08:00';
+  document.getElementById('sc-end').value   = '17:00';
+  document.getElementById('sc-late-tol').value  = '15';
+  document.getElementById('sc-early-tol').value = '10';
+  document.getElementById('sc-error').style.display = 'none';
+  // Reset days
+  selectedDays = new Set([1,2,3,4,5]);
+  document.querySelectorAll('.dp-day').forEach(d=>{
+    d.classList.toggle('sel', selectedDays.has(parseInt(d.dataset.day)));
+  });
+  // Reset color
+  selectedColor = '#1d4ed8';
+  document.querySelectorAll('.cp-swatch').forEach(s=>s.classList.remove('sel'));
+  document.querySelector('.cp-swatch[data-color="#1d4ed8"]').classList.add('sel');
+  document.getElementById('modal-schedule').classList.add('open');
+}
+
+function scToggleEndDate(){
+  const mode = document.querySelector('[name="sc-end-mode"]:checked')?.value;
+  document.getElementById('sc-end-date-wrap').style.display = mode==='date' ? 'block' : 'none';
+}
+
+function scStep1Next(){
+  const name = document.getElementById('sc-name').value.trim();
+  const errEl = document.getElementById('sc-error');
+  if(!name){ document.getElementById('sc-error-msg').textContent='Le nom de l\'horaire est obligatoire.'; errEl.style.display='flex'; return; }
+  errEl.style.display='none';
+
+  // Build repeat label
+  const n = document.getElementById('sc-repeat-n').value;
+  const unit = document.getElementById('sc-repeat-unit');
+  const unitLabel = unit.options[unit.selectedIndex].text;
+  const startDate = document.getElementById('sc-start-date').value;
+  const start = document.getElementById('sc-start').value;
+  const end   = document.getElementById('sc-end').value;
+
+  // Fill step 2 recap
+  document.getElementById('s2-sc-name').textContent   = name;
+  document.getElementById('s2-sc-repeat').textContent = `${n} × ${unitLabel}`;
+  document.getElementById('s2-sc-time').textContent   = `${start} — ${end}`;
+  document.getElementById('s2-sc-startdate').textContent = startDate || '—';
+
+  // Reset assignment
+  scAssignedGroups = [];
+  scAssignedEmps   = [];
+  document.getElementById('sc-group-chips').innerHTML = '';
+  document.getElementById('sc-emp-chips').innerHTML   = '';
+  document.getElementById('sc-emp-search').value = '';
+  document.getElementById('sc-error-2').style.display = 'none';
+  document.getElementById('btn-sc-label').textContent = 'Créer l\'horaire';
+  document.getElementById('btn-sc-save').disabled = false;
+
+  // Render group toggle buttons
+  scRenderGroupSelect();
+  scRenderEmpDD('');
+
+  closeModal('modal-schedule');
+  document.getElementById('modal-schedule-step2').classList.add('open');
+}
+
+function scGoBack(){
+  closeModal('modal-schedule-step2');
+  document.getElementById('modal-schedule').classList.add('open');
+}
+
+// Group toggle pills
+async function scRenderGroupSelect(){
+  if(allGroups.length === 0) allGroups = await sbGet('employee_groups','order=code.asc') || [];
+  const wrap = document.getElementById('sc-group-select');
+  if(!allGroups.length){ wrap.innerHTML='<span style="color:var(--text3);font-size:0.82rem;">Aucun groupe disponible</span>'; return; }
+  const sel = new Set(scAssignedGroups.map(g=>g.id));
+  wrap.innerHTML = allGroups.map(g=>`
+    <button onclick="scToggleGroup('${g.id}','${(g.code||'').replace(/'/g,"\\'")}')"
+      style="padding:6px 14px;border-radius:20px;font-family:'Instrument Sans',sans-serif;font-size:0.8rem;
+      cursor:pointer;border:1.5px solid ${sel.has(g.id)?'var(--blue)':'var(--border)'};
+      background:${sel.has(g.id)?'var(--blue-bg)':'var(--surface)'};
+      color:${sel.has(g.id)?'var(--blue)':'var(--text)'};
+      font-weight:${sel.has(g.id)?'600':'400'};transition:all 0.15s;" id="scg-${g.id}">
+      ${g.code}
+    </button>`).join('');
+}
+
+function scToggleGroup(id, code){
+  const idx = scAssignedGroups.findIndex(g=>g.id===id);
+  if(idx>-1) scAssignedGroups.splice(idx,1);
+  else scAssignedGroups.push({id,code});
+  scRenderGroupSelect();
+  // Update chips
+  const chips = document.getElementById('sc-group-chips');
+  chips.innerHTML = scAssignedGroups.map(g=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-bg);
+      border:1px solid var(--blue-border);border-radius:20px;padding:3px 10px;font-size:0.78rem;color:var(--blue);">
+      ${g.code}
+      <button onclick="scToggleGroup('${g.id}','${g.code}')"
+        style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.8rem;line-height:1;">✕</button>
+    </span>`).join('');
+}
+
+// Employee dropdown for step 2
+function scFilterEmps(q){
+  scRenderEmpDD(q);
+  document.getElementById('sc-emp-dd').style.display='block';
+}
+function scRenderEmpDD(q){
+  const dd = document.getElementById('sc-emp-dd');
+  const sel = new Set(scAssignedEmps.map(e=>e.id));
+  const matches = allEmployees.filter(e=>
+    !q || (e.full_name||'').toLowerCase().includes(q.toLowerCase())
+  ).slice(0,25);
+  if(!matches.length){ dd.innerHTML='<div style="padding:10px 14px;color:var(--text3);font-size:0.85rem;">Aucun résultat</div>'; return; }
+  dd.innerHTML = matches.map(e=>`
+    <div onmousedown="scToggleEmp('${e.id}','${(e.full_name||'').replace(/'/g,"\\'")}')"
+      style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;
+      font-size:0.875rem;border-bottom:1px solid var(--border);
+      background:${sel.has(e.id)?'var(--blue-bg)':'var(--surface)'};transition:background 0.1s;"
+      onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${sel.has(e.id)?'var(--blue-bg)':'var(--surface)'}'">
+      <span style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${sel.has(e.id)?'#1d4ed8':'var(--border)'};
+        background:${sel.has(e.id)?'#1d4ed8':'transparent'};display:inline-flex;align-items:center;
+        justify-content:center;font-size:0.7rem;color:#fff;flex-shrink:0;">${sel.has(e.id)?'✓':''}</span>
+      ${e.full_name||'—'}
+    </div>`).join('');
+}
+function scToggleEmp(id, name){
+  const idx = scAssignedEmps.findIndex(e=>e.id===id);
+  if(idx>-1) scAssignedEmps.splice(idx,1);
+  else scAssignedEmps.push({id,name});
+  scRenderEmpDD(document.getElementById('sc-emp-search').value);
+  document.getElementById('sc-emp-chips').innerHTML = scAssignedEmps.map(e=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg);
+      border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.78rem;color:var(--text);">
+      ${e.name}
+      <button onclick="scToggleEmp('${e.id}','${e.name.replace(/'/g,"\\'")}')"
+        style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.8rem;line-height:1;">✕</button>
+    </span>`).join('');
+}
+
+async function saveSchedule(){
+  const name      = document.getElementById('sc-name').value.trim();
+  const repeatN   = parseInt(document.getElementById('sc-repeat-n').value)||1;
+  const repeatUnit= document.getElementById('sc-repeat-unit').value;
+  const startDate = document.getElementById('sc-start-date').value;
+  const endMode   = document.querySelector('[name="sc-end-mode"]:checked')?.value;
+  const endDate   = endMode==='date' ? document.getElementById('sc-end-date').value : null;
+  const start     = document.getElementById('sc-start').value;
+  const end       = document.getElementById('sc-end').value;
+  const lateTol   = parseInt(document.getElementById('sc-late-tol').value)||15;
+  const earlyTol  = parseInt(document.getElementById('sc-early-tol').value)||10;
+  const errEl     = document.getElementById('sc-error-2');
+
+  document.getElementById('btn-sc-label').innerHTML='<span class="spinner"></span>';
+  document.getElementById('btn-sc-save').disabled=true;
+
+  const payload = {
+    name, repeat_n:repeatN, repeat_unit:repeatUnit,
+    start_date:startDate||null, end_date:endDate,
+    start_time:start, end_time:end,
+    late_tolerance:lateTol, early_tolerance:earlyTol,
+    color:selectedColor, work_days:[...selectedDays],
+    company_id:(me && me.company_id)||null
+  };
+
+  const result = await LC.sbInsert('schedules', payload);
+
+  if(result&&(result[0]?.id||result.id)){
+    // Fill done modal
+    const unitLabel = document.getElementById('sc-repeat-unit');
+    document.getElementById('done-sc-name').textContent   = name;
+    document.getElementById('done-sc-repeat').textContent = `${repeatN} × ${unitLabel.options[unitLabel.selectedIndex].text}`;
+    document.getElementById('done-sc-time').textContent   = `${start} — ${end}`;
+    const daysArr = [...selectedDays].sort();
+    document.getElementById('done-sc-days').textContent   = daysArr.map(d=>DAY_NAMES[d]).join(', ');
+    closeModal('modal-schedule-step2');
+    document.getElementById('modal-schedule-done').classList.add('open');
+  } else {
+    document.getElementById('sc-error-msg-2').textContent='Erreur : '+(result?.message||result?.error||JSON.stringify(result));
+    errEl.style.display='flex';
+    document.getElementById('btn-sc-label').textContent='Créer l\'horaire';
+    document.getElementById('btn-sc-save').disabled=false;
+  }
+}
+
+// ══ DETAIL SCHEDULE ══
+function openScDetail(id){
+  detailSchedule = allSchedules.find(s=>s.id===id);
+  if(!detailSchedule) return;
+  const s = detailSchedule;
+  const color = s.color||'#1d4ed8';
+  document.getElementById('det-sc-color-dot').style.background = color;
+  document.getElementById('det-sc-name').textContent = s.name;
+  const rows=[
+    ['Type', typeLabel(s.type)],
+    ['Début', s.start_time||'—'],
+    ['Fin', s.end_time||'—'],
+    ['Durée', calcHours(s.start_time||'08:00',s.end_time||'17:00')+'h'],
+    ['Tolérance retard', (s.late_tolerance||15)+' min'],
+    ['Tolérance départ anticipé', (s.early_tolerance||10)+' min'],
+    ['Créé le', new Date(s.created_at).toLocaleDateString('fr-FR')],
+  ];
+  document.getElementById('det-sc-rows').innerHTML = rows.map(([k,v])=>`
+    <div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('');
+  const days = s.work_days||[1,2,3,4,5];
+  document.getElementById('det-sc-days').innerHTML = [1,2,3,4,5,6,0].map(d=>`
+    <div class="sc-day ${days.includes(d)?'active':''}"
+      style="${days.includes(d)?'background:'+color+';border-color:'+color+';':''}">${DAY_NAMES[d]}</div>`).join('');
+  document.getElementById('modal-sc-detail').classList.add('open');
+}
+
+async function deleteSchedule(){
+  if(!detailSchedule) return;
+  if(!confirm(`Supprimer l'horaire "${detailSchedule.name}" ?`)) return;
+  await LC.sbDelete('schedules',`id=eq.${detailSchedule.id}`);
+  closeModal('modal-sc-detail');
+  await loadSchedules();
+}
+
+function editSchedule(){
+  if(!detailSchedule) return;
+  closeModal('modal-sc-detail');
+  const s = detailSchedule;
+  editMode=true;
+  document.getElementById('sc-name').value         = s.name||'';
+  document.getElementById('sc-repeat-n').value     = s.repeat_n||1;
+  document.getElementById('sc-repeat-unit').value  = s.repeat_unit||'weekly';
+  document.getElementById('sc-start-date').value   = s.start_date||new Date().toISOString().split('T')[0];
+  if(s.end_date){
+    document.getElementById('sc-end-by').checked = true;
+    document.getElementById('sc-end-date').value = s.end_date;
+    document.getElementById('sc-end-date-wrap').style.display='block';
+  } else {
+    document.getElementById('sc-end-none').checked = true;
+    document.getElementById('sc-end-date-wrap').style.display='none';
+  }
+  document.getElementById('sc-start').value        = s.start_time||'08:00';
+  document.getElementById('sc-end').value          = s.end_time||'17:00';
+  document.getElementById('sc-late-tol').value     = s.late_tolerance||15;
+  document.getElementById('sc-early-tol').value    = s.early_tolerance||10;
+  document.getElementById('sc-error').style.display='none';
+  selectedDays = new Set(s.work_days||[1,2,3,4,5]);
+  document.querySelectorAll('.dp-day').forEach(d=>{
+    d.classList.toggle('sel', selectedDays.has(parseInt(d.dataset.day)));
+  });
+  selectedColor = s.color||'#1d4ed8';
+  document.querySelectorAll('.cp-swatch').forEach(sw=>{
+    sw.classList.toggle('sel', sw.dataset.color===selectedColor);
+  });
+  document.getElementById('modal-schedule').classList.add('open');
+}
+
+// ══ SHIFT MODAL ══
+function openShiftModal(){
+  document.getElementById('sh-name').value = '';
+  document.getElementById('sh-desc').value = '';
+  document.getElementById('sh-error').style.display='none';
+  document.getElementById('btn-sh-label').textContent='Créer';
+  document.getElementById('btn-sh-save').disabled=false;
+  // Populate schedule select
+  const sel = document.getElementById('sh-schedule');
+  sel.innerHTML = '<option value="">— Aucun horaire —</option>' +
+    allSchedules.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('modal-shift').classList.add('open');
+}
+
+async function saveShift(){
+  const name = document.getElementById('sh-name').value.trim();
+  const scId = document.getElementById('sh-schedule').value;
+  const desc = document.getElementById('sh-desc').value.trim();
+  const errEl= document.getElementById('sh-error');
+  if(!name){ document.getElementById('sh-error-msg').textContent='Le nom est obligatoire.'; errEl.style.display='flex'; return; }
+  errEl.style.display='none';
+  document.getElementById('btn-sh-label').innerHTML='<span class="spinner"></span>';
+  document.getElementById('btn-sh-save').disabled=true;
+
+  const result = await sbInsert('shifts',{
+    name, schedule_id:scId||null, description:desc||null, member_count:0
+  });
+  if(result&&(result[0]?.id||result.id)){
+    closeModal('modal-shift');
+    await loadShifts();
+  } else {
+    document.getElementById('sh-error-msg').textContent='Erreur : '+(result?.message||result?.error||JSON.stringify(result));
+    errEl.style.display='flex';
+    document.getElementById('btn-sh-label').textContent='Créer';
+    document.getElementById('btn-sh-save').disabled=false;
+  }
+}
+
+async function deleteShiftById(id){
+  if(!confirm('Supprimer cette équipe ?')) return;
+  await sbDelete('shifts',`id=eq.${id}`);
+  await loadShifts();
+}
+
+// ══ MODAL HELPERS ══
+function closeModal(id){ document.getElementById(id)?.classList.remove('open'); }
+
+// ══ INIT ══
+(async()=>{
+  me = await LC.requireAuth({ roles:['patron','rh'], fallback:'index.html' });
+  if(!me) return;
+  loadSchedules();
+  loadShifts();
+  allEmployees = await sbGet('employees','order=full_name.asc&select=id,full_name') || [];
+})();
+</script>
+</body>
+</html>

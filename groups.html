@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Groupes d'utilisateurs</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f4f7;--surface:#fff;--border:#e4e7ec;
+  --text:#101828;--text2:#667085;--text3:#98a2b3;
+  --green:#12b76a;--green-bg:#ecfdf3;--green-border:#a9efc5;--green-dark:#027a48;
+  --red:#f04438;--red-bg:#fef3f2;--red-border:#fecdca;
+  --amber:#f79009;--amber-bg:#fffaeb;--amber-border:#fed0aa;--amber-dark:#b54708;
+  --blue:#2e90fa;--blue-bg:#eff8ff;--blue-border:#b2ddff;
+  --radius:10px;--shadow:0 1px 3px rgba(16,24,40,0.1);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:6px 8px;
+  border-radius:6px;display:flex;align-items:center;gap:4px;
+  font-family:'Instrument Sans',sans-serif;font-size:0.85rem;}
+.back-btn:hover{background:var(--bg);}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);}
+.icon-btn:hover{background:var(--bg);}
+
+/* CONTAINER */
+.container{max-width:900px;margin:0 auto;padding:16px;}
+
+/* ACTION ROW */
+.action-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.btn-create{display:flex;align-items:center;gap:6px;background:#1d4ed8;color:#fff;
+  border:none;border-radius:8px;padding:9px 16px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:600;cursor:pointer;transition:background 0.15s;white-space:nowrap;}
+.btn-create:hover{background:#1e40af;}
+.btn-import{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;
+  font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:500;
+  cursor:pointer;color:var(--text);transition:all 0.15s;white-space:nowrap;}
+.btn-import:hover{background:var(--bg);}
+.search-wrap{position:relative;flex:1;min-width:160px;}
+.search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:8px;padding:9px 14px 9px 36px;font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;color:var(--text);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--blue);}
+.search-input::placeholder{color:var(--text3);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  color:var(--text3);font-size:0.9rem;pointer-events:none;}
+
+/* BULK BAR */
+.bulk-bar{display:none;position:sticky;top:52px;z-index:90;background:#1d4ed8;
+  padding:10px 16px;align-items:center;gap:12px;color:#fff;font-size:0.875rem;}
+.bulk-bar.visible{display:flex;}
+.bulk-count{font-weight:600;}
+.bulk-actions{display:flex;gap:8px;margin-left:auto;}
+.bulk-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
+  border-radius:6px;padding:5px 12px;color:#fff;font-family:'Instrument Sans',sans-serif;
+  font-size:0.8rem;cursor:pointer;}
+.bulk-btn:hover{background:rgba(255,255,255,0.25);}
+.bulk-btn.danger{background:rgba(231,76,60,0.3);border-color:rgba(231,76,60,0.5);}
+
+/* TABLE CARD */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f9fafb;border-bottom:1px solid var(--border);}
+th{padding:10px 14px;text-align:left;font-size:0.75rem;font-weight:600;color:var(--text2);
+  white-space:nowrap;user-select:none;}
+th.sortable{cursor:pointer;}
+th.sortable:hover{color:var(--text);}
+.th-check{width:40px;}
+.th-menu{width:44px;}
+td{padding:11px 14px;border-top:1px solid var(--border);font-size:0.855rem;vertical-align:middle;}
+tr:hover td{background:#f9fafb;}
+tr.selected td{background:#eff8ff;}
+.cb{width:16px;height:16px;cursor:pointer;accent-color:var(--blue);}
+
+/* ROW ARROW */
+.row-arrow{color:var(--text3);font-size:1rem;cursor:pointer;padding:4px 8px;
+  border-radius:6px;display:inline-flex;align-items:center;}
+.row-arrow:hover{background:var(--bg);color:var(--text);}
+
+/* KEBAB */
+.kebab-wrap{position:relative;display:inline-block;}
+.kebab-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.1rem;
+  padding:4px 8px;border-radius:6px;line-height:1;}
+.kebab-btn:hover{background:var(--bg);color:var(--text);}
+.kebab-menu{display:none;position:absolute;right:0;top:110%;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);
+  min-width:160px;z-index:200;overflow:hidden;}
+.kebab-menu.open{display:block;}
+.km-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:0.85rem;
+  color:var(--text);cursor:pointer;border:none;background:none;width:100%;text-align:left;
+  font-family:'Instrument Sans',sans-serif;}
+.km-item:hover{background:var(--bg);}
+.km-item.danger{color:var(--red);}
+
+/* BADGE COUNT */
+.badge-count{display:inline-flex;align-items:center;justify-content:center;
+  background:var(--blue-bg);color:#1d4ed8;border:1px solid var(--blue-border);
+  border-radius:20px;font-size:0.7rem;font-weight:600;padding:1px 8px;white-space:nowrap;}
+
+/* DEFAULT BADGE */
+.badge-default{background:#f9fafb;border:1px solid var(--border);border-radius:20px;
+  font-size:0.7rem;color:var(--text3);padding:1px 8px;white-space:nowrap;}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+.per-page{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text2);}
+.per-page-select{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:4px 8px;font-family:'Instrument Sans',sans-serif;font-size:0.82rem;color:var(--text);outline:none;}
+.page-info{font-size:0.82rem;color:var(--text2);}
+.page-nav{display:flex;align-items:center;gap:4px;}
+.page-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;color:var(--text2);transition:all 0.15s;}
+.page-btn:hover:not(:disabled){background:var(--bg);color:var(--text);}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.page-input{width:48px;text-align:center;border:1px solid var(--border);border-radius:6px;
+  padding:4px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:var(--text);outline:none;}
+.page-total{font-size:0.82rem;color:var(--text2);}
+
+/* EMPTY */
+.empty-row td{text-align:center;padding:48px;color:var(--text3);}
+.empty-icon{font-size:2rem;margin-bottom:8px;}
+
+/* MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);z-index:300;align-items:flex-end;justify-content:center;}
+.modal-bd.open{display:flex;}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;
+  width:100%;max-width:500px;animation:slideUp 0.25s ease;max-height:92vh;overflow:hidden;
+  display:flex;flex-direction:column;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px 20px;}
+.modal-footer{padding:12px 20px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;}
+
+/* FORM */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:6px;}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.9rem;outline:none;}
+.fi:focus{border-color:var(--blue);background:var(--surface);}
+textarea.fi{resize:vertical;min-height:80px;}
+
+/* UTILS */
+.btn-primary{padding:10px 24px;border-radius:8px;border:none;background:#1d4ed8;
+  color:#fff;font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;}
+.btn-primary:hover{background:#1e40af;}
+.btn-ghost{padding:10px 18px;border-radius:8px;border:1.5px solid var(--border);
+  background:transparent;color:var(--text2);font-family:'Instrument Sans',sans-serif;
+  font-size:0.875rem;font-weight:500;cursor:pointer;}
+.btn-ghost:hover{background:var(--bg);}
+.alert{padding:10px 14px;border-radius:8px;font-size:0.82rem;border:1px solid;
+  margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;}
+.alert-error{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* DETAIL SHEET */
+.detail-row{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border);font-size:0.875rem;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{color:var(--text2);}
+.detail-val{font-weight:500;text-align:right;}
+
+/* MEMBERS CHIPS */
+.member-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg);
+  border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.78rem;color:var(--text);}
+.chip-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.8rem;
+  padding:0 2px;line-height:1;}
+.chip-rm:hover{color:var(--red);}
+
+/* MEMBERS SELECT */
+.member-select-wrap{position:relative;}
+.member-select-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;font-family:'Instrument Sans',sans-serif;font-size:0.9rem;color:var(--text);outline:none;cursor:pointer;}
+.member-select-input:focus{border-color:var(--blue);background:var(--surface);}
+.member-dropdown{display:none;position:absolute;left:0;right:0;top:calc(100%+4px);background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  z-index:400;max-height:180px;overflow-y:auto;}
+.member-dropdown.open{display:block;}
+.md-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;
+  font-size:0.875rem;border-bottom:1px solid var(--border);}
+.md-item:last-child{border-bottom:none;}
+.md-item:hover{background:var(--bg);}
+.md-item.selected{background:var(--blue-bg);}
+.md-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;}
+.md-item.selected .md-check{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}
+
+@media(min-width:768px){
+  .modal-bd{align-items:center;}
+  .modal{border-radius:16px;max-width:480px;}
+  .modal-handle{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="back-btn" onclick="window.location.href='index.html'">← Tableau de bord</button>
+  </div>
+  <div style="font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;position:absolute;left:50%;transform:translateX(-50%);">
+    Groupes d'utilisateurs
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" title="Actualiser" onclick="loadGroups()">↻</button>
+  </div>
+</div>
+
+<!-- BULK ACTION BAR -->
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-count" id="bulk-count">0 sélectionné(s)</span>
+  <div class="bulk-actions">
+    <button class="bulk-btn danger" onclick="bulkDelete()">Supprimer</button>
+  </div>
+  <button class="bulk-btn" onclick="clearSelection()" style="margin-left:8px;">✕</button>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- ACTION ROW (matches screenshot: Create + Import + Search inline) -->
+  <div class="action-row">
+    <button class="btn-create" onclick="openCreateModal()">
+      <span style="font-size:1rem;line-height:1;">+</span> Créer un groupe
+    </button>
+    <button class="btn-import" onclick="alert('Import — bientôt disponible')">
+      <span style="font-size:0.9rem;">⬇</span> Importer
+    </button>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="search-input"
+        placeholder="Rechercher…" oninput="filterGroups(this.value)"/>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-check">
+              <input type="checkbox" class="cb" id="cb-all" onchange="toggleAll(this)"/>
+            </th>
+            <th class="sortable" onclick="sortBy('code')">Code du groupe ↕</th>
+            <th class="sortable" onclick="sortBy('description')">Description ↕</th>
+            <th style="width:60px;text-align:center;">Membres</th>
+            <th class="th-menu"></th>
+          </tr>
+        </thead>
+        <tbody id="groups-tbody">
+          <tr class="empty-row">
+            <td colspan="5">
+              <div class="empty-icon">⏳</div>
+              <div>Chargement…</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination">
+      <div class="per-page">
+        <select class="per-page-select" id="per-page" onchange="changePP(this.value)">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+        </select>
+        <span>éléments par page</span>
+      </div>
+      <div class="page-info" id="page-info">—</div>
+      <div class="page-nav">
+        <button class="page-btn" id="btn-first" onclick="goPage(1)">⏮</button>
+        <button class="page-btn" id="btn-prev"  onclick="goPage(currentPage-1)">◀</button>
+        <input class="page-input" type="number" id="page-input" min="1"
+          onchange="goPage(parseInt(this.value))" value="1"/>
+        <span class="page-total" id="page-total">/ 1</span>
+        <button class="page-btn" id="btn-next"  onclick="goPage(currentPage+1)">▶</button>
+        <button class="page-btn" id="btn-last"  onclick="goPage(totalPages)">⏭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CRÉER UN GROUPE — STEP 1 ══ -->
+<div class="modal-bd" id="modal-create">
+  <div class="modal" style="padding:0;overflow:hidden;">
+    <div class="modal-handle" style="margin:12px auto 0;"></div>
+
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;">
+      <div style="font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;">Ajouter un groupe d'utilisateurs</div>
+      <button onclick="closeModal('modal-create')" style="background:none;border:none;font-size:1.1rem;
+        cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;line-height:1;">✕</button>
+    </div>
+
+    <!-- BREADCRUMB (NCheck style: "Détails du groupe > Ajouter des utilisateurs" then "› Enregistrer appareil") -->
+    <div style="padding:0 20px 14px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+        <span style="color:#1d4ed8;font-size:0.875rem;font-weight:600;cursor:pointer;" onclick="cgGoStep(1)">Détails du groupe</span>
+        <span style="color:var(--text3);font-size:0.8rem;">›</span>
+        <span id="cg-crumb-2" style="color:var(--text3);font-size:0.875rem;cursor:pointer;" onclick="cgGoStep(2)">Ajouter des utilisateurs</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="color:var(--text3);font-size:0.8rem;">›</span>
+        <span id="cg-crumb-3" style="color:var(--text3);font-size:0.875rem;cursor:pointer;" onclick="cgGoStep(3)">Enregistrer un appareil partagé</span>
+      </div>
+    </div>
+
+    <!-- STEP 1 BODY -->
+    <div id="cg-step-1" style="overflow-y:auto;max-height:calc(90vh - 200px);padding:16px 20px 20px;">
+
+      <!-- GROUP INFORMATION CARD (white card with border like screenshot) -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:18px;">
+        <div style="font-size:0.9rem;font-weight:600;margin-bottom:14px;color:var(--text);">Informations du groupe</div>
+
+        <div class="fg">
+          <label class="fl" style="color:var(--text);font-size:0.875rem;text-transform:none;letter-spacing:0;font-weight:500;margin-bottom:6px;">
+            Code du groupe <span style="color:var(--red);">*</span>
+          </label>
+          <input class="fi" id="cg-code" placeholder="Code du groupe"
+            oninput="this.value=this.value.toUpperCase()"
+            style="background:var(--surface);"/>
+        </div>
+
+        <div class="fg" style="margin-bottom:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <label class="fl" style="color:var(--text);font-size:0.875rem;text-transform:none;letter-spacing:0;font-weight:500;margin:0;">
+              Description <span style="color:var(--red);">*</span>
+            </label>
+            <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--text3);
+              display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;
+              color:var(--text3);cursor:help;flex-shrink:0;"
+              title="Décrivez brièvement la fonction de ce groupe.">?</span>
+          </div>
+          <input class="fi" id="cg-desc" placeholder="Description"
+            style="background:var(--surface);"/>
+        </div>
+      </div>
+
+      <!-- PROFILE PHOTO (landscape, group silhouette) -->
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:0.875rem;font-weight:500;color:var(--text);">Photo de profil :</span>
+          <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--text3);
+            display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;
+            color:var(--text3);cursor:help;flex-shrink:0;"
+            title="Photo optionnelle représentant ce groupe.">?</span>
+        </div>
+
+        <!-- Landscape placeholder with group silhouette (3 people) -->
+        <div id="cg-photo-preview" style="width:100%;height:160px;border-radius:8px;
+          background:#d0d5dd;overflow:hidden;
+          display:flex;align-items:center;justify-content:center;margin-bottom:10px;position:relative;">
+          <img id="cg-photo-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;"/>
+          <!-- Group SVG: 3-person silhouette like the NCheck screenshot -->
+          <svg id="cg-photo-svg" width="140" height="90" viewBox="0 0 140 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:0.4;">
+            <!-- Left person -->
+            <circle cx="40" cy="28" r="14" fill="#98a2b3"/>
+            <path d="M10 80c0-16.569 13.431-30 30-30s30 13.431 30 30" fill="#98a2b3"/>
+            <!-- Right person -->
+            <circle cx="100" cy="28" r="14" fill="#98a2b3"/>
+            <path d="M70 80c0-16.569 13.431-30 30-30s30 13.431 30 30" fill="#98a2b3"/>
+            <!-- Center person (front, slightly larger) -->
+            <circle cx="70" cy="22" r="16" fill="#667085"/>
+            <path d="M36 82c0-18.778 15.222-34 34-34s34 15.222 34 34" fill="#667085"/>
+          </svg>
+        </div>
+
+        <input type="file" id="cg-photo-file" accept="image/*" style="display:none;" onchange="cgHandlePhoto(this)"/>
+        <button onclick="document.getElementById('cg-photo-file').click()"
+          style="width:100%;padding:10px;background:var(--surface);border:1.5px solid var(--border);
+          border-radius:8px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:0.875rem;
+          cursor:pointer;margin-bottom:8px;transition:background 0.15s;"
+          onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='var(--surface)'">
+          Télécharger une photo
+        </button>
+        <button id="cg-remove-btn" onclick="cgRemovePhoto()"
+          style="width:100%;padding:10px;background:var(--surface);border:1.5px solid var(--border);
+          border-radius:8px;color:var(--red);font-family:'Instrument Sans',sans-serif;font-size:0.875rem;
+          cursor:pointer;display:none;transition:background 0.15s;"
+          onmouseover="this.style.background='var(--red-bg)'" onmouseout="this.style.background='var(--surface)'">
+          Supprimer l'image
+        </button>
+      </div>
+
+      <div id="create-error" class="alert alert-error" style="display:none;margin-top:12px;">
+        <span>⚠</span><span id="create-error-msg">Erreur.</span>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="padding:12px 20px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+      <button onclick="cgStep1Next()"
+        style="padding:10px 28px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;
+        font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;">
+        Suivant
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CRÉER — STEP 2: AJOUTER DES UTILISATEURS ══ -->
+<div class="modal-bd" id="modal-create-step2">
+  <div class="modal" style="padding:0;overflow:hidden;">
+    <div class="modal-handle" style="margin:12px auto 0;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;">
+      <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;">Ajouter des utilisateurs</div>
+      <button onclick="closeModal('modal-create-step2')" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;">✕</button>
+    </div>
+
+    <!-- breadcrumb -->
+    <div style="padding:0 20px 14px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+        <span style="color:var(--green-dark);font-size:0.875rem;font-weight:500;cursor:pointer;" onclick="cgGoStep(1)">✓ Détails du groupe</span>
+        <span style="color:var(--text3);font-size:0.8rem;">›</span>
+        <span style="color:#1d4ed8;font-size:0.875rem;font-weight:600;">Ajouter des utilisateurs</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="color:var(--text3);font-size:0.8rem;">›</span>
+        <span style="color:var(--text3);font-size:0.875rem;">Enregistrer un appareil partagé</span>
+      </div>
+    </div>
+
+    <div style="overflow-y:auto;max-height:calc(90vh - 200px);padding:16px 20px 20px;">
+      <div class="fg">
+        <label class="fl" style="color:var(--text);font-size:0.875rem;text-transform:none;letter-spacing:0;font-weight:500;margin-bottom:8px;">
+          Rechercher des employés à ajouter
+        </label>
+        <div class="member-select-wrap">
+          <input class="member-select-input" id="member-search" type="text"
+            placeholder="Nom de l'employé…"
+            oninput="filterMemberDropdown(this.value)"
+            onfocus="document.getElementById('member-dropdown').classList.add('open')"
+            onblur="setTimeout(()=>document.getElementById('member-dropdown').classList.remove('open'),200)"
+            autocomplete="off"/>
+          <div class="member-dropdown" id="member-dropdown"></div>
+        </div>
+        <div class="member-chips" id="member-chips" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- recap -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;
+          letter-spacing:1px;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;">Récapitulatif</div>
+        <div class="detail-row"><span class="detail-key">Code</span><span class="detail-val" id="s2-code">—</span></div>
+        <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" id="s2-desc">—</span></div>
+        <div class="detail-row"><span class="detail-key">Membres sélectionnés</span><span class="detail-val" id="s2-count">0</span></div>
+      </div>
+
+      <div id="create-error-2" class="alert alert-error" style="display:none;margin-top:12px;">
+        <span>⚠</span><span id="create-error-msg-2">Erreur.</span>
+      </div>
+    </div>
+
+    <div style="padding:12px 20px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;">
+      <button onclick="cgGoStep(1)"
+        style="padding:10px 20px;background:transparent;color:var(--text2);border:1.5px solid var(--border);
+        border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:0.875rem;cursor:pointer;">
+        ← Retour
+      </button>
+      <button id="btn-save" onclick="saveGroup()"
+        style="padding:10px 28px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;
+        font-family:'Instrument Sans',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;">
+        <span id="btn-save-label">Créer le groupe</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CRÉER — STEP 3: SUCCÈS ══ -->
+<div class="modal-bd" id="modal-create-step3">
+  <div class="modal" style="text-align:center;padding:28px 24px 32px;">
+    <div class="modal-handle"></div>
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--green-bg);
+      border:2px solid var(--green-border);display:flex;align-items:center;justify-content:center;
+      font-size:1.8rem;margin:0 auto 14px;">✓</div>
+    <div style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;margin-bottom:6px;">Groupe créé !</div>
+    <div style="color:var(--text2);font-size:0.875rem;margin-bottom:20px;">Le groupe a été ajouté avec succès.</div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;
+      text-align:left;margin-bottom:20px;">
+      <div class="detail-row"><span class="detail-key">Code</span><span class="detail-val" id="s3-code">—</span></div>
+      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" id="s3-desc">—</span></div>
+      <div class="detail-row"><span class="detail-key">Membres</span><span class="detail-val" id="s3-count">—</span></div>
+    </div>
+    <button onclick="closeModal('modal-create-step3');loadGroups();"
+      style="width:100%;padding:11px;background:transparent;border:1.5px solid var(--border);
+      border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:0.875rem;cursor:pointer;color:var(--text2);">
+      Fermer
+    </button>
+  </div>
+</div>
+
+<!-- ══ MODAL: DÉTAIL GROUPE ══ -->
+<div class="modal-bd" id="modal-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body">
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:var(--blue-bg);
+          border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;
+          font-size:1.2rem;flex-shrink:0;">👥</div>
+        <div>
+          <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;" id="det-code">—</div>
+          <div style="color:var(--text2);font-size:0.82rem;" id="det-desc-sub">—</div>
+        </div>
+        <button onclick="closeModal('modal-detail')" style="background:none;border:none;font-size:1.1rem;
+          cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;line-height:1;margin-left:auto;">✕</button>
+      </div>
+
+      <div id="det-rows"></div>
+
+      <div style="margin-top:14px;">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;
+          letter-spacing:1px;margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">Membres</div>
+        <div id="det-members" class="member-chips" style="min-height:32px;"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn-ghost" style="color:var(--red);border-color:var(--red-border);"
+        id="det-delete-btn" onclick="deleteGroup()">Supprimer</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost" onclick="closeModal('modal-detail')">Fermer</button>
+        <button class="btn-primary" onclick="openEditModal()">Modifier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: MODIFIER GROUPE ══ -->
+<div class="modal-bd" id="modal-edit">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;">Modifier le groupe</div>
+        <button onclick="closeModal('modal-edit')" style="background:none;border:none;font-size:1.1rem;
+          cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:6px;line-height:1;">✕</button>
+      </div>
+      <div class="fg">
+        <label class="fl">Code du groupe <span style="color:var(--red);">*</span></label>
+        <input class="fi" id="eg-code" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="fg">
+        <label class="fl">Description</label>
+        <textarea class="fi" id="eg-desc"></textarea>
+      </div>
+      <div id="edit-error" class="alert alert-error" style="display:none;">
+        <span>⚠</span><span id="edit-error-msg">Erreur.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-edit')">Annuler</button>
+      <button class="btn-primary" id="btn-edit-save" onclick="saveEdit()">
+        <span id="btn-edit-label">Enregistrer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+// ══ CONFIG ══
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const sbH = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+
+async function sbGet(t, q=''){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{headers:sbH});
+  if(!r.ok) return [];
+  return r.json();
+}
+async function sbInsert(t, d){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}`,{
+    method:'POST',headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(d)
+  })).json();
+}
+async function sbPatch(t, q, d){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{
+    method:'PATCH',headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(d)
+  })).json();
+}
+async function sbDelete(t, q){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{
+    method:'DELETE',headers:{...sbH,Prefer:'return=representation'}
+  })).json();
+}
+
+// ══ STATE ══
+let allGroups   = [];
+let filtered    = [];
+let selected    = new Set();
+let currentPage = 1;
+let perPage     = 50;
+let totalPages  = 1;
+let sortKey     = 'code';
+let sortAsc     = true;
+let searchVal   = '';
+let detailGroup = null;
+let allEmployees= [];
+let chosenMembers = []; // {id, name}
+
+// ══ INIT ══
+async function loadGroups(){
+  const tbody = document.getElementById('groups-tbody');
+  tbody.innerHTML = `<tr class="empty-row"><td colspan="5"><div class="empty-icon">⏳</div><div>Chargement…</div></td></tr>`;
+
+  // Load groups from Supabase (table: employee_groups)
+  const data = await sbGet('employee_groups','order=code.asc');
+
+  // If table doesn't exist yet, seed with default
+  if(!Array.isArray(data) || data.length === 0){
+    allGroups = [{
+      id: '__default__',
+      code: 'TOUS_LES_UTILISATEURS',
+      description: 'Groupe par défaut pour tous les utilisateurs',
+      is_default: true,
+      member_count: 0,
+      created_at: new Date().toISOString()
+    }];
+  } else {
+    allGroups = data;
+  }
+
+  // Load employees for member picker
+  allEmployees = await sbGet('employees','select=id,full_name&order=full_name.asc') || [];
+
+  applyFilter();
+}
+
+function applyFilter(){
+  const q = searchVal.toLowerCase();
+  filtered = allGroups.filter(g =>
+    !q ||
+    (g.code||'').toLowerCase().includes(q) ||
+    (g.description||'').toLowerCase().includes(q)
+  );
+  filtered.sort((a,b)=>{
+    const va = (a[sortKey]||'').toLowerCase();
+    const vb = (b[sortKey]||'').toLowerCase();
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  if(currentPage > totalPages) currentPage = 1;
+  renderTable();
+  updatePagination();
+}
+
+function filterGroups(v){ searchVal = v; currentPage = 1; applyFilter(); }
+function sortBy(key){ if(sortKey===key) sortAsc=!sortAsc; else{sortKey=key;sortAsc=true;} applyFilter(); }
+function changePP(v){ perPage=parseInt(v); currentPage=1; applyFilter(); }
+function goPage(n){
+  n = Math.max(1, Math.min(n, totalPages));
+  currentPage = n;
+  document.getElementById('page-input').value = n;
+  renderTable(); updatePagination();
+}
+
+function renderTable(){
+  const tbody = document.getElementById('groups-tbody');
+  const start = (currentPage - 1) * perPage;
+  const page  = filtered.slice(start, start + perPage);
+
+  if(page.length === 0){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">
+      <div class="empty-icon">👥</div>
+      <div>Aucun groupe trouvé</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = page.map((g, idx) => {
+    const isDefault = g.is_default || g.code === 'TOUS_LES_UTILISATEURS';
+    const displayCode = isDefault ? 'Tous les utilisateurs' : g.code;
+    const displayDesc = g.description || '—';
+    const count = g.member_count ?? '—';
+    const sel = selected.has(g.id);
+    const kebabId = 'kebab-' + (start+idx);
+    return `
+    <tr class="${sel?'selected':''}" onclick="openDetail('${g.id}')">
+      <td onclick="event.stopPropagation()">
+        <input type="checkbox" class="cb" data-id="${g.id}"
+          ${sel?'checked':''} onchange="toggleRow('${g.id}',this)"/>
+      </td>
+      <td>
+        <span style="font-weight:500;">${displayCode}</span>
+        ${isDefault ? '<span class="badge-default" style="margin-left:6px;">Défaut</span>' : ''}
+      </td>
+      <td style="color:var(--text2);">${displayDesc}</td>
+      <td style="text-align:center;">
+        ${count !== '—' ? `<span class="badge-count">${count}</span>` : '<span style="color:var(--text3);">—</span>'}
+      </td>
+      <td onclick="event.stopPropagation()">
+        <div class="kebab-wrap">
+          <button class="kebab-btn" id="${kebabId}" onclick="toggleKebab('${kebabId}')">⋮</button>
+          <div class="kebab-menu" id="menu-${kebabId}">
+            <button class="km-item" onclick="closeAllKebabs();openDetail('${g.id}')">👁 Voir les détails</button>
+            ${isDefault ? '' : `<button class="km-item" onclick="closeAllKebabs();openEditFromId('${g.id}')">✏️ Modifier</button>
+            <button class="km-item danger" onclick="closeAllKebabs();deleteGroupById('${g.id}')">🗑 Supprimer</button>`}
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updatePagination(){
+  const start = Math.min((currentPage-1)*perPage+1, filtered.length);
+  const end   = Math.min(currentPage*perPage, filtered.length);
+  document.getElementById('page-info').textContent =
+    filtered.length ? `${start} - ${end} sur ${filtered.length} élément(s)` : 'Aucun résultat';
+  document.getElementById('page-total').textContent = '/ ' + totalPages;
+  document.getElementById('page-input').value = currentPage;
+  document.getElementById('btn-first').disabled = currentPage === 1;
+  document.getElementById('btn-prev').disabled  = currentPage === 1;
+  document.getElementById('btn-next').disabled  = currentPage === totalPages;
+  document.getElementById('btn-last').disabled  = currentPage === totalPages;
+}
+
+// ══ SELECTION ══
+function toggleAll(cb){
+  const page = filtered.slice((currentPage-1)*perPage, currentPage*perPage);
+  page.forEach(g => cb.checked ? selected.add(g.id) : selected.delete(g.id));
+  renderTable(); updateBulkBar();
+}
+function toggleRow(id, cb){
+  cb.checked ? selected.add(id) : selected.delete(id);
+  updateBulkBar();
+  const tr = cb.closest('tr');
+  tr.classList.toggle('selected', cb.checked);
+}
+function clearSelection(){ selected.clear(); renderTable(); updateBulkBar(); }
+function updateBulkBar(){
+  const bar = document.getElementById('bulk-bar');
+  if(selected.size > 0){
+    bar.classList.add('visible');
+    document.getElementById('bulk-count').textContent = selected.size + ' sélectionné(s)';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+async function bulkDelete(){
+  const n = selected.size;
+  if(!confirm(`Supprimer ${n} groupe(s) ? Cette action est irréversible.`)) return;
+  const deletable = [...selected].filter(id => {
+    const g = allGroups.find(x=>x.id===id);
+    return g && !g.is_default && g.code !== 'TOUS_LES_UTILISATEURS';
+  });
+  if(deletable.length < n) alert('Le groupe par défaut ne peut pas être supprimé.');
+  for(const id of deletable) await sbDelete('employee_groups',`id=eq.${id}`);
+  clearSelection();
+  await loadGroups();
+}
+
+// ══ KEBAB ══
+function toggleKebab(id){
+  closeAllKebabs();
+  const menu = document.getElementById('menu-'+id);
+  if(menu) menu.classList.toggle('open');
+}
+function closeAllKebabs(){
+  document.querySelectorAll('.kebab-menu').forEach(m=>m.classList.remove('open'));
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.kebab-wrap')) closeAllKebabs();
+});
+
+// ══ MEMBER PICKER ══
+function renderMemberDropdown(q=''){
+  const dd = document.getElementById('member-dropdown');
+  const chosen = new Set(chosenMembers.map(m=>m.id));
+  const matches = allEmployees.filter(e=>
+    !q || (e.full_name||'').toLowerCase().includes(q.toLowerCase())
+  ).slice(0,30);
+  if(!matches.length){
+    dd.innerHTML = `<div class="md-item" style="color:var(--text3);cursor:default;">Aucun résultat</div>`;
+    return;
+  }
+  dd.innerHTML = matches.map(e=>`
+    <div class="md-item ${chosen.has(e.id)?'selected':''}" data-id="${e.id}" data-name="${e.full_name||''}"
+      onmousedown="toggleMember('${e.id}','${(e.full_name||'').replace(/'/g,"\\'")}')">
+      <div class="md-check">${chosen.has(e.id)?'✓':''}</div>
+      <span>${e.full_name||'—'}</span>
+    </div>`).join('');
+}
+function filterMemberDropdown(q){ renderMemberDropdown(q); }
+function toggleMember(id, name){
+  const idx = chosenMembers.findIndex(m=>m.id===id);
+  if(idx>-1) chosenMembers.splice(idx,1);
+  else chosenMembers.push({id, name});
+  renderChips();
+  renderMemberDropdown(document.getElementById('member-search').value);
+}
+function renderChips(){
+  const wrap = document.getElementById('member-chips');
+  wrap.innerHTML = chosenMembers.map(m=>`
+    <span class="chip">
+      ${m.name}
+      <button class="chip-rm" onclick="toggleMember('${m.id}','${m.name.replace(/'/g,"\\'")}')">✕</button>
+    </span>`).join('');
+}
+
+// ══ CREATE ══
+let cgPhotoB64 = null;
+
+function openCreateModal(){
+  document.getElementById('cg-code').value = '';
+  document.getElementById('cg-desc').value = '';
+  document.getElementById('create-error').style.display = 'none';
+  cgRemovePhoto();
+  chosenMembers = [];
+  document.getElementById('modal-create').classList.add('open');
+}
+
+function cgGoStep(n){
+  closeModal('modal-create');
+  closeModal('modal-create-step2');
+  closeModal('modal-create-step3');
+  if(n===1) document.getElementById('modal-create').classList.add('open');
+  else if(n===2) document.getElementById('modal-create-step2').classList.add('open');
+  else if(n===3) document.getElementById('modal-create-step3').classList.add('open');
+}
+
+function cgStep1Next(){
+  const code = document.getElementById('cg-code').value.trim().toUpperCase();
+  const desc = document.getElementById('cg-desc').value.trim();
+  const err  = document.getElementById('create-error');
+  const errM = document.getElementById('create-error-msg');
+  if(!code){ errM.textContent='Le code du groupe est obligatoire.'; err.style.display='flex'; return; }
+  if(!desc){ errM.textContent='La description est obligatoire.'; err.style.display='flex'; return; }
+  err.style.display='none';
+  // Prefill recap in step 2
+  document.getElementById('s2-code').textContent = code;
+  document.getElementById('s2-desc').textContent = desc;
+  // Reset members
+  chosenMembers = [];
+  document.getElementById('member-search').value = '';
+  document.getElementById('member-chips').innerHTML = '';
+  document.getElementById('create-error-2').style.display = 'none';
+  renderMemberDropdown();
+  document.getElementById('btn-save-label').textContent = 'Créer le groupe';
+  document.getElementById('btn-save').disabled = false;
+  cgGoStep(2);
+}
+
+function cgHandlePhoto(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    cgPhotoB64 = e.target.result.split(',')[1];
+    document.getElementById('cg-photo-img').src = e.target.result;
+    document.getElementById('cg-photo-img').style.display = 'block';
+    document.getElementById('cg-photo-svg').style.display = 'none';
+    document.getElementById('cg-remove-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function cgRemovePhoto(){
+  cgPhotoB64 = null;
+  const img = document.getElementById('cg-photo-img');
+  if(img){ img.src=''; img.style.display='none'; }
+  const svg = document.getElementById('cg-photo-svg');
+  if(svg) svg.style.display='';
+  const rb = document.getElementById('cg-remove-btn');
+  if(rb) rb.style.display='none';
+  const fi = document.getElementById('cg-photo-file');
+  if(fi) fi.value='';
+}
+
+async function saveGroup(){
+  const code = document.getElementById('cg-code').value.trim().toUpperCase();
+  const desc = document.getElementById('cg-desc').value.trim();
+  const err  = document.getElementById('create-error-2');
+  const errM = document.getElementById('create-error-msg-2');
+
+  document.getElementById('btn-save-label').innerHTML='<span class="spinner"></span>';
+  document.getElementById('btn-save').disabled=true;
+
+  const result = await sbInsert('employee_groups',{
+    code, description:desc||null,
+    member_count: chosenMembers.length,
+    is_default: false
+  });
+
+  if(result&&(result[0]?.id||result.id)){
+    const newGroupId = result[0]?.id || result.id;
+    // Persister les membres choisis dans la table de liaison group_members
+    if(chosenMembers.length){
+      const links = chosenMembers.map(m => ({ group_id: newGroupId, employee_id: m.id }));
+      await sbInsert('group_members', links);
+    }
+    // Fill step 3 recap
+    document.getElementById('s3-code').textContent = code;
+    document.getElementById('s3-desc').textContent = desc||'—';
+    document.getElementById('s3-count').textContent = chosenMembers.length + ' membre(s)';
+    cgGoStep(3);
+  } else {
+    errM.textContent = 'Erreur : '+(result?.message||result?.error||JSON.stringify(result));
+    err.style.display='flex';
+    document.getElementById('btn-save-label').textContent='Créer le groupe';
+    document.getElementById('btn-save').disabled=false;
+  }
+}
+
+// ══ DETAIL ══
+function openDetail(id){
+  detailGroup = allGroups.find(g=>g.id===id);
+  if(!detailGroup) return;
+  document.getElementById('det-code').textContent = detailGroup.code==='TOUS_LES_UTILISATEURS'
+    ? 'Tous les utilisateurs' : detailGroup.code;
+  document.getElementById('det-desc-sub').textContent = detailGroup.description||'Aucune description';
+  const isDefault = detailGroup.is_default || detailGroup.code==='TOUS_LES_UTILISATEURS';
+  document.getElementById('det-delete-btn').style.display = isDefault ? 'none' : '';
+
+  const rows = [
+    ['Code', detailGroup.code],
+    ['Description', detailGroup.description||'—'],
+    ['Membres', detailGroup.member_count ?? '—'],
+    ['Créé le', detailGroup.created_at ? new Date(detailGroup.created_at).toLocaleDateString('fr-FR') : '—'],
+  ];
+  document.getElementById('det-rows').innerHTML = rows.map(([k,v])=>`
+    <div class="detail-row">
+      <span class="detail-key">${k}</span>
+      <span class="detail-val">${v}</span>
+    </div>`).join('');
+
+  document.getElementById('det-members').innerHTML =
+    '<span style="color:var(--text3);font-size:0.82rem;">Chargement des membres…</span>';
+  document.getElementById('modal-detail').classList.add('open');
+
+  // Load real members
+  if(isDefault){
+    document.getElementById('det-members').innerHTML =
+      `<span class="chip">Tous les employés</span>`;
+  } else {
+    (async () => {
+      const links = await sbGet('group_members', `group_id=eq.${detailGroup.id}&select=employee_id`);
+      const el = document.getElementById('det-members');
+      if(!el) return;
+      if(!Array.isArray(links) || !links.length){
+        el.innerHTML =
+          '<span style="color:var(--text3);font-size:0.82rem;">Aucun membre assigné.</span>';
+        return;
+      }
+      const nameById = Object.fromEntries(allEmployees.map(e => [e.id, e.full_name]));
+      el.innerHTML = links.map(l => {
+        const n = (nameById[l.employee_id] || '—').replace(/</g,'&lt;');
+        return `<span class="chip">${n}</span>`;
+      }).join('');
+      // Recaler le compteur affiché à partir des liaisons réelles
+      detailGroup.member_count = links.length;
+      const memberRow = document.querySelector('#det-rows .detail-row:nth-child(3) .detail-val');
+      if(memberRow) memberRow.textContent = links.length;
+    })();
+  }
+}
+
+// ══ EDIT ══
+function openEditFromId(id){
+  detailGroup = allGroups.find(g=>g.id===id);
+  openEditModal();
+}
+function openEditModal(){
+  if(!detailGroup) return;
+  closeModal('modal-detail');
+  document.getElementById('eg-code').value = detailGroup.code||'';
+  document.getElementById('eg-desc').value = detailGroup.description||'';
+  document.getElementById('edit-error').style.display='none';
+  document.getElementById('btn-edit-label').textContent='Enregistrer';
+  document.getElementById('btn-edit-save').disabled=false;
+  document.getElementById('modal-edit').classList.add('open');
+}
+async function saveEdit(){
+  const code = document.getElementById('eg-code').value.trim().toUpperCase();
+  const desc = document.getElementById('eg-desc').value.trim();
+  const err  = document.getElementById('edit-error');
+  const errM = document.getElementById('edit-error-msg');
+  if(!code){ errM.textContent='Le code est obligatoire.'; err.style.display='flex'; return; }
+  err.style.display='none';
+  document.getElementById('btn-edit-label').innerHTML='<span class="spinner"></span>';
+  document.getElementById('btn-edit-save').disabled=true;
+
+  if(detailGroup.id==='__default__'){
+    // Local only
+    detailGroup.code=code; detailGroup.description=desc;
+    allGroups = allGroups.map(g=>g.id===detailGroup.id?{...g,code,description:desc}:g);
+    closeModal('modal-edit'); applyFilter(); return;
+  }
+
+  const result = await sbPatch('employee_groups',`id=eq.${detailGroup.id}`,{code,description:desc||null});
+  if(Array.isArray(result)&&result[0]?.id || result?.id){
+    closeModal('modal-edit'); await loadGroups();
+  } else {
+    errM.textContent='Erreur : '+(result?.message||JSON.stringify(result));
+    err.style.display='flex';
+    document.getElementById('btn-edit-label').textContent='Enregistrer';
+    document.getElementById('btn-edit-save').disabled=false;
+  }
+}
+
+// ══ DELETE ══
+async function deleteGroup(){
+  if(!detailGroup) return;
+  if(!confirm(`Supprimer le groupe "${detailGroup.code}" ?`)) return;
+  await deleteGroupById(detailGroup.id);
+}
+async function deleteGroupById(id){
+  const g = allGroups.find(x=>x.id===id);
+  if(g?.id==='__default__'||g?.is_default||g?.code==='TOUS_LES_UTILISATEURS'){
+    alert('Le groupe par défaut ne peut pas être supprimé.');
+    return;
+  }
+  closeModal('modal-detail');
+  await sbDelete('employee_groups',`id=eq.${id}`);
+  await loadGroups();
+}
+
+// ══ MODAL HELPERS ══
+function closeModal(id){
+  document.getElementById(id)?.classList.remove('open');
+}
+
+// ══ START ══
+loadGroups();
+</script>
+</body>
+</html>

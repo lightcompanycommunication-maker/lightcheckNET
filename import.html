@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Light Check — Import en masse</title>
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,Helvetica,sans-serif;background:#f4f5f7;color:#1a1a1a;}
+  a{color:inherit;text-decoration:none;}
+  .top{background:#111;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;}
+  .logo{width:34px;height:34px;border-radius:50%;background:#111;border:2px solid #FFCF00;display:flex;align-items:center;justify-content:center;}
+  .top h1{font-size:1.05rem;font-weight:700;}
+  .top h1 b{color:#FFCF00;}
+  .top .spacer{flex:1;}
+  .back{font-size:0.8rem;color:#FFCF00;border:1px solid rgba(255,207,0,.4);padding:6px 12px;border-radius:8px;white-space:nowrap;}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 70px;}
+  .steps{display:flex;gap:8px;margin-bottom:20px;font-size:0.78rem;color:#999;flex-wrap:wrap;}
+  .steps .s{display:flex;align-items:center;gap:6px;}
+  .steps .s.active{color:#1a1a1a;font-weight:700;}
+  .steps .dot{width:20px;height:20px;border-radius:50%;background:#e3e3e3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;}
+  .steps .s.active .dot{background:#FFCF00;color:#111;}
+  .steps .s.done .dot{background:#16a34a;color:#fff;}
+  .card{background:#fff;border:1px solid #ececed;border-radius:16px;padding:22px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:16px;}
+  h2{font-size:1.05rem;margin-bottom:6px;}
+  .muted{color:#777;font-size:0.88rem;line-height:1.5;}
+  .drop{margin-top:16px;border:2px dashed #d4d4d8;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .15s;background:#fafafa;}
+  .drop:hover,.drop.over{border-color:#FFCF00;background:#fffdf2;}
+  .drop .big{font-size:2rem;}
+  .drop .t{font-weight:700;margin-top:8px;}
+  .drop .sub{color:#999;font-size:0.82rem;margin-top:4px;}
+  .btn{border:none;border-radius:10px;padding:11px 18px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .15s;}
+  .btn:hover{filter:brightness(.95);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn-gold{background:#FFCF00;color:#111;}
+  .btn-dark{background:#111;color:#fff;}
+  .btn-ghost{background:#fff;color:#333;border:1.5px solid #e0e0e0;}
+  .btn-ok{background:#16a34a;color:#fff;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;}
+  .link{color:#1b6ef3;cursor:pointer;text-decoration:underline;font-size:0.86rem;}
+  .field{margin-top:14px;}
+  .field label{display:block;font-size:0.82rem;color:#555;margin-bottom:5px;font-weight:600;}
+  .field input{width:100%;max-width:320px;padding:9px 11px;border:1px solid #d8d8d8;border-radius:9px;font-family:inherit;font-size:0.9rem;}
+  .pill{display:inline-block;font-size:0.76rem;padding:2px 9px;border-radius:20px;font-weight:600;}
+  .pill-ok{background:#e9f9ef;color:#16794a;}
+  .pill-warn{background:#fff7e6;color:#b77600;}
+  .pill-err{background:#fdeceb;color:#c0392b;}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:0.85rem;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #f0f0f0;}
+  th{color:#888;font-weight:600;font-size:0.76rem;text-transform:uppercase;letter-spacing:.4px;}
+  td.code{font-family:'Courier New',monospace;font-weight:700;}
+  .summary{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;}
+  .summary .b{background:#fafafa;border:1px solid #eee;border-radius:12px;padding:12px 16px;text-align:center;min-width:90px;}
+  .summary .b .n{font-size:1.5rem;font-weight:800;}
+  .summary .b.ok .n{color:#16a34a;} .summary .b.warn .n{color:#b77600;}
+  .summary .b .l{font-size:0.74rem;color:#888;}
+  .progress{height:10px;background:#eee;border-radius:20px;overflow:hidden;margin-top:14px;}
+  .progress > div{height:100%;background:linear-gradient(90deg,#FFCF00,#ffdd4d);width:0;transition:width .2s;}
+  .note{font-size:0.8rem;color:#888;margin-top:8px;}
+  textarea{width:100%;min-height:90px;border:1px solid #d8d8d8;border-radius:9px;padding:10px;font-family:inherit;font-size:0.85rem;margin-top:10px;}
+  .hide{display:none;}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:11px 20px;border-radius:30px;font-size:0.88rem;opacity:0;pointer-events:none;transition:all .25s;z-index:50;border:1px solid #FFCF00;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="logo">💡</div>
+    <h1>LIGHT <b>CHECK</b> · Import en masse</h1>
+    <div class="spacer"></div>
+    <a class="back" href="users.html">← Employés</a>
+  </div>
+
+  <div class="wrap">
+    <div class="steps">
+      <div class="s active" id="st-1"><span class="dot">1</span> Importer le fichier</div>
+      <div class="s" id="st-2"><span class="dot">2</span> Vérifier</div>
+      <div class="s" id="st-3"><span class="dot">3</span> Créer &amp; distribuer</div>
+    </div>
+
+    <!-- STEP 1 : UPLOAD -->
+    <div id="step-upload">
+      <div class="card">
+        <h2>Importez votre liste d'employés</h2>
+        <p class="muted">Glissez votre fichier <b>Excel (.xlsx)</b> ou <b>CSV</b>, ou collez depuis Excel.
+          Une seule colonne obligatoire : le <b>nom</b>. Les autres (poste, équipe, e-mail, téléphone) sont facultatives.
+          Chaque employé reçoit automatiquement un <b>code d'accès</b> pour pointer immédiatement.</p>
+
+        <div class="drop" id="drop">
+          <div class="big">📄</div>
+          <div class="t">Cliquez ou glissez votre fichier ici</div>
+          <div class="sub">.xlsx, .xls ou .csv</div>
+        </div>
+        <input type="file" id="file" accept=".xlsx,.xls,.csv,text/csv" class="hide"/>
+
+        <div class="row">
+          <span class="link" onclick="downloadTemplate()">⬇ Télécharger le modèle (CSV)</span>
+          <span class="link" onclick="togglePaste()">📋 Coller depuis Excel</span>
+        </div>
+        <div id="paste-box" class="hide">
+          <textarea id="paste" placeholder="Collez ici (Ctrl+V) les lignes copiées depuis Excel…"></textarea>
+          <div class="row"><button class="btn btn-dark" onclick="usePaste()">Analyser</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 : PREVIEW -->
+    <div id="step-preview" class="hide">
+      <div class="card">
+        <h2>Vérification</h2>
+        <div class="summary">
+          <div class="b ok"><div class="n" id="cnt-valid">0</div><div class="l">à créer</div></div>
+          <div class="b warn"><div class="n" id="cnt-skip">0</div><div class="l">ignorés (sans nom)</div></div>
+          <div class="b"><div class="n" id="cnt-total">0</div><div class="l">lignes lues</div></div>
+        </div>
+
+        <div class="field">
+          <label>Société</label>
+          <input id="company-name" type="text" readonly value="—"/>
+        </div>
+        <div class="field">
+          <label>Équipe par défaut (facultatif — appliquée aux lignes sans équipe)</label>
+          <input id="default-team" type="text" placeholder="Ex : Chantier Nord"/>
+        </div>
+
+        <table id="preview-table"></table>
+        <p class="note" id="preview-more"></p>
+
+        <div class="row">
+          <button class="btn btn-gold" id="btn-import" onclick="doImport()">✓ Créer les employés</button>
+          <button class="btn btn-ghost" onclick="resetAll()">Changer de fichier</button>
+        </div>
+        <div class="progress hide" id="prog"><div id="prog-bar"></div></div>
+        <p class="note hide" id="prog-txt"></p>
+      </div>
+    </div>
+
+    <!-- STEP 3 : RESULT -->
+    <div id="step-result" class="hide">
+      <div class="card">
+        <h2 id="res-title">✅ Employés créés</h2>
+        <p class="muted" id="res-sub"></p>
+        <div class="row">
+          <button class="btn btn-ok" onclick="downloadCodes()">⬇ Télécharger les codes (CSV)</button>
+          <button class="btn btn-dark" onclick="printBadges()">🖨 Imprimer les badges (QR)</button>
+          <a class="btn btn-ghost" href="users.html">Voir les employés</a>
+        </div>
+        <p class="note">Le fichier CSV contient, pour chaque employé : son nom, son <b>code d'accès</b> et son <b>lien personnel</b> de pointage (à transformer en QR si besoin).
+          Au premier pointage, l'employé scanne/saisit son code et enrôle lui-même son visage — ensuite il pointe normalement.</p>
+        <table id="result-table"></table>
+        <p class="note" id="result-more"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script src="lc-auth.js"></script>
+<script>
+let me = null;
+let COMPANY_ID = null;
+let parsed = [];      // {full_name, post, equipe, email, phone}
+let created = [];     // {full_name, post, token, link}
+let existingTokens = new Set();
+
+const FIELD_ALIASES = {
+  full_name: ['nom complet','full name','fullname','nom et prenom','nom & prenom','name','nom','noms'],
+  first:     ['prenom','first name','firstname','first','prenoms'],
+  last:      ['nom de famille','last name','lastname','last','famille'],
+  post:      ['poste','post','fonction','titre','job','role'],
+  equipe:    ['equipe','team','service','departement','département','dept','groupe'],
+  email:     ['email','e-mail','courriel','mail','adresse email'],
+  phone:     ['telephone','téléphone','phone','tel','portable','mobile','numero','numéro','contact']
+};
+
+function noAcc(s){ return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+let _tt;
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2800); }
+
+// ── lecture de fichier ──
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+drop.addEventListener('click', ()=>fileInput.click());
+fileInput.addEventListener('change', e=>{ if(e.target.files[0]) readFile(e.target.files[0]); });
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) readFile(f); });
+
+function togglePaste(){ document.getElementById('paste-box').classList.toggle('hide'); }
+function usePaste(){
+  const txt = document.getElementById('paste').value;
+  if(!txt.trim()){ toast('Rien à analyser.'); return; }
+  const aoa = parseDelimited(txt);
+  processAOA(aoa);
+}
+
+function readFile(file){
+  const name = (file.name||'').toLowerCase();
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try {
+      if(name.endsWith('.xlsx') || name.endsWith('.xls')){
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        processAOA(aoa);
+      } else {
+        processAOA(parseDelimited(e.target.result));
+      }
+    } catch(err){ toast('Fichier illisible : '+err.message); }
+  };
+  if(name.endsWith('.xlsx')||name.endsWith('.xls')) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file, 'UTF-8');
+}
+
+// ── parsing CSV / collage (détection du séparateur , ; ou tab) ──
+function detectDelim(line){
+  const counts={',':0,';':0,'\t':0}; let q=false;
+  for(const ch of line){ if(ch==='"') q=!q; else if(!q && counts[ch]!==undefined) counts[ch]++; }
+  return Object.keys(counts).reduce((a,b)=>counts[b]>counts[a]?b:a, ',');
+}
+function parseDelimited(text){
+  text = String(text).replace(/\r\n?/g,'\n').replace(/\n+$/,'');
+  const D = detectDelim((text.split('\n')[0]||''));
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=ch; }
+    else { if(ch==='"') q=true; else if(ch===D){ row.push(cur); cur=''; } else if(ch==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; } else cur+=ch; }
+  }
+  row.push(cur); rows.push(row);
+  return rows;
+}
+
+// ── mapping colonnes + validation ──
+function buildHeaderMap(headers){
+  const idx = {};
+  headers.forEach((h,i)=>{
+    const n = noAcc(h);
+    for(const field in FIELD_ALIASES){
+      if(idx[field]!==undefined) continue;
+      if(FIELD_ALIASES[field].some(a=>a===n)){ idx[field]=i; break; }
+    }
+  });
+  return idx;
+}
+
+function processAOA(aoa){
+  aoa = (aoa||[]).filter(r=>Array.isArray(r) && r.some(c=>String(c).trim()!==''));
+  if(aoa.length < 2){ toast('Aucune donnée détectée (en-tête + au moins une ligne attendus).'); return; }
+  const headers = aoa[0].map(x=>String(x));
+  const map = buildHeaderMap(headers);
+  const hasName = (map.full_name!==undefined) || (map.first!==undefined) || (map.last!==undefined);
+  if(!hasName){
+    toast('Colonne « Nom » introuvable. Utilisez le modèle.');
+    return;
+  }
+  const out=[]; let totalRows=0, skipped=0;
+  for(let r=1;r<aoa.length;r++){
+    const row = aoa[r]; totalRows++;
+    const get = f => (map[f]!==undefined ? String(row[map[f]]||'').trim() : '');
+    let full = get('full_name');
+    if(!full){ full = (get('first')+' '+get('last')).trim(); }
+    if(!full){ skipped++; continue; }
+    out.push({
+      full_name: full,
+      post:   get('post')   || null,
+      equipe: get('equipe') || null,
+      email:  get('email')  || null,
+      phone:  get('phone')  || null
+    });
+  }
+  parsed = out;
+  document.getElementById('cnt-valid').textContent = out.length;
+  document.getElementById('cnt-skip').textContent  = skipped;
+  document.getElementById('cnt-total').textContent = totalRows;
+  renderPreview();
+  goStep(2);
+}
+
+function renderPreview(){
+  const tb = document.getElementById('preview-table');
+  const head = '<tr><th>Nom</th><th>Poste</th><th>Équipe</th><th>E-mail</th><th>Téléphone</th></tr>';
+  const rows = parsed.slice(0,8).map(p=>`<tr>
+    <td>${esc(p.full_name)}</td><td>${esc(p.post||'—')}</td><td>${esc(p.equipe||'—')}</td>
+    <td>${esc(p.email||'—')}</td><td>${esc(p.phone||'—')}</td></tr>`).join('');
+  tb.innerHTML = head + rows;
+  document.getElementById('preview-more').textContent =
+    parsed.length>8 ? `… et ${parsed.length-8} autre(s).` : '';
+}
+
+// ── import par lots ──
+async function doImport(){
+  if(!parsed.length){ toast('Rien à importer.'); return; }
+  const btn = document.getElementById('btn-import');
+  btn.disabled = true;
+  document.getElementById('prog').classList.remove('hide');
+  document.getElementById('prog-txt').classList.remove('hide');
+
+  const defTeam = document.getElementById('default-team').value.trim();
+
+  // pré-charger les codes existants pour éviter les doublons
+  try {
+    const ex = await LC.sbGet('employees','select=login_token') || [];
+    existingTokens = new Set((Array.isArray(ex)?ex:[]).map(e=>e.login_token).filter(Boolean));
+  } catch(e){ existingTokens = new Set(); }
+
+  // préparer les enregistrements + codes uniques
+  const records = parsed.map(p=>{
+    const token = genToken(existingTokens);
+    return {
+      payload: {
+        full_name: p.full_name,
+        post: p.post, equipe: p.equipe || (defTeam||null),
+        email: p.email, phone: p.phone,
+        status: 'actif', login_token: token,
+        company_id: COMPANY_ID, face_token: null, photo_url: null
+      },
+      token
+    };
+  });
+
+  const CHUNK = 400;
+  created = [];
+  let done = 0, failed = 0;
+  for(let i=0;i<records.length;i+=CHUNK){
+    const slice = records.slice(i, i+CHUNK);
+    const res = await LC.sbInsert('employees', slice.map(r=>r.payload));
+    if(Array.isArray(res)){
+      slice.forEach(r=>{
+        created.push({ full_name:r.payload.full_name, post:r.payload.post, token:r.token, link:pointLink(r.token) });
+      });
+      done += slice.length;
+    } else {
+      failed += slice.length;
+    }
+    const pct = Math.round((i+slice.length)/records.length*100);
+    document.getElementById('prog-bar').style.width = pct+'%';
+    document.getElementById('prog-txt').textContent = `${done} créé(s)${failed?` · ${failed} en échec`:''}…`;
+    await new Promise(r=>setTimeout(r,30));
+  }
+
+  if(!created.length){
+    toast('Échec de la création. Vérifiez vos droits / connexion.');
+    btn.disabled = false;
+    return;
+  }
+  showResult(done, failed);
+}
+
+function pointLink(token){
+  try { return new URL('attend.html', location.href).href + '?code=' + token; }
+  catch(e){ return 'attend.html?code=' + token; }
+}
+
+function genToken(used){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let t;
+  do { t='LC-'; for(let i=0;i<6;i++) t+=c[Math.floor(Math.random()*c.length)]; } while(used.has(t));
+  used.add(t);
+  return t;
+}
+
+function showResult(done, failed){
+  goStep(3);
+  document.getElementById('res-title').textContent = `✅ ${done} employé(s) créé(s)`;
+  document.getElementById('res-sub').textContent = failed
+    ? `${failed} n'ont pas pu être créés (réessayez l'import du fichier pour ceux-là).`
+    : `Ils peuvent pointer dès maintenant avec leur code d'accès.`;
+  const tb = document.getElementById('result-table');
+  const head = '<tr><th>Nom</th><th>Poste</th><th>Code d\'accès</th></tr>';
+  tb.innerHTML = head + created.slice(0,12).map(c=>`<tr>
+    <td>${esc(c.full_name)}</td><td>${esc(c.post||'—')}</td><td class="code">${esc(c.token)}</td></tr>`).join('');
+  document.getElementById('result-more').textContent =
+    created.length>12 ? `… et ${created.length-12} autre(s) dans le fichier téléchargé.` : '';
+}
+
+// ── exports ──
+function downloadTemplate(){
+  const csv = 'Prénom;Nom;Poste;Équipe;Email;Téléphone\n'
+            + 'Kossi;MENSAH;Soudeur;Atelier A;kossi@exemple.com;+229 90 00 00 00\n'
+            + 'Awa;DIALLO;Comptable;Administration;;\n';
+  dl(csv, 'modele_employes.csv', 'text/csv');
+}
+function downloadCodes(){
+  let csv = 'Nom complet;Poste;Code d\'acces;Lien de pointage\n';
+  created.forEach(c=>{
+    const safe = v => '"'+String(v||'').replace(/"/g,'""')+'"';
+    csv += [safe(c.full_name), safe(c.post||''), safe(c.token), safe(c.link)].join(';') + '\n';
+  });
+  dl(csv, 'codes_employes.csv', 'text/csv');
+}
+function dl(content, filename, type){
+  const blob = new Blob(["\ufeff"+content], {type:type+';charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+}
+
+// ── badges imprimables avec QR (par lots pour ne pas figer) ──
+function qrDataURL(text, size){
+  const tmp=document.createElement('div');
+  new QRCode(tmp, {text:text, width:size, height:size, correctLevel:QRCode.CorrectLevel.M});
+  const c = tmp.querySelector('canvas');
+  return c ? c.toDataURL('image/png') : (tmp.querySelector('img')?tmp.querySelector('img').src:'');
+}
+
+async function printBadges(){
+  if(!created.length) return;
+  if(created.length > 400 && !confirm(`${created.length} badges, c'est beaucoup pour une impression navigateur. Continuer quand même ?`)) return;
+  toast('Génération des badges…');
+  let cards = '';
+  for(let i=0;i<created.length;i++){
+    const c = created[i];
+    const qr = qrDataURL(c.link, 150);
+    cards += `<div class="badge">
+      <div class="b-head">LIGHT CHECK</div>
+      <div class="b-name">${esc(c.full_name)}</div>
+      <div class="b-post">${esc(c.post||'')}</div>
+      <img class="b-qr" src="${qr}"/>
+      <div class="b-code">${esc(c.token)}</div>
+      <div class="b-foot">Scannez pour pointer</div>
+    </div>`;
+    if(i % 40 === 0) await new Promise(r=>setTimeout(r,0));
+  }
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Badges — Light Check</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+      body{background:#fff;padding:10px;}
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+      .badge{border:2px solid #111;border-radius:12px;padding:12px;text-align:center;page-break-inside:avoid;}
+      .b-head{background:#111;color:#FFCF00;font-weight:800;font-size:0.7rem;letter-spacing:1px;border-radius:6px;padding:3px;margin-bottom:8px;}
+      .b-name{font-weight:800;font-size:1rem;}
+      .b-post{color:#666;font-size:0.78rem;margin-bottom:8px;}
+      .b-qr{width:150px;height:150px;}
+      .b-code{font-family:'Courier New',monospace;font-weight:800;font-size:1.05rem;letter-spacing:1px;margin-top:6px;}
+      .b-foot{color:#999;font-size:0.7rem;margin-top:4px;}
+      @media print{ .grid{grid-template-columns:repeat(3,1fr);} }
+    </style></head><body>
+    <div class="grid">${cards}</div>
+    <script>window.onload=function(){setTimeout(function(){window.print();},400);}<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
+// ── navigation étapes ──
+function goStep(n){
+  document.getElementById('step-upload').classList.toggle('hide', n!==1);
+  document.getElementById('step-preview').classList.toggle('hide', n!==2);
+  document.getElementById('step-result').classList.toggle('hide', n!==3);
+  [1,2,3].forEach(i=>{
+    const el=document.getElementById('st-'+i);
+    el.classList.toggle('active', i===n);
+    el.classList.toggle('done', i<n);
+  });
+  window.scrollTo(0,0);
+}
+function resetAll(){ parsed=[]; created=[]; fileInput.value=''; document.getElementById('paste').value=''; goStep(1); }
+
+// ── init ──
+(async()=>{
+  me = await LC.requireAuth({ roles:['patron','rh'], fallback:'index.html' });
+  if(!me) return;
+  COMPANY_ID = me.company_id || null;
+  let cname = '—';
+  try {
+    if(COMPANY_ID){ const c = await LC.sbGet('companies',`id=eq.${COMPANY_ID}&select=name`); if(c && c[0]) cname = c[0].name; }
+  } catch(e){}
+  document.getElementById('company-name').value = cname;
+})();
+</script>
+</body>
+</html>

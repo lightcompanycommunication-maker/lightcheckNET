@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Light Check — Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --gold:#f5c542;--gold-dark:#c9a030;--gold-dim:rgba(245,197,66,0.12);
+  --red:#e74c3c;--red-dim:rgba(231,76,60,0.12);
+  --amber:#f39c12;--blue:#3498db;--green:#2ecc71;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#222;--dark4:#2c2c2c;
+  --text:#fff;--text2:rgba(255,255,255,0.55);--text3:rgba(255,255,255,0.25);
+  --border:rgba(255,255,255,0.08);
+}
+html,body{height:100%;overflow:hidden;background:var(--dark);color:var(--text);
+  font-family:'Instrument Sans',sans-serif;user-select:none;-webkit-user-select:none;}
+
+/* ── SCREENS ── */
+.screen{display:none;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:center;}
+.screen.active{display:flex;}
+
+/* ════════════════════
+   IDLE SCREEN
+════════════════════ */
+#s-idle{ background:var(--dark); }
+.idle-glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 105%,rgba(245,197,66,0.07) 0%,transparent 65%);pointer-events:none;}
+
+.idle-brand{position:absolute;top:28px;left:0;right:0;text-align:center;
+  font-family:'Fraunces',serif;font-size:1rem;font-weight:700;color:var(--text3);}
+.idle-brand em{font-style:italic;color:rgba(245,197,66,0.4);}
+
+.idle-clock{font-family:'IBM Plex Mono',monospace;font-size:4rem;font-weight:500;
+  letter-spacing:-2px;line-height:1;margin-bottom:4px;}
+.idle-date{font-size:0.82rem;color:var(--text2);margin-bottom:52px;text-transform:capitalize;}
+
+/* Fingerprint button */
+.fp-btn{
+  position:relative;width:176px;height:176px;border-radius:50%;
+  background:none;border:none;cursor:pointer;margin-bottom:28px;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.fp-btn:active .fp-core{transform:scale(0.93);}
+.fp-ring1,.fp-ring2{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(245,197,66,0.2);animation:fpPulse 3s ease-in-out infinite;}
+.fp-ring2{inset:12px;animation-delay:.6s;}
+@keyframes fpPulse{0%,100%{opacity:.35;transform:scale(1);}50%{opacity:.9;transform:scale(1.04);}}
+.fp-core{width:104px;height:104px;border-radius:50%;background:rgba(245,197,66,0.07);
+  border:1.5px solid rgba(245,197,66,0.22);display:flex;align-items:center;justify-content:center;
+  transition:transform .12s;}
+
+.idle-label{font-size:1rem;font-weight:600;margin-bottom:6px;}
+.idle-sub{font-size:0.8rem;color:var(--text3);}
+
+.idle-status{position:absolute;bottom:24px;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;gap:14px;}
+.idle-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 2.2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+.idle-status-txt{font-size:0.68rem;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+
+/* ════════════════════
+   SCAN SCREEN
+════════════════════ */
+#s-scan{background:var(--dark);}
+.scan-glow{position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 50% 110%,rgba(245,197,66,0.1) 0%,transparent 60%);pointer-events:none;}
+.scan-brand{position:absolute;top:28px;left:0;right:0;text-align:center;
+  font-family:'Fraunces',serif;font-size:1rem;color:var(--text3);}
+.scan-brand em{font-style:italic;color:rgba(245,197,66,0.4);}
+
+.scan-wrap{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;}
+.scan-arc{position:absolute;inset:-4px;border-radius:50%;border:3px solid transparent;border-top-color:var(--gold);animation:spin .9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.scan-ring-s{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(245,197,66,0.3);animation:fpPulse 1.5s ease-in-out infinite;}
+.scan-core{width:90px;height:90px;border-radius:50%;background:rgba(245,197,66,0.08);
+  border:1.5px solid rgba(245,197,66,0.25);display:flex;align-items:center;justify-content:center;}
+
+.scan-msg{font-size:1rem;font-weight:600;margin-bottom:6px;text-align:center;}
+.scan-sub{font-size:0.78rem;color:var(--text3);text-align:center;margin-bottom:28px;}
+.scan-cancel{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;
+  padding:10px 28px;color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:0.85rem;cursor:pointer;}
+.scan-cancel:active{background:rgba(255,255,255,0.1);}
+
+/* ════════════════════
+   RESULT SCREEN
+════════════════════ */
+#s-result{background:var(--dark);}
+.result-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px;text-align:center;width:100%;max-width:320px;}
+.result-icon{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.4rem;}
+.ri-ok{background:rgba(245,197,66,0.1);border:1.5px solid rgba(245,197,66,0.3);}
+.ri-err{background:var(--red-dim);border:1.5px solid rgba(231,76,60,0.3);}
+.result-badge{display:inline-flex;align-items:center;padding:4px 14px;border-radius:20px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:500;}
+.rb-in{background:rgba(46,204,113,0.12);color:var(--green);}
+.rb-out{background:var(--red-dim);color:var(--red);}
+.rb-pause{background:rgba(243,156,18,0.12);color:var(--amber);}
+.rb-retour{background:rgba(52,152,219,0.12);color:var(--blue);}
+.rb-err{background:var(--red-dim);color:var(--red);}
+.result-name{font-family:'Fraunces',serif;font-size:1.55rem;font-weight:700;line-height:1.1;}
+.result-post{font-size:0.8rem;color:var(--text2);}
+.result-time{font-family:'IBM Plex Mono',monospace;font-size:0.9rem;color:var(--text3);}
+.result-err-msg{font-size:0.85rem;color:var(--text2);line-height:1.5;}
+.result-bar{width:100%;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-top:6px;}
+.result-bar-fill{height:100%;background:var(--gold);border-radius:2px;width:100%;}
+
+/* ════════════════════
+   REGISTER SCREEN
+   (1ère fois — token requis)
+════════════════════ */
+#s-register{background:var(--dark);}
+.reg-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 28px;width:100%;max-width:340px;text-align:center;}
+.reg-icon{font-size:2.8rem;margin-bottom:4px;}
+.reg-title{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;}
+.reg-sub{font-size:0.82rem;color:var(--text2);line-height:1.5;}
+
+.reg-field{width:100%;background:var(--dark3);border:1.5px solid var(--dark4);border-radius:10px;
+  padding:13px 16px;font-family:'IBM Plex Mono',monospace;font-size:1rem;letter-spacing:3px;
+  color:var(--text);outline:none;transition:border-color .2s;text-transform:uppercase;text-align:center;}
+.reg-field:focus{border-color:var(--gold);}
+.reg-field::placeholder{letter-spacing:1px;font-size:0.82rem;font-family:'Instrument Sans',sans-serif;
+  text-transform:none;color:var(--text3);}
+
+.reg-error{width:100%;background:var(--red-dim);border:1px solid rgba(231,76,60,0.3);
+  border-radius:8px;padding:8px 12px;font-size:0.78rem;color:var(--red);display:none;text-align:left;}
+
+.btn-gold{width:100%;padding:14px;border-radius:11px;border:none;background:var(--gold);
+  color:#000;font-family:'Instrument Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-gold:active{transform:scale(0.97);background:var(--gold-dark);}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-ghost{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;
+  padding:11px;color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:0.85rem;
+  cursor:pointer;width:100%;}
+.btn-ghost:active{background:rgba(255,255,255,0.1);}
+
+/* ════════════════════
+   ENROLL SCREEN
+   (capture empreinte)
+════════════════════ */
+#s-enroll{background:var(--dark);}
+.enroll-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;padding:32px 28px;width:100%;max-width:320px;text-align:center;}
+.enroll-emp{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;
+  background:rgba(245,197,66,0.1);border:1px solid rgba(245,197,66,0.2);
+  font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--gold);}
+
+/* spinner */
+.sp{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.15);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+.sp-dark{border:2px solid rgba(0,0,0,0.15);border-top-color:#000;}
+</style>
+</head>
+<body>
+
+<!-- ══ IDLE ══ -->
+<div class="screen active" id="s-idle">
+  <div class="idle-glow"></div>
+  <div class="idle-brand">Light <em>Check</em></div>
+
+  <div class="idle-clock" id="idle-clock">00:00</div>
+  <div class="idle-date"  id="idle-date">—</div>
+
+  <button class="fp-btn" id="fp-btn" onclick="startScan()">
+    <div class="fp-ring1"></div>
+    <div class="fp-ring2"></div>
+    <div class="fp-core">
+      <svg width="50" height="50" viewBox="0 0 64 64" fill="none">
+        <path d="M32 8C19.85 8 10 17.85 10 30c0 6.5 2.7 12.4 7 16.7" stroke="rgba(245,197,66,.9)" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M32 8c12.15 0 22 9.85 22 22 0 6.5-2.7 12.4-7 16.7" stroke="rgba(245,197,66,.65)" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M32 14c-8.84 0-16 7.16-16 16 0 4.8 2.1 9.1 5.5 12.1" stroke="rgba(245,197,66,.85)" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M32 14c8.84 0 16 7.16 16 16 0 4.8-2.1 9.1-5.5 12.1" stroke="rgba(245,197,66,.6)" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M32 20c-5.52 0-10 4.48-10 10 0 3.2 1.5 6.1 3.9 8" stroke="rgba(245,197,66,.8)" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M32 20c5.52 0 10 4.48 10 10 0 3.2-1.5 6.1-3.9 8" stroke="rgba(245,197,66,.55)" stroke-width="2.3" stroke-linecap="round"/>
+        <circle cx="32" cy="30" r="3.5" fill="rgba(245,197,66,.35)" stroke="rgba(245,197,66,.85)" stroke-width="2"/>
+      </svg>
+    </div>
+  </button>
+
+  <div class="idle-label">Appuyez pour pointer</div>
+  <div class="idle-sub">Empreinte digitale</div>
+
+  <div class="idle-status">
+    <div class="idle-dot"></div>
+    <div class="idle-status-txt" id="idle-device-name">Terminal actif</div>
+  </div>
+</div>
+
+<!-- ══ SCAN ══ -->
+<div class="screen" id="s-scan">
+  <div class="scan-glow"></div>
+  <div class="scan-brand">Light <em>Check</em></div>
+  <div class="scan-wrap">
+    <div class="scan-arc"></div>
+    <div class="scan-ring-s"></div>
+    <div class="scan-core">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none">
+        <path d="M32 8C19.85 8 10 17.85 10 30c0 6.5 2.7 12.4 7 16.7" stroke="rgba(245,197,66,.9)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M32 8c12.15 0 22 9.85 22 22 0 6.5-2.7 12.4-7 16.7" stroke="rgba(245,197,66,.65)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M32 14c-8.84 0-16 7.16-16 16 0 4.8 2.1 9.1 5.5 12.1" stroke="rgba(245,197,66,.85)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M32 14c8.84 0 16 7.16 16 16 0 4.8-2.1 9.1-5.5 12.1" stroke="rgba(245,197,66,.6)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="32" cy="30" r="3.5" fill="rgba(245,197,66,.3)" stroke="rgba(245,197,66,.85)" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+  <div class="scan-msg" id="scan-msg">Placez votre doigt sur le capteur</div>
+  <div class="scan-sub" id="scan-sub">Maintenez jusqu'au signal</div>
+  <button class="scan-cancel" onclick="goIdle()">Annuler</button>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div class="screen" id="s-result">
+  <div class="result-wrap">
+    <div class="result-icon" id="r-icon">✓</div>
+    <div class="result-badge" id="r-badge">ENTRÉE</div>
+    <div class="result-name"  id="r-name">—</div>
+    <div class="result-post"  id="r-post">—</div>
+    <div class="result-time"  id="r-time">—</div>
+    <div class="result-err-msg" id="r-errmsg"></div>
+    <div class="result-bar"><div class="result-bar-fill" id="r-bar"></div></div>
+  </div>
+</div>
+
+<!-- ══ REGISTER (token) ══ -->
+<div class="screen" id="s-register">
+  <div class="reg-wrap">
+    <div class="reg-icon">☝️</div>
+    <div class="reg-title">Première connexion</div>
+    <div class="reg-sub">Votre empreinte n'est pas encore enregistrée sur cet appareil.<br>Entrez votre code employé pour continuer.</div>
+    <input class="reg-field" id="reg-token" placeholder="Code LC-XXXXXX"
+      maxlength="10" autocomplete="off" autocorrect="off" spellcheck="false"
+      oninput="this.value=this.value.toUpperCase();regClearError()"
+      onkeydown="if(event.key==='Enter')regSubmit()"/>
+    <div class="reg-error" id="reg-error"></div>
+    <button class="btn-gold" id="reg-btn" onclick="regSubmit()">Continuer</button>
+    <button class="btn-ghost" onclick="goIdle()">Annuler</button>
+  </div>
+</div>
+
+<!-- ══ ENROLL (capture) ══ -->
+<div class="screen" id="s-enroll">
+  <div class="enroll-wrap">
+    <div style="font-size:2.5rem">👆</div>
+    <div class="enroll-emp" id="enroll-emp-name">—</div>
+    <div style="font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;">Enregistrement de l'empreinte</div>
+    <div style="font-size:0.83rem;color:var(--text2);line-height:1.6;">
+      Posez votre doigt sur le capteur de l'appareil lorsque Android le demande.<br>
+      <span style="color:var(--text3);">Vous n'aurez plus besoin de votre code ensuite (sur cet appareil).</span>
+    </div>
+    <!-- Fingerprint animation -->
+    <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(245,197,66,0.3);animation:fpPulse 1.4s ease-in-out infinite;"></div>
+      <div style="width:72px;height:72px;border-radius:50%;background:rgba(245,197,66,0.08);border:1.5px solid rgba(245,197,66,0.2);display:flex;align-items:center;justify-content:center;">
+        <span id="enroll-status-icon" style="font-size:1.6rem;">⌛</span>
+      </div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--text2);" id="enroll-status-msg">En attente du capteur Android…</div>
+    <div class="reg-error" id="enroll-error" style="width:100%;"></div>
+    <button class="btn-ghost" id="enroll-cancel-btn" onclick="goIdle()">Annuler</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="lc-dialog.js"></script>
+<script>
+// ══════════════════════════════
+//  CONFIG
+// ══════════════════════════════
+const SUPABASE_URL = window.LC_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = window.LC_CONFIG.SUPABASE_ANON_KEY;
+const RPID = location.hostname === 'localhost' ? 'localhost' : location.hostname;
+
+// ══════════════════════════════
+//  SUPABASE HELPERS
+// ══════════════════════════════
+const sbH = {apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY};
+async function sbGet(t,q=''){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{headers:sbH})).json();
+}
+async function sbInsert(t,d){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}`,{method:'POST',
+    headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(d)})).json();
+}
+async function sbPatch(t,q,d){
+  return (await fetch(`${SUPABASE_URL}/rest/v1/${t}?${q}`,{method:'PATCH',
+    headers:{...sbH,'Content-Type':'application/json',Prefer:'return=representation'},
+    body:JSON.stringify(d)})).json();
+}
+
+// ══════════════════════════════
+//  UTILS
+// ══════════════════════════════
+function ab2b64(buf){
+  let s=''; new Uint8Array(buf).forEach(b=>s+=String.fromCharCode(b));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+function b642ab(s){
+  const b=atob(s.replace(/-/g,'+').replace(/_/g,'/'));
+  const a=new Uint8Array(b.length);
+  for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);
+  return a.buffer;
+}
+function randChallenge(){const c=new Uint8Array(32);crypto.getRandomValues(c);return c;}
+
+// ══════════════════════════════
+//  TYPE LOGIC (identique attend.html)
+// ══════════════════════════════
+const TYPE_MAP = {
+  'entrée': {next:'sortie',  badge:'ENTRÉE',        cls:'rb-in'},
+  'sortie': {next:'entrée',  badge:'SORTIE',         cls:'rb-out'},
+  'pause':  {next:'retour',  badge:'PAUSE',          cls:'rb-pause'},
+  'retour': {next:'sortie',  badge:'RETOUR DE PAUSE',cls:'rb-retour'},
+};
+function nextType(last){return last ? (TYPE_MAP[last]?.next||'entrée') : 'entrée';}
+
+// ══════════════════════════════
+//  STATE
+// ══════════════════════════════
+let autoReturnTimer = null;
+let currentEmp = null;  // employé en cours d'enregistrement
+
+// ══════════════════════════════
+//  CLOCK
+// ══════════════════════════════
+function tick(){
+  const n=new Date();
+  document.getElementById('idle-clock').textContent=n.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('idle-date').textContent=n.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+}
+tick(); setInterval(tick,1000);
+
+// ══════════════════════════════
+//  SCREEN ROUTER
+// ══════════════════════════════
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+}
+function goIdle(){
+  if(autoReturnTimer){clearTimeout(autoReturnTimer);autoReturnTimer=null;}
+  currentEmp=null;
+  show('idle');
+}
+
+// ══════════════════════════════
+//  MAIN SCAN FLOW
+// ══════════════════════════════
+async function startScan(){
+  show('scan');
+  document.getElementById('scan-msg').textContent='Lecture de l\'empreinte…';
+  document.getElementById('scan-sub').textContent='Maintenez votre doigt sur le capteur';
+
+  // Charger tous les credentials depuis Supabase
+  let creds = [];
+  try {
+    const rows = await sbGet('webauthn_credentials','select=credential_id,employee_id&order=created_at.desc');
+    if(Array.isArray(rows)) creds = rows;
+  } catch(e){
+    showError('Erreur réseau','Impossible de contacter le serveur.');return;
+  }
+
+  // Construire la liste allowCredentials
+  // Si vide → Android proposera tous les passkeys enregistrés sur l'appareil (resident keys)
+  const allowCreds = creds.map(c=>({
+    id: b642ab(c.credential_id),
+    type:'public-key',
+    transports:['internal']
+  }));
+
+  try {
+    const assertion = await navigator.credentials.get({
+      publicKey:{
+        challenge: randChallenge(),
+        rpId: RPID,
+        allowCredentials: allowCreds,
+        userVerification:'required',
+        timeout:30000
+      },
+      mediation: 'optional'  // Pas de UI Google — utilise la liste allowCredentials directement
+    });
+
+    const credId = ab2b64(assertion.rawId);
+
+    // Trouver l'employé associé
+    const match = creds.find(c=>c.credential_id===credId);
+
+    if(!match){
+      // Credential non trouvé dans Supabase → premier enregistrement
+      show('register');
+      document.getElementById('reg-token').value='';
+      setTimeout(()=>document.getElementById('reg-token').focus(),300);
+      return;
+    }
+
+    // Charger l'employé
+    const emps = await sbGet('employees',`id=eq.${match.employee_id}&status=eq.actif`);
+    if(!Array.isArray(emps)||!emps[0]){
+      showError('Compte introuvable','Employé inactif ou supprimé.');return;
+    }
+    const emp = emps[0];
+
+    // Déterminer le type de pointage
+    const today=new Date().toISOString().split('T')[0];
+    const pts=await sbGet('pointages',`employee_id=eq.${emp.id}&created_at=gte.${today}T00:00:00&order=created_at.desc&limit=1`);
+    const lastT=(Array.isArray(pts)&&pts[0])?pts[0].type:null;
+    const type=nextType(lastT);
+
+    // Enregistrer le pointage
+    await sbInsert('pointages',{
+      employee_id:emp.id, company_id:emp.company_id,
+      type, statut:'valide', face_confidence:null
+    });
+
+    showSuccess(emp, type);
+
+  } catch(err){
+    if(err.name==='NotAllowedError'){
+      // L'utilisateur a annulé / aucune empreinte correspondante → proposer l'enregistrement
+      show('register');
+      setTimeout(()=>document.getElementById('reg-token').focus(),300);
+    } else {
+      showError('Échec de lecture', err.message||'Réessayez.');
+    }
+  }
+}
+
+// ══════════════════════════════
+//  REGISTER FLOW (token → enroll)
+// ══════════════════════════════
+function regClearError(){document.getElementById('reg-error').style.display='none';}
+function regShowError(msg){
+  const e=document.getElementById('reg-error');
+  e.textContent=msg; e.style.display='block';
+}
+
+async function regSubmit(){
+  const token=document.getElementById('reg-token').value.trim().toUpperCase();
+  if(!token){regShowError('Entrez votre code employé.');return;}
+
+  const btn=document.getElementById('reg-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="sp sp-dark"></span> Vérification…';
+
+  try {
+    const emps=await sbGet('employees',`login_token=eq.${token}&status=eq.actif`);
+    if(!Array.isArray(emps)||!emps[0]){
+      regShowError('Code invalide ou compte inactif.');
+      btn.disabled=false; btn.textContent='Continuer'; return;
+    }
+    currentEmp=emps[0];
+    btn.disabled=false; btn.textContent='Continuer';
+    startEnroll();
+  } catch(e){
+    regShowError('Erreur réseau : '+e.message);
+    btn.disabled=false; btn.textContent='Continuer';
+  }
+}
+
+// ══════════════════════════════
+//  ENROLL FLOW (WebAuthn create)
+// ══════════════════════════════
+async function startEnroll(){
+  if(!currentEmp) return;
+  show('enroll');
+  document.getElementById('enroll-emp-name').textContent=currentEmp.full_name;
+  document.getElementById('enroll-status-icon').textContent='⌛';
+  document.getElementById('enroll-status-msg').textContent='En attente du capteur Android…';
+  document.getElementById('enroll-error').style.display='none';
+  document.getElementById('enroll-cancel-btn').style.display='block';
+
+  // AMÉLIORATION : empêcher le double-enrôlement du même appareil pour cet employé
+  let excludeCreds = [];
+  try {
+    const ex = await sbGet('webauthn_credentials',`employee_id=eq.${currentEmp.id}&select=credential_id`);
+    if(Array.isArray(ex)) excludeCreds = ex.map(c=>({id:b642ab(c.credential_id),type:'public-key',transports:['internal']}));
+  } catch(e){ /* non bloquant */ }
+
+  try {
+    const uid=new TextEncoder().encode(currentEmp.id.toString());
+
+    const cred=await navigator.credentials.create({
+      publicKey:{
+        challenge: randChallenge(),
+        rp:{ name:'Light Check', id:RPID },
+        user:{ id:uid, name:currentEmp.login_token||currentEmp.id, displayName:currentEmp.full_name },
+        pubKeyCredParams:[
+          {type:'public-key',alg:-7},   // ES256
+          {type:'public-key',alg:-257}  // RS256
+        ],
+        excludeCredentials: excludeCreds,   // refuse de recréer un passkey déjà présent sur cet appareil
+        authenticatorSelection:{
+          authenticatorAttachment:'platform',
+          userVerification:'required',
+          residentKey:'discouraged'  // Pas de Google Password Manager — capteur local uniquement
+        },
+        timeout:60000
+      }
+    });
+
+    const credId=ab2b64(cred.rawId);
+
+    document.getElementById('enroll-status-icon').textContent='💾';
+    document.getElementById('enroll-status-msg').textContent='Enregistrement dans la base…';
+    document.getElementById('enroll-cancel-btn').style.display='none';
+
+    // Stocker dans Supabase
+    const ins = await sbInsert('webauthn_credentials',{
+      employee_id: currentEmp.id,
+      credential_id: credId
+    });
+    // Gérer un éventuel doublon (credential_id unique)
+    if(ins && ins.code && !Array.isArray(ins)){
+      const errEl=document.getElementById('enroll-error');
+      document.getElementById('enroll-status-icon').textContent='✕';
+      document.getElementById('enroll-status-msg').textContent='Empreinte déjà enregistrée';
+      errEl.textContent='Cette empreinte est déjà liée à un compte sur cet appareil.';
+      errEl.style.display='block';
+      document.getElementById('enroll-cancel-btn').style.display='block';
+      return;
+    }
+
+    // Marquer l'employé
+    await sbPatch('employees',`id=eq.${currentEmp.id}`,{webauthn_enrolled:true});
+
+    document.getElementById('enroll-status-icon').textContent='✓';
+    document.getElementById('enroll-status-msg').textContent='Enregistrement réussi !';
+
+    // Premier pointage entrée
+    await sbInsert('pointages',{
+      employee_id:currentEmp.id, company_id:currentEmp.company_id,
+      type:'entrée', statut:'valide', face_confidence:null
+    });
+
+    await new Promise(r=>setTimeout(r,800));
+    showSuccess(currentEmp,'entrée');
+
+  } catch(err){
+    const errEl=document.getElementById('enroll-error');
+    document.getElementById('enroll-cancel-btn').style.display='block';
+    document.getElementById('enroll-status-icon').textContent='✕';
+    document.getElementById('enroll-status-msg').textContent='Échec d\'enregistrement';
+    if(err.name==='InvalidStateError'){
+      errEl.textContent='Une empreinte est déjà enregistrée sur cet appareil pour ce compte.';
+      errEl.style.display='block';
+    } else if(err.name!=='NotAllowedError'){
+      errEl.textContent='Erreur : '+(err.message||err.name);
+      errEl.style.display='block';
+    } else {
+      goIdle();
+    }
+  }
+}
+
+// ══════════════════════════════
+//  RESULT SCREENS
+// ══════════════════════════════
+function showSuccess(emp, type){
+  show('result');
+  const t=TYPE_MAP[type]||{badge:type.toUpperCase(),cls:'rb-in'};
+  document.getElementById('r-icon').className='result-icon ri-ok';
+  document.getElementById('r-icon').textContent='✓';
+  document.getElementById('r-badge').className='result-badge '+t.cls;
+  document.getElementById('r-badge').textContent=t.badge;
+  document.getElementById('r-name').textContent=emp.full_name;
+  document.getElementById('r-post').textContent=emp.post||emp.poste||'';
+  document.getElementById('r-time').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('r-errmsg').textContent='';
+  startReturnBar();
+}
+function showError(title, msg){
+  show('result');
+  document.getElementById('r-icon').className='result-icon ri-err';
+  document.getElementById('r-icon').textContent='✕';
+  document.getElementById('r-badge').className='result-badge rb-err';
+  document.getElementById('r-badge').textContent='ERREUR';
+  document.getElementById('r-name').textContent=title;
+  document.getElementById('r-post').textContent='';
+  document.getElementById('r-time').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('r-errmsg').textContent=msg||'';
+  startReturnBar();
+}
+function startReturnBar(){
+  const fill=document.getElementById('r-bar');
+  fill.style.transition='none'; fill.style.width='100%';
+  fill.getBoundingClientRect(); // force reflow
+  fill.style.transition='width 4s linear'; fill.style.width='0%';
+  autoReturnTimer=setTimeout(goIdle,4000);
+}
+
+// ══════════════════════════════
+//  WEBAUTHN CHECK
+// ══════════════════════════════
+if(!window.PublicKeyCredential){
+  document.getElementById('idle-sub').textContent='⚠️ WebAuthn non supporté — utilisez HTTPS';
+  document.getElementById('fp-btn').disabled=true;
+}
+
+// Device name from localStorage
+const devName=localStorage.getItem('lc_device_name');
+if(devName) document.getElementById('idle-device-name').textContent=devName;
+</script>
+</body>
+</html>
